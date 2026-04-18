@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack.min.css" rel="stylesheet">
 <style>
 /* ===== SFS Brand: Red #C1282E | Blue #2B3160 | Gray #878787 ===== */
 
@@ -90,9 +91,9 @@ body {
 }
 
 .container {
-  max-width: 1440px;
+  width: 100%;
   margin: 0 auto;
-  padding: 24px;
+  padding: 20px 28px;
 }
 
 /* ===== HEADER ===== */
@@ -174,6 +175,29 @@ header {
 
 .theme-btn svg { width: 14px; height: 14px; }
 
+.reset-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 6px 11px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.reset-btn:hover {
+  color: var(--sfs-red);
+  border-color: var(--border-strong);
+}
+
+.reset-btn svg { width: 13px; height: 13px; }
+
 .clock {
   font-family: 'Inter', sans-serif;
   font-variant-numeric: tabular-nums;
@@ -187,24 +211,38 @@ header {
   letter-spacing: 0.5px;
 }
 
-/* ===== WIDGET GRID (YISS-style uniform bento) ===== */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-auto-rows: 360px;
-  gap: 14px;
+/* ===== GRIDSTACK OVERRIDES (YISS-style uniform drag grid) ===== */
+.grid-stack {
+  background: transparent;
+  min-height: 400px;
 }
 
-@media (max-width: 1100px) {
-  .grid { grid-template-columns: repeat(2, 1fr); }
+.grid-stack-item-content {
+  inset: 0 !important;
+  overflow: visible !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
 }
 
-@media (max-width: 640px) {
-  .grid { grid-template-columns: 1fr; grid-auto-rows: auto; }
-  .widget { min-height: 260px; }
+.grid-stack > .grid-stack-item > .grid-stack-item-content { overflow: visible; }
+
+.grid-stack-item.ui-draggable-dragging { z-index: 100; }
+.grid-stack-item.ui-draggable-dragging .widget {
+  box-shadow: 0 24px 60px rgba(0,0,0,0.55);
+  cursor: grabbing;
+}
+
+.grid-stack > .grid-stack-placeholder > .placeholder-content {
+  background: var(--tag-red-bg);
+  border: 2px dashed var(--sfs-red);
+  border-radius: 18px;
+  inset: 0;
 }
 
 .widget {
+  position: absolute;
+  inset: 0;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 18px;
@@ -212,7 +250,7 @@ header {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transition: border-color 0.2s, background 0.2s;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
 }
 
 .widget:hover { border-color: var(--border-strong); }
@@ -220,18 +258,9 @@ header {
 a.widget { text-decoration: none; color: inherit; }
 a.widget:hover { background: var(--bg-card-hover); }
 
-.w-2 { grid-column: span 2; }
-.w-4 { grid-column: span 4; }
-.h-half { grid-row: span 1; }
-.h-tall { grid-row: span 2; }
-
-@media (max-width: 1100px) {
-  .w-4 { grid-column: span 2; }
-}
-@media (max-width: 640px) {
-  .w-2, .w-4 { grid-column: span 1; }
-  .h-tall { grid-row: span 1; }
-}
+.w-head { cursor: grab; }
+.w-head:active { cursor: grabbing; }
+.w-link, .w-badge { cursor: pointer; }
 
 /* Widget header */
 .w-head {
@@ -424,30 +453,24 @@ a.widget:hover { background: var(--bg-card-hover); }
 }
 
 /* ===== LUNCH GRID ===== */
-.lunch-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  grid-template-rows: 1fr;
-  gap: 8px;
-  height: 100%;
-}
-
-@media (max-width: 880px) { .lunch-grid { grid-template-columns: repeat(2, 1fr); grid-template-rows: auto; } }
-@media (max-width: 640px) { .lunch-grid { grid-template-columns: 1fr; } }
-
-.lunch-day {
-  background: var(--surface);
-  border-radius: 10px;
-  padding: 14px;
+.lunch-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  min-height: 100%;
+  gap: 2px;
 }
+
+.lunch-day {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.lunch-day:last-child { border-bottom: none; }
 
 .lunch-day.today {
   background: var(--tag-red-bg);
-  border: 1px solid var(--sfs-red);
+  margin: 0 -8px;
+  padding: 10px 8px;
+  border-radius: 8px;
+  border-bottom: none;
 }
 
 .lunch-label {
@@ -456,12 +479,13 @@ a.widget:hover { background: var(--bg-card-hover); }
   text-transform: uppercase;
   letter-spacing: 1.2px;
   color: var(--text-muted);
+  margin-bottom: 4px;
 }
 
 .lunch-day.today .lunch-label { color: var(--sfs-red); }
 
 .lunch-text {
-  font-size: 11.5px;
+  font-size: 12px;
   color: var(--text-secondary);
   line-height: 1.5;
   font-weight: 500;
@@ -470,48 +494,42 @@ a.widget:hover { background: var(--bg-card-hover); }
 /* ===== QUICK LINKS GRID ===== */
 .links-grid {
   display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  grid-template-rows: repeat(2, 1fr);
-  gap: 8px;
-  height: 100%;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
 }
-
-@media (max-width: 1100px) { .links-grid { grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 1fr); } }
-@media (max-width: 640px) { .links-grid { grid-template-columns: repeat(3, 1fr); grid-template-rows: auto; } }
 
 .link-tile {
   background: var(--surface);
-  border-radius: 12px;
-  padding: 12px 8px;
+  border-radius: 8px;
+  padding: 9px 10px;
   text-decoration: none;
   color: var(--text-secondary);
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
+  gap: 10px;
   transition: all 0.2s;
-  text-align: center;
-  min-height: 80px;
 }
 
 .link-tile:hover {
   background: var(--bg-card-hover);
   color: var(--text);
-  transform: translateY(-1px);
 }
 
 .link-tile svg {
-  width: 22px;
-  height: 22px;
-  stroke-width: 1.6;
+  width: 15px;
+  height: 15px;
+  stroke-width: 1.8;
   color: var(--sfs-red);
+  flex-shrink: 0;
 }
 
 .link-name {
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 600;
   line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ===== INSTAGRAM CAROUSEL ===== */
@@ -720,14 +738,18 @@ footer p {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       </button>
     </div>
+    <button class="reset-btn" title="Reset widget layout" onclick="resetLayout()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+      <span>Reset</span>
+    </button>
     <div class="clock" id="clock">--:--:--</div>
   </div>
 </header>
 
-<div class="grid">
+<div class="grid" id="grid">
 
   <!-- AQI -->
-  <a href="https://www.seoulforeign.org/aqi" target="_blank" class="widget" id="aqi-widget">
+  <a href="https://www.seoulforeign.org/aqi" target="_blank" class="widget" id="aqi-widget" data-wid="aqi">
     <div class="w-head">
       <div class="w-head-left">
         <div class="w-icon bg-green" id="aqi-icon-wrap">
@@ -750,7 +772,7 @@ footer p {
   </a>
 
   <!-- Today Schedule -->
-  <div class="widget">
+  <div class="widget" data-wid="today">
     <div class="w-head">
       <div class="w-head-left">
         <div class="w-icon bg-blue">
@@ -772,7 +794,7 @@ footer p {
   </div>
 
   <!-- News & Announcements -->
-  <div class="widget w-2">
+  <div class="widget" data-wid="news">
     <div class="w-head">
       <div class="w-head-left">
         <div class="w-icon bg-red">
@@ -796,8 +818,8 @@ footer p {
     </div>
   </div>
 
-  <!-- Lunch (full width) -->
-  <div class="widget w-4">
+  <!-- Lunch -->
+  <div class="widget" data-wid="lunch">
     <div class="w-head">
       <div class="w-head-left">
         <div class="w-icon bg-amber">
@@ -811,7 +833,7 @@ footer p {
       </a>
     </div>
     <div class="w-body">
-      <div class="lunch-grid">
+      <div class="lunch-list">
         <div class="lunch-day" id="lunch-mon">
           <div class="lunch-label">Monday</div>
           <div class="lunch-text">Chicken Katsu Curry, Steamed Rice, Miso Soup, Seasonal Salad</div>
@@ -837,7 +859,7 @@ footer p {
   </div>
 
   <!-- Athletics -->
-  <div class="widget w-2">
+  <div class="widget" data-wid="athletics">
     <div class="w-head">
       <div class="w-head-left">
         <div class="w-icon bg-red">
@@ -856,7 +878,7 @@ footer p {
   </div>
 
   <!-- College News -->
-  <div class="widget w-2">
+  <div class="widget" data-wid="college">
     <div class="w-head">
       <div class="w-head-left">
         <div class="w-icon bg-purple">
@@ -872,7 +894,7 @@ footer p {
   </div>
 
   <!-- Instagram SFS -->
-  <div class="widget w-2 h-tall">
+  <div class="widget" data-wid="ig-sfs">
     <div class="w-head">
       <div class="w-head-left">
         <div class="w-icon bg-red">
@@ -896,7 +918,7 @@ footer p {
   </div>
 
   <!-- Instagram Athletics -->
-  <div class="widget w-2 h-tall">
+  <div class="widget" data-wid="ig-athletics">
     <div class="w-head">
       <div class="w-head-left">
         <div class="w-icon bg-blue">
@@ -919,8 +941,8 @@ footer p {
     <div class="ig-dots" id="ig-dots-athletics"></div>
   </div>
 
-  <!-- Quick Links (full width) -->
-  <div class="widget w-4">
+  <!-- Quick Links -->
+  <div class="widget" data-wid="links">
     <div class="w-head">
       <div class="w-head-left">
         <div class="w-icon bg-amber">
@@ -935,7 +957,7 @@ footer p {
   </div>
 
   <!-- Spirit Magazine -->
-  <a href="https://www.seoulforeign.org/community/spirit-magazine" target="_blank" class="widget w-2">
+  <a href="https://www.seoulforeign.org/community/spirit-magazine" target="_blank" class="widget" data-wid="spirit">
     <div class="w-head">
       <div class="w-head-left">
         <div class="w-icon bg-red">
@@ -957,7 +979,7 @@ footer p {
   </a>
 
   <!-- Unlocked -->
-  <a href="https://www.seoulforeign.org" target="_blank" class="widget w-2">
+  <a href="https://www.seoulforeign.org" target="_blank" class="widget" data-wid="unlocked">
     <div class="w-head">
       <div class="w-head-left">
         <div class="w-icon bg-blue">
@@ -986,6 +1008,7 @@ footer p {
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack-all.js"></script>
 <script>
 // ===== ICONS (Lucide-style stroke set) =====
 var ICONS = {
@@ -1403,6 +1426,93 @@ loadCollegeFeeds();
 loadAthletics();
 loadInstagramCarousel('sfs', 'seoul_foreign_school');
 loadInstagramCarousel('athletics', 'sfscrusaderathletics');
+
+// ===== GRIDSTACK DRAG GRID =====
+var LAYOUT_KEY = 'sfs-grid-layout-v2';
+var CELL_W = 3;   // every widget 3 columns wide in a 12-col grid (4 per row)
+var CELL_H = 6;   // every widget 6 rows tall (row height 52 → ~360px with margin)
+var gridApi = null;
+
+function initDragGrid() {
+  var gridEl = document.getElementById('grid');
+  if (!gridEl || !window.GridStack) return;
+
+  gridEl.classList.remove('grid');
+  gridEl.classList.add('grid-stack');
+
+  var saved = null;
+  try { saved = JSON.parse(localStorage.getItem(LAYOUT_KEY) || 'null'); } catch (e) {}
+  var savedMap = {};
+  if (saved) saved.forEach(function(it) { savedMap[it.id] = it; });
+
+  var widgets = Array.from(gridEl.children).filter(function(c) {
+    return c.classList && c.classList.contains('widget');
+  });
+
+  // Wrap each widget in grid-stack-item > grid-stack-item-content
+  widgets.forEach(function(w, i) {
+    var wid = w.getAttribute('data-wid') || 'w' + i;
+    var item = document.createElement('div');
+    item.className = 'grid-stack-item';
+    item.setAttribute('gs-id', wid);
+    var pos = savedMap[wid];
+    if (pos) {
+      item.setAttribute('gs-x', pos.x);
+      item.setAttribute('gs-y', pos.y);
+      item.setAttribute('gs-w', pos.w || CELL_W);
+      item.setAttribute('gs-h', pos.h || CELL_H);
+    } else {
+      item.setAttribute('gs-w', CELL_W);
+      item.setAttribute('gs-h', CELL_H);
+    }
+    var content = document.createElement('div');
+    content.className = 'grid-stack-item-content';
+    gridEl.insertBefore(item, w);
+    content.appendChild(w);
+    item.appendChild(content);
+  });
+
+  gridApi = GridStack.init({
+    column: 12,
+    cellHeight: 52,
+    margin: 8,
+    float: false,         // compact to top-left
+    animate: true,
+    handle: '.w-head',    // drag by widget header only
+    resizable: { handles: '' },
+    disableResize: true,
+    columnOpts: {
+      breakpointForWindow: true,
+      breakpoints: [
+        { w: 640,  c: 1 },
+        { w: 1100, c: 6 }
+      ]
+    }
+  }, gridEl);
+
+  gridApi.on('change', saveLayout);
+}
+
+function saveLayout() {
+  if (!gridApi) return;
+  var items = gridApi.save(false);
+  var min = items.map(function(it) {
+    return { id: it.id, x: it.x, y: it.y, w: it.w, h: it.h };
+  });
+  try { localStorage.setItem(LAYOUT_KEY, JSON.stringify(min)); } catch (e) {}
+}
+
+function resetLayout() {
+  try { localStorage.removeItem(LAYOUT_KEY); } catch (e) {}
+  window.location.reload();
+}
+
+// Init after Gridstack loads. script tag is before this block so window.GridStack exists.
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initDragGrid);
+} else {
+  initDragGrid();
+}
 </script>
 
 </body>
