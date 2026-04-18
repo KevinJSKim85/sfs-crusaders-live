@@ -4,7 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SFS Crusaders Live</title>
-<link rel="icon" type="image/png" href="sfs-logo.png">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="sfs-logo.png">
+<link rel="apple-touch-icon" href="sfs-logo.png">
+<meta name="theme-color" content="#2B3160">
+<meta name="description" content="SFS Crusaders Live — Seoul Foreign School student dashboard with news, lunch, athletics, weather, and more.">
+<meta property="og:title" content="SFS Crusaders Live">
+<meta property="og:description" content="Seoul Foreign School student dashboard">
+<meta property="og:image" content="hero-campus.jpg">
+<meta property="og:type" content="website">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -400,6 +408,8 @@ body {
   .topnav-inner { gap: 12px; }
   .nav-links { gap: 18px; }
   .brand-tag { display: none; }
+  /* Drag is disabled below 1000px — the Reset button has nothing to reset */
+  .reset-layout-btn { display: none; }
 }
 
 @media (max-width: 640px) {
@@ -1144,7 +1154,7 @@ footer p {
         <button class="icon-btn active" id="btnDark" title="Dark mode" onclick="setTheme('dark')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         </button>
-        <button class="icon-btn" title="Reset widget layout" onclick="resetLayout()">
+        <button class="icon-btn reset-layout-btn" title="Reset widget layout" onclick="resetLayout()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
         </button>
       </div>
