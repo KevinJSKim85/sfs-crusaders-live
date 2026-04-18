@@ -94,48 +94,328 @@ body {
 .container {
   width: 100%;
   margin: 0 auto;
-  padding: 20px 28px;
+  padding: 0 24px 24px;
 }
 
-/* ===== HEADER ===== */
-header {
+/* ===== TOP NAV ===== */
+.topnav {
+  background: var(--sfs-blue);
+  border-bottom: 3px solid var(--sfs-red);
+  padding: 16px 32px;
+  margin: 0 -24px 0;
+}
+
+.topnav-inner {
+  max-width: 1600px;
+  margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 4px 4px 24px;
+  gap: 24px;
   flex-wrap: wrap;
-  gap: 16px;
 }
 
-.brand {
+.brand-logo {
   display: flex;
   align-items: center;
   gap: 14px;
+  text-decoration: none;
+  color: white;
 }
 
-.brand img {
-  width: 44px;
-  height: 44px;
+.brand-logo img {
+  width: 42px;
+  height: 42px;
   object-fit: contain;
+  background: white;
+  border-radius: 6px;
+  padding: 3px;
   flex-shrink: 0;
 }
 
-.brand-text h1 {
+.brand-name {
   font-family: 'Cinzel', serif;
-  font-size: 19px;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-  color: var(--text);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: white;
   line-height: 1.1;
 }
 
-.brand-text p {
-  font-size: 11px;
-  color: var(--text-muted);
+.brand-tag {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  color: rgba(255,255,255,0.65);
+  letter-spacing: 1.8px;
+  margin-top: 3px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.nav-link {
+  font-family: 'Inter', sans-serif;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: rgba(255,255,255,0.75);
+  text-decoration: none;
+  text-transform: uppercase;
+  padding: 6px 0;
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.nav-link:hover, .nav-link.active {
+  color: white;
+  border-bottom-color: var(--sfs-red);
+}
+
+.nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(255,255,255,0.25);
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: white;
+  text-decoration: none;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  margin-top: 4px;
-  font-weight: 500;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.nav-btn:hover {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.4);
+}
+
+.nav-btn svg { width: 11px; height: 11px; }
+
+.nav-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 4px;
+}
+
+.icon-btn {
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: transparent;
+  border-radius: 6px;
+  color: rgba(255,255,255,0.75);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.icon-btn:hover { color: white; border-color: rgba(255,255,255,0.4); }
+.icon-btn svg { width: 14px; height: 14px; }
+.icon-btn.active { background: var(--sfs-red); border-color: var(--sfs-red); color: white; }
+
+/* ===== HERO BANNER ===== */
+.hero {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  margin: 24px 0 28px;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+  min-height: 340px;
+}
+
+.hero-media {
+  position: relative;
+  overflow: hidden;
+  background: #000;
+}
+
+.hero-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(20,20,28,0.75) 0%, rgba(20,20,28,0.45) 50%, rgba(20,20,28,0.2) 100%),
+              linear-gradient(180deg, rgba(43,49,96,0.35) 0%, rgba(20,20,28,0.5) 100%);
+}
+
+.hero-text {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 36px 40px 32px;
+  color: white;
+}
+
+.hero-greet {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: rgba(255,255,255,0.85);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.hero-day {
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(54px, 8vw, 110px);
+  font-weight: 900;
+  letter-spacing: -2px;
+  line-height: 0.95;
+  color: white;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.25);
+}
+
+.hero-date {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  color: rgba(255,255,255,0.75);
+  text-transform: uppercase;
+  margin-top: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.hero-weather {
+  background: var(--sfs-blue);
+  color: white;
+  padding: 30px 36px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.hw-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.hw-loc {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  color: rgba(255,255,255,0.6);
+  text-transform: uppercase;
+}
+
+.hw-icon { color: rgba(255,255,255,0.9); }
+.hw-icon svg { width: 32px; height: 32px; }
+
+.hw-temp {
+  font-family: 'Inter', sans-serif;
+  font-size: 76px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -3px;
+  margin: 4px 0 2px;
+  display: flex;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.hw-unit {
+  font-size: 22px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.7);
+  margin-top: 10px;
+  letter-spacing: 0;
+}
+
+.hw-cond {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.85);
+  margin-bottom: auto;
+  padding-bottom: 20px;
+}
+
+.hw-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  border-top: 1px solid rgba(255,255,255,0.18);
+  padding-top: 16px;
+  position: relative;
+}
+
+.hw-stats::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 40px;
+  height: 1px;
+  background: var(--sfs-red);
+}
+
+.hw-stat-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.55);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.hw-stat-val {
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  color: white;
+  letter-spacing: -0.3px;
+  font-variant-numeric: tabular-nums;
+}
+
+.hw-stat-unit {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.6);
+  margin-left: 2px;
+}
+
+@media (max-width: 1000px) {
+  .hero { grid-template-columns: 1fr; }
+  .hero-media { min-height: 220px; }
+  .topnav-inner { gap: 12px; }
+  .nav-links { gap: 18px; }
+  .brand-tag { display: none; }
+}
+
+@media (max-width: 640px) {
+  .topnav { padding: 12px 16px; margin: 0 -14px; }
+  .brand-name { font-size: 13px; letter-spacing: 0.5px; }
+  .brand-logo img { width: 36px; height: 36px; }
+  .nav-link { font-size: 11px; letter-spacing: 0.8px; }
+  .nav-btn { padding: 6px 10px; font-size: 11px; }
+  .nav-links { gap: 10px; flex-wrap: wrap; }
+  .nav-link:not(.nav-btn):nth-child(n+3) { display: none; }
+  .hero-text { padding: 24px 24px 20px; }
+  .hero-day { font-size: 56px; letter-spacing: -1px; }
+  .hero-weather { padding: 22px 24px; }
+  .hw-temp { font-size: 60px; }
+  .hw-stats { gap: 10px; }
+  .hw-stat-val { font-size: 14px; }
 }
 
 .header-tools {
@@ -734,79 +1014,81 @@ footer p {
 </head>
 <body>
 
-<div class="container">
+<nav class="topnav">
+  <div class="topnav-inner">
+    <a href="https://www.seoulforeign.org" target="_blank" class="brand-logo">
+      <img src="sfs-logo.png" alt="SFS Crusaders Seal">
+      <div>
+        <div class="brand-name">SEOUL FOREIGN SCHOOL</div>
+        <div class="brand-tag">Seoul, Korea &middot; Est. 1912</div>
+      </div>
+    </a>
+    <div class="nav-links">
+      <a href="#top" class="nav-link active">Dashboard</a>
+      <a href="https://sfscrusaderathletics.com/" target="_blank" class="nav-link">Athletics</a>
+      <a href="https://calendar.google.com" target="_blank" class="nav-link">Calendar</a>
+      <a href="#links" class="nav-link">Links</a>
+      <a href="https://www.seoulforeign.org" target="_blank" class="nav-btn">SFS.org
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M8 7h9v9"/></svg>
+      </a>
+      <div class="nav-tools">
+        <button class="icon-btn" id="btnLight" title="Light mode" onclick="setTheme('light')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+        </button>
+        <button class="icon-btn active" id="btnDark" title="Dark mode" onclick="setTheme('dark')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+        <button class="icon-btn" title="Reset widget layout" onclick="resetLayout()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</nav>
 
-<header>
-  <div class="brand">
-    <img src="sfs-logo.png" alt="SFS Crusaders Seal">
-    <div class="brand-text">
-      <h1>SFS Crusaders Live</h1>
-      <p>Seoul Foreign School Dashboard</p>
+<section class="hero">
+  <div class="hero-media">
+    <img src="hero-campus.jpg" alt="SFS Campus">
+    <div class="hero-overlay"></div>
+    <div class="hero-text">
+      <p class="hero-greet">Good <span id="greet-time">Morning</span>, Crusaders</p>
+      <h1 class="hero-day" id="hero-day">SUNDAY</h1>
+      <p class="hero-date" id="hero-date">APR 19, 2026 &middot; 12:00 AM KST</p>
     </div>
   </div>
-  <div class="header-tools">
-    <div class="theme-toggle">
-      <button class="theme-btn" id="btnLight" title="Light" onclick="setTheme('light')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
-      </button>
-      <button class="theme-btn active" id="btnDark" title="Dark" onclick="setTheme('dark')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-      </button>
+  <div class="hero-weather">
+    <div class="hw-header">
+      <p class="hw-loc">Seoul</p>
+      <div class="hw-icon" id="hw-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      </div>
     </div>
-    <button class="reset-btn" title="Reset widget layout" onclick="resetLayout()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
-      <span>Reset</span>
-    </button>
-    <div class="clock" id="clock">--:--:--</div>
+    <div class="hw-temp">
+      <span id="hw-temp-num">--</span><span class="hw-unit">&deg;F</span>
+    </div>
+    <p class="hw-cond" id="hw-cond">Loading weather...</p>
+    <div class="hw-stats">
+      <div class="hw-stat">
+        <div class="hw-stat-label">Feels</div>
+        <div class="hw-stat-val"><span id="hw-feels">--</span>&deg;</div>
+      </div>
+      <div class="hw-stat">
+        <div class="hw-stat-label">Wind</div>
+        <div class="hw-stat-val"><span id="hw-wind">--</span><span class="hw-stat-unit">mph</span></div>
+      </div>
+      <div class="hw-stat">
+        <div class="hw-stat-label">H / L</div>
+        <div class="hw-stat-val"><span id="hw-h">--</span>&deg;/<span id="hw-l">--</span>&deg;</div>
+      </div>
+      <div class="hw-stat">
+        <div class="hw-stat-label">AQI</div>
+        <div class="hw-stat-val"><span id="hw-aqi">--</span> <span class="hw-stat-unit" id="hw-aqi-tier">--</span></div>
+      </div>
+    </div>
   </div>
-</header>
+</section>
 
 <div class="grid" id="grid">
-
-  <!-- AQI -->
-  <a href="https://www.seoulforeign.org/aqi" target="_blank" class="widget" id="aqi-widget" data-wid="aqi">
-    <div class="w-head">
-      <div class="w-head-left">
-        <div class="w-icon bg-green" id="aqi-icon-wrap">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/></svg>
-        </div>
-        <div class="w-title">Air Quality</div>
-      </div>
-      <span class="w-badge bg-green" id="aqi-status">Loading</span>
-    </div>
-    <div class="w-body">
-      <div class="aqi-stack">
-        <div class="aqi-num" id="aqi-num">--</div>
-        <div class="aqi-label-row">
-          <span class="aqi-unit">US AQI</span>
-          <span class="aqi-status" id="aqi-tier">Seoul</span>
-        </div>
-        <div class="aqi-meta" id="aqi-pm">PM 2.5: -- &micro;g/m&sup3;</div>
-      </div>
-    </div>
-  </a>
-
-  <!-- Today Schedule -->
-  <div class="widget" data-wid="today">
-    <div class="w-head">
-      <div class="w-head-left">
-        <div class="w-icon bg-blue">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-        </div>
-        <div class="w-title">Today</div>
-      </div>
-      <span class="w-badge bg-blue" id="today-date">--</span>
-    </div>
-    <div class="w-body">
-      <div class="schedule-list">
-        <div class="sched-row"><div class="sched-time">8:00</div><div class="sched-desc">School Begins</div></div>
-        <div class="sched-row"><div class="sched-time">10:15</div><div class="sched-desc">Morning Break</div></div>
-        <div class="sched-row"><div class="sched-time">12:05</div><div class="sched-desc">Lunch Period</div></div>
-        <div class="sched-row"><div class="sched-time">15:15</div><div class="sched-desc">Dismissal</div></div>
-        <div class="sched-row"><div class="sched-time">15:30</div><div class="sched-desc">After-School Activities</div></div>
-      </div>
-    </div>
-  </div>
 
   <!-- News & Announcements -->
   <div class="widget" data-wid="news">
@@ -1055,21 +1337,29 @@ function setTheme(theme) {
 var saved = localStorage.getItem('sfs-theme');
 if (saved) setTheme(saved);
 
-// ===== CLOCK =====
-function updateClock() {
-  var now = new Date();
-  var h = String(now.getHours()).padStart(2, '0');
-  var m = String(now.getMinutes()).padStart(2, '0');
-  var s = String(now.getSeconds()).padStart(2, '0');
-  document.getElementById('clock').textContent = h + ':' + m + ':' + s;
-}
-setInterval(updateClock, 1000);
-updateClock();
+// ===== HERO BANNER CLOCK / GREETING =====
+var DAYS = ['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
+var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-// ===== TODAY DATE BADGE =====
-var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-var nowDate = new Date();
-document.getElementById('today-date').textContent = months[nowDate.getMonth()] + ' ' + nowDate.getDate();
+function updateHero() {
+  var now = new Date();
+  var day = DAYS[now.getDay()];
+  var greet = now.getHours() < 12 ? 'Morning' : now.getHours() < 18 ? 'Afternoon' : 'Evening';
+  var mm = String(now.getMinutes()).padStart(2, '0');
+  var hh = now.getHours();
+  var ampm = hh >= 12 ? 'PM' : 'AM';
+  hh = hh % 12 || 12;
+  var dateStr = MONTHS[now.getMonth()] + ' ' + now.getDate() + ', ' + now.getFullYear()
+              + ' \u00B7 ' + hh + ':' + mm + ' ' + ampm + ' KST';
+  var dayEl = document.getElementById('hero-day');
+  var greetEl = document.getElementById('greet-time');
+  var dateEl = document.getElementById('hero-date');
+  if (dayEl) dayEl.textContent = day;
+  if (greetEl) greetEl.textContent = greet;
+  if (dateEl) dateEl.textContent = dateStr;
+}
+setInterval(updateHero, 30000);
+updateHero();
 
 // ===== HIGHLIGHT TODAY'S LUNCH =====
 var dayMap = { 1:'mon', 2:'tue', 3:'wed', 4:'thu', 5:'fri' };
@@ -1128,48 +1418,80 @@ function toggleAnnouncements() {
   }
 }
 
-// ===== AQI =====
-async function fetchRealAQI() {
-  var num = document.getElementById('aqi-num');
-  var status = document.getElementById('aqi-status');
-  var iconWrap = document.getElementById('aqi-icon-wrap');
-  var tier = document.getElementById('aqi-tier');
-  var pmEl = document.getElementById('aqi-pm');
+// ===== HERO WEATHER + AQI =====
+// WMO weather code -> { label, svg }. SVGs are lucide-style stroke icons.
+var WEATHER_ICONS = {
+  sun:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>',
+  pcloud: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 18a5 5 0 0 0 0-10c-.5-3-3-5-6-5a6 6 0 0 0-6 6 4 4 0 0 0 0 8h12z"/><circle cx="7" cy="7" r="2.2" opacity=".7"/></svg>',
+  cloud:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 18a5 5 0 0 0 0-10c-.5-3-3-5-6-5a6 6 0 0 0-6 6 4 4 0 0 0 0 8h12z"/></svg>',
+  rain:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 14a5 5 0 0 0 0-10c-.5-3-3-5-6-5a6 6 0 0 0-6 6 4 4 0 0 0 0 8h12z"/><path d="M8 18l-1 3M12 18l-1 3M16 18l-1 3"/></svg>',
+  snow:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 14a5 5 0 0 0 0-10c-.5-3-3-5-6-5a6 6 0 0 0-6 6 4 4 0 0 0 0 8h12z"/><path d="M8 19l.01 0M12 21l.01 0M16 19l.01 0"/></svg>',
+  storm:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 14a5 5 0 0 0 0-10c-.5-3-3-5-6-5a6 6 0 0 0-6 6 4 4 0 0 0 0 8h12z"/><path d="M13 14l-3 5h3l-2 4"/></svg>',
+  fog:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h18M5 12h14M3 16h16M7 20h12"/></svg>'
+};
 
-  try {
-    var res = await fetch(
-      'https://air-quality-api.open-meteo.com/v1/air-quality?' +
-      'latitude=37.5665&longitude=126.9780' +
-      '&current=pm2_5,pm10,us_aqi' +
-      '&timezone=Asia%2FSeoul'
-    );
-    var data = await res.json();
-    var c = data.current;
-    var aqi = c.us_aqi;
-    var pm25 = c.pm2_5;
+function weatherMeta(code) {
+  if (code === 0)                    return { label: 'Clear',         icon: WEATHER_ICONS.sun };
+  if (code === 1 || code === 2)      return { label: 'Partly Cloudy', icon: WEATHER_ICONS.pcloud };
+  if (code === 3)                    return { label: 'Overcast',      icon: WEATHER_ICONS.cloud };
+  if (code === 45 || code === 48)    return { label: 'Foggy',         icon: WEATHER_ICONS.fog };
+  if (code >= 51 && code <= 67)      return { label: 'Rain',          icon: WEATHER_ICONS.rain };
+  if (code >= 71 && code <= 77)      return { label: 'Snow',          icon: WEATHER_ICONS.snow };
+  if (code >= 80 && code <= 82)      return { label: 'Showers',       icon: WEATHER_ICONS.rain };
+  if (code >= 85 && code <= 86)      return { label: 'Snow Showers',  icon: WEATHER_ICONS.snow };
+  if (code >= 95)                    return { label: 'Thunderstorm',  icon: WEATHER_ICONS.storm };
+  return { label: 'Clear', icon: WEATHER_ICONS.sun };
+}
 
-    num.textContent = aqi;
-    pmEl.innerHTML = 'PM 2.5: ' + pm25 + ' &micro;g/m&sup3;';
+function aqiTier(aqi) {
+  if (aqi <= 50)   return 'Good';
+  if (aqi <= 100)  return 'Moderate';
+  if (aqi <= 150)  return 'Unhealthy SG';
+  if (aqi <= 200)  return 'Unhealthy';
+  if (aqi <= 300)  return 'Very Poor';
+  return 'Hazardous';
+}
 
-    function setColor(label, varName, classN) {
-      num.style.color = 'var(' + varName + ')';
-      status.className = 'w-badge ' + classN;
-      status.textContent = label;
-      iconWrap.className = 'w-icon ' + classN;
-      tier.textContent = label;
+async function fetchWeatherAndAQI() {
+  var setTxt = function(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; };
+
+  // Parallel fetch: weather + air quality
+  var [wRes, aRes] = await Promise.allSettled([
+    fetch('https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.9780'
+        + '&current=temperature_2m,weather_code,wind_speed_10m,apparent_temperature'
+        + '&daily=temperature_2m_max,temperature_2m_min'
+        + '&timezone=Asia%2FSeoul&temperature_unit=fahrenheit&wind_speed_unit=mph').then(r => r.json()),
+    fetch('https://air-quality-api.open-meteo.com/v1/air-quality?'
+        + 'latitude=37.5665&longitude=126.9780&current=pm2_5,us_aqi'
+        + '&timezone=Asia%2FSeoul').then(r => r.json())
+  ]);
+
+  if (wRes.status === 'fulfilled' && wRes.value.current) {
+    var c = wRes.value.current;
+    var d = wRes.value.daily;
+    var meta = weatherMeta(c.weather_code);
+    setTxt('hw-temp-num', Math.round(c.temperature_2m));
+    setTxt('hw-cond', meta.label);
+    setTxt('hw-feels', Math.round(c.apparent_temperature));
+    setTxt('hw-wind', Math.round(c.wind_speed_10m));
+    if (d && d.temperature_2m_max && d.temperature_2m_min) {
+      setTxt('hw-h', Math.round(d.temperature_2m_max[0]));
+      setTxt('hw-l', Math.round(d.temperature_2m_min[0]));
     }
+    var iconEl = document.getElementById('hw-icon');
+    if (iconEl) iconEl.innerHTML = meta.icon;
+  } else {
+    setTxt('hw-cond', 'Weather unavailable');
+  }
 
-    if (aqi <= 50)        setColor('Good',          '--accent-green', 'bg-green');
-    else if (aqi <= 100)  setColor('Moderate',      '--accent-amber', 'bg-amber');
-    else if (aqi <= 150)  setColor('Unhealthy SG',  '--accent-red',   'bg-red');
-    else                  setColor('Unhealthy',     '--accent-red',   'bg-red');
-  } catch (e) {
-    num.textContent = '--';
-    status.textContent = 'Offline';
+  if (aRes.status === 'fulfilled' && aRes.value.current) {
+    var aqi = Math.round(aRes.value.current.us_aqi);
+    setTxt('hw-aqi', aqi);
+    setTxt('hw-aqi-tier', aqiTier(aqi));
   }
 }
-fetchRealAQI();
-setInterval(fetchRealAQI, 600000);
+fetchWeatherAndAQI();
+setInterval(fetchWeatherAndAQI, 600000);
 
 // ===== RSS =====
 var RSS_PROXY = 'https://api.rss2json.com/v1/api.json?rss_url=';
