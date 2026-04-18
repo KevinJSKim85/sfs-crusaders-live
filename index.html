@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack-extra.min.css" rel="stylesheet">
 <style>
 /* ===== SFS Brand: Red #C1282E | Blue #2B3160 | Gray #878787 ===== */
 
@@ -710,10 +711,24 @@ footer p {
   color: var(--sfs-red);
 }
 
+@media (max-width: 1000px) {
+  .container { padding: 18px 18px; }
+}
+
 @media (max-width: 640px) {
-  .container { padding: 16px; }
-  header { padding: 0 0 16px; }
+  .container { padding: 14px; }
+  header { padding: 0 0 14px; flex-direction: column; align-items: flex-start; }
+  .header-tools { flex-wrap: wrap; }
   .brand-text h1 { font-size: 16px; }
+  .brand-text p { font-size: 10px; letter-spacing: 1.2px; }
+  .brand img { width: 38px; height: 38px; }
+  .aqi-num { font-size: 48px; }
+  .w-title { font-size: 11.5px; }
+  .w-link { max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .feature-content h3 { font-size: 18px; }
+  .feature-content p { font-size: 12px; }
+  .reset-btn span { display: none; }
+  .reset-btn { padding: 6px 8px; }
 }
 </style>
 </head>
@@ -1428,9 +1443,9 @@ loadInstagramCarousel('sfs', 'seoul_foreign_school');
 loadInstagramCarousel('athletics', 'sfscrusaderathletics');
 
 // ===== GRIDSTACK DRAG GRID =====
-var LAYOUT_KEY = 'sfs-grid-layout-v2';
-var CELL_W = 3;   // every widget 3 columns wide in a 12-col grid (4 per row)
-var CELL_H = 6;   // every widget 6 rows tall (row height 52 → ~360px with margin)
+var LAYOUT_KEY = 'sfs-grid-layout-v4';
+var CELL_W = 4;   // 12-col grid / 4 = 3 widgets per row
+var CELL_H = 6;   // 6 rows tall (row height 54 → ~344px with margin)
 var gridApi = null;
 
 function initDragGrid() {
@@ -1440,57 +1455,82 @@ function initDragGrid() {
   gridEl.classList.remove('grid');
   gridEl.classList.add('grid-stack');
 
+  // Pull original widgets out of the DOM — we'll re-add via gridstack's API
+  var origWidgets = Array.from(gridEl.children).filter(function(c) {
+    return c.classList && c.classList.contains('widget');
+  });
+  origWidgets.forEach(function(w) { w.remove(); });
+
   var saved = null;
   try { saved = JSON.parse(localStorage.getItem(LAYOUT_KEY) || 'null'); } catch (e) {}
   var savedMap = {};
   if (saved) saved.forEach(function(it) { savedMap[it.id] = it; });
 
-  var widgets = Array.from(gridEl.children).filter(function(c) {
-    return c.classList && c.classList.contains('widget');
-  });
-
-  // Wrap each widget in grid-stack-item > grid-stack-item-content
-  widgets.forEach(function(w, i) {
-    var wid = w.getAttribute('data-wid') || 'w' + i;
-    var item = document.createElement('div');
-    item.className = 'grid-stack-item';
-    item.setAttribute('gs-id', wid);
-    var pos = savedMap[wid];
-    if (pos) {
-      item.setAttribute('gs-x', pos.x);
-      item.setAttribute('gs-y', pos.y);
-      item.setAttribute('gs-w', pos.w || CELL_W);
-      item.setAttribute('gs-h', pos.h || CELL_H);
-    } else {
-      item.setAttribute('gs-w', CELL_W);
-      item.setAttribute('gs-h', CELL_H);
-    }
-    var content = document.createElement('div');
-    content.className = 'grid-stack-item-content';
-    gridEl.insertBefore(item, w);
-    content.appendChild(w);
-    item.appendChild(content);
-  });
-
   gridApi = GridStack.init({
-    column: 12,
-    cellHeight: 52,
-    margin: 8,
+    column: 12,           // 12-col base grid (extra CSS covers 2-11 for breakpoints)
+    cellHeight: 54,
+    margin: 10,
     float: false,         // compact to top-left
     animate: true,
-    handle: '.w-head',    // drag by widget header only
+    handle: '.w-head',
     resizable: { handles: '' },
     disableResize: true,
-    columnOpts: {
-      breakpointForWindow: true,
-      breakpoints: [
-        { w: 640,  c: 1 },
-        { w: 1100, c: 6 }
-      ]
-    }
+    columnOpts: { layout: 'move' }
   }, gridEl);
 
+  // Register each widget via Gridstack's addWidget API so internal
+  // state (w/h/x/y) is set consistently and the width CSS applies.
+  origWidgets.forEach(function(widgetEl, i) {
+    var wid = widgetEl.getAttribute('data-wid') || 'w' + i;
+    var pos = savedMap[wid];
+    var opts = {
+      id: wid,
+      w: (pos && pos.w) || CELL_W,
+      h: (pos && pos.h) || CELL_H,
+      minW: CELL_W, maxW: CELL_W,
+      minH: CELL_H, maxH: CELL_H,
+      autoPosition: !pos
+    };
+    if (pos) { opts.x = pos.x; opts.y = pos.y; }
+
+    var item = gridApi.addWidget(opts);
+    var contentEl = item.querySelector('.grid-stack-item-content');
+    if (contentEl) contentEl.appendChild(widgetEl);
+  });
+
   gridApi.on('change', saveLayout);
+
+  // Manual responsive: switch column count + restack in reading order so every
+  // row stays fully packed (no staggered gaps after a column transition).
+  function applyResponsiveColumns() {
+    var w = window.innerWidth;
+    var target = w < 640 ? 4 : w < 1000 ? 8 : 12;
+    if (!gridApi || gridApi.getColumn() === target) return;
+
+    var items = gridApi.getGridItems().slice().sort(function(a, b) {
+      var ay = +a.getAttribute('gs-y') || 0;
+      var by = +b.getAttribute('gs-y') || 0;
+      if (ay !== by) return ay - by;
+      return (+a.getAttribute('gs-x') || 0) - (+b.getAttribute('gs-x') || 0);
+    });
+
+    gridApi.batchUpdate();
+    gridApi.column(target, 'none');
+    var perRow = Math.max(1, Math.floor(target / CELL_W));
+    items.forEach(function(item, i) {
+      var row = Math.floor(i / perRow);
+      var col = (i % perRow) * CELL_W;
+      gridApi.update(item, { x: col, y: row * CELL_H, w: CELL_W, h: CELL_H });
+    });
+    gridApi.commit();
+    saveLayout();
+  }
+  applyResponsiveColumns();
+  var resizeTimer;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(applyResponsiveColumns, 150);
+  });
 }
 
 function saveLayout() {
