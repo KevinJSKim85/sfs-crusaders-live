@@ -1064,7 +1064,7 @@ footer p {
       </div>
     </div>
     <div class="hw-temp">
-      <span id="hw-temp-num">--</span><span class="hw-unit">&deg;F</span>
+      <span id="hw-temp-num">--</span><span class="hw-unit">&deg;C</span>
     </div>
     <p class="hw-cond" id="hw-cond">Loading weather...</p>
     <div class="hw-stats">
@@ -1460,7 +1460,7 @@ async function fetchWeatherAndAQI() {
     fetch('https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.9780'
         + '&current=temperature_2m,weather_code,wind_speed_10m,apparent_temperature'
         + '&daily=temperature_2m_max,temperature_2m_min'
-        + '&timezone=Asia%2FSeoul&temperature_unit=fahrenheit&wind_speed_unit=mph').then(r => r.json()),
+        + '&timezone=Asia%2FSeoul&wind_speed_unit=mph').then(r => r.json()),
     fetch('https://air-quality-api.open-meteo.com/v1/air-quality?'
         + 'latitude=37.5665&longitude=126.9780&current=pm2_5,us_aqi'
         + '&timezone=Asia%2FSeoul').then(r => r.json())
