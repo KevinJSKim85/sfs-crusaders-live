@@ -1371,7 +1371,7 @@ footer p {
       </a>
     </div>
     <div class="w-body" id="spirit-body">
-      <div class="feed-loading">Loading latest issue...</div>
+      <!-- Static feed rendered instantly, then refreshed from Issuu in the background -->
     </div>
   </div>
 
@@ -1861,14 +1861,37 @@ async function loadInstagramCarousel(id, username) {
 loadNewsAndAnnouncements();
 loadCollegeFeeds();
 loadAthletics();
-loadSpirit();
 loadInstagramCarousel('sfs', 'seoul_foreign_school');
 loadInstagramCarousel('athletics', 'sfscrusaderathletics');
 
-// Refresh Spirit hourly so newly published issues appear without a manual reload
-setInterval(loadSpirit, 3600000);
+// ===== SPIRIT MAGAZINE (Issuu profile scrape, cached-first) =====
+var SPIRIT_CACHE_KEY = 'sfs-spirit-feed-v1';
 
-// ===== SPIRIT MAGAZINE (Issuu profile scrape) =====
+// Seed issues — used when there's nothing in localStorage yet so the widget
+// never shows a loading spinner on first paint. Kept small; real-time fetch
+// replaces this within a few hundred ms of page load when the network is fine.
+var SPIRIT_SEED = [
+  { coverId: '260409121357-c9e4e0918ea8035d33b42629fd0110ed', slug: 'special_50th_anniversary_issue_apri_0a5c115fe31195' },
+  { coverId: '260210112926-58d61de8d8880477a82fd863a5bbdf37', slug: 'volume_50_issue_5_2026_valentine_s_issue' },
+  { coverId: '260126090757-ce18e0f4c6938c59f3c1ec6bfe0aea91', slug: 'volume_4_issue_4_2026_new_year_s_issue' },
+  { coverId: '251211060958-c2bd62b7cca1639cb6c73b0a8039d874', slug: 'volume_3_issue_4_2025_winter_issue' }
+];
+
+function spiritIssueFromRaw(raw) {
+  return {
+    cover: 'https://image.isu.pub/' + raw.coverId + '/jpg/page_1_thumb_large.jpg',
+    url:   'https://issuu.com/thesfhsspirit/docs/' + raw.slug,
+    title: cleanSpiritTitle(raw.slug),
+    date:  parseCoverDate(raw.coverId)
+  };
+}
+
+function renderSpiritCache() {
+  var cache;
+  try { cache = JSON.parse(localStorage.getItem(SPIRIT_CACHE_KEY) || 'null'); } catch (e) {}
+  var list = (cache && cache.length) ? cache : SPIRIT_SEED;
+  renderSpirit(list.map(spiritIssueFromRaw));
+}
 function cleanSpiritTitle(slug) {
   var s = String(slug).replace(/_[a-f0-9]{10,}$/i, ''); // strip trailing dedupe hash
   s = s.replace(/_s_/g, "'s ");
@@ -1890,9 +1913,10 @@ function parseCoverDate(coverId) {
   return new Date(2000 + +head.slice(0,2), +head.slice(2,4) - 1, +head.slice(4,6));
 }
 
+// Background refresh. Does NOT clear the cached UI on failure — keeps whatever
+// renderSpiritCache() painted so the user never sees a spinner or error state.
 async function loadSpirit(attempt) {
-  var container = document.getElementById('spirit-body');
-  if (!container) return;
+  if (!document.getElementById('spirit-body')) return;
   attempt = attempt || 1;
   try {
     var res = await fetchWithTimeout(
@@ -1900,15 +1924,12 @@ async function loadSpirit(attempt) {
       15000
     );
     var html = await res.text();
-    var coverSet = [];
-    var seen = {};
+    var coverSet = [], seen = {}, m;
     var re = /image\.isu\.pub\/(\d{12}-[a-f0-9]+)/g;
-    var m;
     while ((m = re.exec(html)) !== null) {
       if (!seen[m[1]]) { seen[m[1]] = 1; coverSet.push(m[1]); }
     }
-    var slugSet = [];
-    var sseen = {};
+    var slugSet = [], sseen = {};
     var re2 = /\/docs\/([a-zA-Z0-9_-]+)/g;
     while ((m = re2.exec(html)) !== null) {
       if (!sseen[m[1]]) { sseen[m[1]] = 1; slugSet.push(m[1]); }
@@ -1916,23 +1937,23 @@ async function loadSpirit(attempt) {
     if (coverSet.length === 0 || slugSet.length === 0) throw new Error('empty');
 
     var count = Math.min(5, coverSet.length, slugSet.length);
-    var issues = [];
+    var raw = [];
     for (var i = 0; i < count; i++) {
-      issues.push({
-        cover: 'https://image.isu.pub/' + coverSet[i] + '/jpg/page_1_thumb_large.jpg',
-        url:   'https://issuu.com/thesfhsspirit/docs/' + slugSet[i],
-        title: cleanSpiritTitle(slugSet[i]),
-        date:  parseCoverDate(coverSet[i])
-      });
+      raw.push({ coverId: coverSet[i], slug: slugSet[i] });
     }
-    renderSpirit(issues);
+
+    // Skip DOM churn if the top issue matches what's already rendered.
+    var cached;
+    try { cached = JSON.parse(localStorage.getItem(SPIRIT_CACHE_KEY) || 'null'); } catch (e) {}
+    var unchanged = cached && cached[0]
+      && cached[0].coverId === raw[0].coverId
+      && cached[0].slug === raw[0].slug;
+    if (!unchanged) {
+      renderSpirit(raw.map(spiritIssueFromRaw));
+    }
+    try { localStorage.setItem(SPIRIT_CACHE_KEY, JSON.stringify(raw)); } catch (e) {}
   } catch (e) {
-    if (attempt < 2) {
-      setTimeout(function() { loadSpirit(attempt + 1); }, 1500);
-      return;
-    }
-    container.innerHTML = '<div class="feed-empty">Could not load issues. '
-      + '<a href="https://issuu.com/thesfhsspirit" target="_blank" style="color:var(--sfs-red);">Visit on Issuu</a></div>';
+    if (attempt < 2) setTimeout(function() { loadSpirit(attempt + 1); }, 2000);
   }
 }
 
@@ -1966,6 +1987,12 @@ function renderSpirit(issues) {
   }
   container.innerHTML = out;
 }
+
+// Initial paint from cached/seed data — instant, no network.
+// Then background fetch to update with latest from Issuu.
+renderSpiritCache();
+loadSpirit();
+setInterval(loadSpirit, 300000);   // re-check Issuu every 5 minutes
 
 // ===== GRIDSTACK DRAG GRID =====
 var LAYOUT_KEY = 'sfs-grid-layout-v5';
