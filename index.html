@@ -1,0 +1,1793 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SFS Crusaders Live</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
+<style>
+/* ===== SFS Official Brand Colors ===== */
+/* SFS Red: #C1282E | British Blue: #2B3160 | SFS Gray: #878787 */
+/* Fonts: Cinzel (headings/logo) | Lato (body) */
+
+/* ===== DARK THEME (default) ===== */
+:root, [data-theme="dark"] {
+  --sfs-red: #C1282E;
+  --sfs-red-light: #D4393F;
+  --sfs-red-dark: #9A1F24;
+  --sfs-blue: #2B3160;
+  --sfs-blue-light: #3D4580;
+  --sfs-gray: #878787;
+  --sfs-gray-light: #A0A0A0;
+  --sfs-white: #FFFFFF;
+
+  --bg: #1A0A0C;
+  --bg-card: #13131E;
+  --bg-card-hover: #1B1B28;
+  --surface: #181825;
+  --border: rgba(255,255,255,0.07);
+  --border-hover: rgba(255,255,255,0.14);
+  --text: #EAEAF2;
+  --text-secondary: #9090AA;
+  --text-muted: #5A5A72;
+  --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  --shadow-lg: 0 8px 40px rgba(0,0,0,0.5);
+
+  --glow-color: transparent;
+  --logo-gradient: linear-gradient(135deg, #EAEAF2 30%, #EAEAF2 100%);
+  --scrollbar-thumb: rgba(255,255,255,0.08);
+  --scrollbar-hover: rgba(255,255,255,0.15);
+  --theme-toggle-bg: var(--surface);
+  --theme-icon-active: var(--sfs-red);
+  --tag-urgent-bg: rgba(193,40,46,0.15);
+  --tag-urgent-text: #E8585D;
+  --tag-academic-bg: rgba(43,49,96,0.25);
+  --tag-academic-text: #7A8AD4;
+  --tag-event-bg: rgba(175,82,222,0.12);
+  --tag-event-text: #C490E8;
+  --tag-club-bg: rgba(52,199,89,0.12);
+  --tag-club-text: #5AD87A;
+  --accent-green: #34C759;
+  --accent-orange: #FF9500;
+  --accent-red: #FF3B30;
+  --accent-blue: #4A90D9;
+  --accent-purple: #AF52DE;
+  --accent-teal: #5AC8FA;
+  --today-bg: rgba(193,40,46,0.06);
+  --today-label: var(--sfs-red-light);
+}
+
+/* ===== LIGHT THEME ===== */
+[data-theme="light"] {
+  --bg: #7A1520;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #F9F9FC;
+  --surface: #EEEEF2;
+  --border: rgba(0,0,0,0.08);
+  --border-hover: rgba(0,0,0,0.15);
+  --text: #1A1A2E;
+  --text-secondary: #5A5A72;
+  --text-muted: #9090A5;
+  --shadow: 0 2px 12px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+
+  --glow-color: transparent;
+  --logo-gradient: linear-gradient(135deg, #FFFFFF 30%, #FFFFFF 100%);
+  --scrollbar-thumb: rgba(0,0,0,0.1);
+  --scrollbar-hover: rgba(0,0,0,0.2);
+  --theme-toggle-bg: var(--surface);
+  --theme-icon-active: var(--sfs-red);
+  --tag-urgent-bg: rgba(193,40,46,0.1);
+  --tag-urgent-text: #C1282E;
+  --tag-academic-bg: rgba(43,49,96,0.1);
+  --tag-academic-text: #2B3160;
+  --tag-event-bg: rgba(128,50,180,0.08);
+  --tag-event-text: #7B2FA0;
+  --tag-club-bg: rgba(40,160,70,0.1);
+  --tag-club-text: #1E8B3E;
+  --accent-green: #28A745;
+  --accent-orange: #E08600;
+  --accent-red: #D32F2F;
+  --accent-blue: #2B6CB0;
+  --accent-purple: #7B2FA0;
+  --accent-teal: #0891B2;
+  --today-bg: rgba(193,40,46,0.04);
+  --today-label: var(--sfs-red);
+}
+
+/* Light mode: elements on burgundy bg need white text */
+[data-theme="light"] .section-title,
+[data-theme="light"] .logo-text p,
+[data-theme="light"] footer p,
+[data-theme="light"] .clock {
+  color: rgba(255,255,255,0.7);
+}
+[data-theme="light"] .logo-text h1 {
+  background: none;
+  -webkit-text-fill-color: #FFFFFF;
+}
+[data-theme="light"] header {
+  border-bottom-color: rgba(255,255,255,0.12);
+}
+[data-theme="light"] footer {
+  border-top-color: rgba(255,255,255,0.12);
+}
+[data-theme="light"] .footer-brand {
+  color: #FFFFFF;
+}
+[data-theme="light"] .live-badge {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.15);
+}
+[data-theme="light"] .clock {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.12);
+}
+[data-theme="light"] .aqi-bar {
+  border-color: rgba(255,255,255,0.1);
+}
+[data-theme="light"] .sfs-news-viewall {
+  color: var(--sfs-red);
+}
+[data-theme="light"] .card .sfs-news-viewall {
+  color: var(--sfs-red);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Lato', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background 0.4s ease, color 0.4s ease;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Animated background glow */
+.bg-glow {
+  position: fixed;
+  top: -200px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 900px;
+  height: 600px;
+  background: radial-gradient(ellipse, var(--glow-color) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+  animation: glowPulse 8s ease-in-out infinite;
+}
+
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.5; transform: translateX(-50%) scale(1); }
+  50% { opacity: 1; transform: translateX(-50%) scale(1.1); }
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ===== HEADER ===== */
+header {
+  padding: 28px 0 22px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 28px;
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.logo-group {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.logo-shield-img {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 4px 16px rgba(193,40,46,0.3);
+  flex-shrink: 0;
+}
+
+.logo-shield {
+  width: 54px;
+  height: 54px;
+  background: linear-gradient(145deg, var(--sfs-red), var(--sfs-red-dark));
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cinzel', serif;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--sfs-white);
+  box-shadow: 0 4px 20px rgba(193,40,46,0.35);
+  position: relative;
+  overflow: hidden;
+}
+
+.logo-shield::before {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.15);
+  pointer-events: none;
+}
+
+.logo-shield::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.08) 50%, transparent 60%);
+  animation: shimmer 4s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%) rotate(45deg); }
+  100% { transform: translateX(100%) rotate(45deg); }
+}
+
+.logo-text h1 {
+  font-family: 'Cinzel', serif;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  background: var(--logo-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.logo-text p {
+  font-family: 'Lato', sans-serif;
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-top: 3px;
+  font-weight: 400;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Theme Toggle */
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  background: var(--theme-toggle-bg);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 4px;
+  gap: 2px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.theme-btn {
+  width: 32px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  color: var(--text-muted);
+}
+
+.theme-btn.active {
+  background: var(--sfs-red);
+  color: white;
+  box-shadow: 0 2px 8px rgba(193,40,46,0.3);
+}
+
+.live-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(52,199,89,0.1);
+  border: 1px solid rgba(52,199,89,0.2);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent-green);
+  letter-spacing: 1px;
+}
+
+.live-dot {
+  width: 7px;
+  height: 7px;
+  background: var(--accent-green);
+  border-radius: 50%;
+  animation: livePulse 2s ease-in-out infinite;
+}
+
+@keyframes livePulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(52,199,89,0.4); }
+  50% { opacity: 0.6; box-shadow: 0 0 0 6px rgba(52,199,89,0); }
+}
+
+.clock {
+  font-family: 'Lato', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  background: var(--surface);
+  padding: 6px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  letter-spacing: 1px;
+}
+
+/* AQI Bar (full width) */
+.aqi-bar {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px 28px;
+  margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  color: inherit;
+}
+
+.aqi-bar:hover {
+  border-color: var(--border-hover);
+  background: var(--bg-card-hover);
+  box-shadow: var(--shadow);
+}
+
+/* SFS News Bar */
+.sfs-news-bar {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px 22px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sfs-news-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+
+.sfs-news-header h3 {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.sfs-news-header p {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+.sfs-news-icon {
+  width: 36px;
+  height: 36px;
+  background: var(--tag-urgent-bg);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.sfs-news-viewall {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--sfs-red);
+  text-decoration: none;
+  white-space: nowrap;
+  padding: 4px 10px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.sfs-news-viewall:hover {
+  background: var(--tag-urgent-bg);
+}
+
+.sfs-news-scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 4px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.sfs-news-scroll::-webkit-scrollbar { height: 3px; }
+.sfs-news-scroll::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 2px; }
+
+.sfs-news-card {
+  flex: 0 0 220px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  text-decoration: none;
+  color: inherit;
+  scroll-snap-align: start;
+  transition: all 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sfs-news-card:hover {
+  border-color: var(--sfs-red);
+  background: var(--bg-card-hover);
+  transform: translateY(-1px);
+}
+
+.sfs-news-card h4 {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.sfs-news-card .sfs-news-meta {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: auto;
+}
+
+.sfs-news-loading {
+  color: var(--text-muted);
+  font-size: 12px;
+  padding: 10px 0;
+}
+
+/* Expand/Collapse button */
+.expand-btn {
+  width: 100%;
+  padding: 10px 0;
+  margin-top: 8px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-secondary);
+  font-family: 'Lato', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.expand-btn:hover {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--border-hover);
+}
+
+#expand-arrow {
+  font-size: 10px;
+  transition: transform 0.3s ease;
+}
+
+#expand-arrow.rotated {
+  transform: rotate(180deg);
+}
+
+/* Collapsed announcements: hide items after 5th */
+#announcements-body.collapsed .news-item:nth-child(n+6) {
+  display: none;
+}
+
+/* ===== Instagram Carousel ===== */
+.ig-carousel-card .card-body { padding: 0 0 16px; }
+
+.ig-carousel {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0;
+}
+
+.ig-carousel-track {
+  display: flex;
+  transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+  will-change: transform;
+}
+
+.ig-slide {
+  flex: 0 0 100%;
+  min-height: 380px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ig-slide iframe {
+  width: 100%;
+  height: 380px;
+  border: none;
+  display: block;
+}
+
+.ig-slide-loading {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+/* Arrows */
+.ig-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: var(--bg-card);
+  color: var(--text);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 2;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  opacity: 0.85;
+}
+
+.ig-arrow:hover { opacity: 1; background: var(--surface); }
+.ig-arrow-left { left: 8px; }
+.ig-arrow-right { right: 8px; }
+
+/* Dots */
+.ig-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 0 0;
+}
+
+.ig-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+  border: none;
+  cursor: pointer;
+  transition: all 0.25s;
+  padding: 0;
+}
+
+.ig-dot.active {
+  background: var(--sfs-red);
+  width: 20px;
+  border-radius: 4px;
+}
+
+/* College Feeds Grid */
+.college-feeds-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+@media (max-width: 1100px) {
+  .college-feeds-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 768px) {
+  .college-feeds-grid { grid-template-columns: 1fr; }
+}
+
+.aqi-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.aqi-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+
+.aqi-info h3 {
+  font-family: 'Lato', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+
+.aqi-info p {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.aqi-right {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.aqi-value { text-align: right; }
+
+.aqi-number {
+  font-family: 'Cinzel', serif;
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.aqi-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-top: 3px;
+  font-weight: 700;
+}
+
+.aqi-status-pill {
+  padding: 6px 18px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+/* ===== SECTION TITLES ===== */
+.section-title {
+  font-family: 'Cinzel', serif;
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  letter-spacing: 0.5px;
+}
+
+.section-title .icon { font-size: 18px; }
+
+/* ===== QUICK LINKS ===== */
+.links-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+  margin-bottom: 36px;
+}
+
+.link-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px 14px;
+  text-decoration: none;
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.25s ease;
+  cursor: pointer;
+  text-align: center;
+}
+
+.link-card:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-hover);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+}
+
+.link-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.link-card .link-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--text-secondary);
+  letter-spacing: 0.2px;
+}
+
+.link-card:hover .link-label { color: var(--text); }
+
+/* Two-column layout */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 768px) {
+  .two-col { grid-template-columns: 1fr; }
+}
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.card-header {
+  padding: 20px 22px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-header h3 {
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: 0.3px;
+}
+
+.card-header .badge {
+  font-family: 'Lato', sans-serif;
+  font-size: 10px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.card-body { padding: 0 22px 22px; }
+
+/* ===== NEWS ITEMS ===== */
+.news-item {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.news-item:last-child { border-bottom: none; }
+.news-item:hover { opacity: 0.75; }
+.news-item a { text-decoration: none; color: inherit; display: block; }
+.news-item a:hover h4 { text-decoration: underline; }
+.college-item a { text-decoration: none; color: inherit; display: flex; gap: 12px; align-items: flex-start; }
+.college-item a:hover h4 { text-decoration: underline; }
+.feed-error { text-align: center; color: var(--text-muted); padding: 24px 0; font-size: 13px; }
+
+.news-tag {
+  font-family: 'Lato', sans-serif;
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  margin-bottom: 6px;
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.news-item h4 {
+  font-family: 'Lato', sans-serif;
+  font-size: 13.5px;
+  font-weight: 700;
+  line-height: 1.5;
+  margin-bottom: 4px;
+}
+
+.news-item .meta {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+/* ===== LUNCH MENU ===== */
+.lunch-day {
+  padding: 10px 0;
+  border-bottom: none;
+  border-right: 1px solid var(--border);
+  padding-right: 12px;
+}
+
+.lunch-day:last-child { border-right: none; padding-right: 0; }
+
+@media (max-width: 768px) {
+  #lunch-body > div { grid-template-columns: 1fr !important; }
+  .lunch-day { border-right: none; border-bottom: 1px solid var(--border); padding-right: 0; }
+  .lunch-day:last-child { border-bottom: none; }
+}
+
+.lunch-day .day-label {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--sfs-red);
+  margin-bottom: 5px;
+}
+
+.lunch-day .menu-text {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.lunch-day.today {
+  background: var(--today-bg);
+  padding: 10px 12px;
+  border-radius: 10px;
+  border-left: 3px solid var(--sfs-red);
+  border-right: none;
+}
+
+.lunch-day.today .day-label {
+  color: var(--today-label);
+}
+
+/* ===== COLLEGE NEWS ===== */
+.college-item {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.college-item:last-child { border-bottom: none; }
+
+.college-flag {
+  font-size: 20px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.college-item h4 {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+  margin-bottom: 3px;
+}
+
+.college-item .source {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* ===== SCHEDULE ===== */
+.schedule-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.schedule-item:last-child { border-bottom: none; }
+
+.schedule-time {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--sfs-blue-light);
+  min-width: 52px;
+}
+
+[data-theme="light"] .schedule-time {
+  color: var(--sfs-blue);
+}
+
+.schedule-item .desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
+/* ===== SPIRIT / NEWSLETTER CARDS ===== */
+.feature-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 36px;
+}
+
+.feature-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  color: inherit;
+}
+
+.feature-card:hover {
+  border-color: var(--sfs-red);
+  box-shadow: 0 4px 20px rgba(193,40,46,0.12);
+  transform: translateY(-2px);
+}
+
+.feature-inner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.feature-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.feature-card h4 {
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.feature-card p {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* ===== FOOTER ===== */
+footer {
+  text-align: center;
+  padding: 28px 0;
+  border-top: 1px solid var(--border);
+  margin-top: 12px;
+}
+
+footer p {
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.3px;
+}
+
+.footer-brand {
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  color: var(--sfs-red);
+}
+
+/* ===== COLOR UTILITIES ===== */
+.bg-sfs-red { background: rgba(193,40,46,0.12); }
+.bg-sfs-blue { background: rgba(43,49,96,0.15); }
+.bg-green { background: rgba(52,199,89,0.12); }
+.bg-orange { background: rgba(255,149,0,0.12); }
+.bg-purple { background: rgba(175,82,222,0.12); }
+.bg-teal { background: rgba(90,200,250,0.12); }
+.bg-pink { background: rgba(255,45,85,0.12); }
+
+[data-theme="light"] .bg-sfs-red { background: rgba(193,40,46,0.08); }
+[data-theme="light"] .bg-sfs-blue { background: rgba(43,49,96,0.08); }
+[data-theme="light"] .bg-green { background: rgba(40,167,69,0.1); }
+[data-theme="light"] .bg-orange { background: rgba(224,134,0,0.1); }
+[data-theme="light"] .bg-purple { background: rgba(123,47,160,0.08); }
+[data-theme="light"] .bg-teal { background: rgba(8,145,178,0.08); }
+[data-theme="light"] .bg-pink { background: rgba(200,30,70,0.08); }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .feature-grid { grid-template-columns: 1fr; }
+  .links-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+  .header-inner { flex-direction: column; align-items: flex-start; }
+  .aqi-bar { flex-direction: column; align-items: flex-start; }
+  .aqi-right { width: 100%; justify-content: space-between; }
+  .logo-text h1 { font-size: 20px; }
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-hover); }
+
+/* ===== ANIMATIONS ===== */
+.fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+  opacity: 0;
+}
+
+@keyframes fadeIn { to { opacity: 1; } }
+
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+.stagger-5 { animation-delay: 0.25s; }
+
+/* Smooth transitions for theme switch */
+.card, .link-card, .aqi-bar, header, footer, .feature-card, .theme-toggle, .clock, .live-badge {
+  transition: background 0.4s ease, border-color 0.4s ease, color 0.4s ease, box-shadow 0.3s ease;
+}
+</style>
+</head>
+<body>
+
+<div class="bg-glow"></div>
+
+<div class="container">
+
+<!-- ===== HEADER ===== -->
+<header class="fade-in">
+  <div class="header-inner">
+    <div class="logo-group">
+      <img class="logo-shield-img" src="https://upload.wikimedia.org/wikipedia/en/d/d4/Seoul_Foreign_School_Seal.png" alt="SFS Crest" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"><div class="logo-shield" style="display:none;">S</div>
+      <div class="logo-text">
+        <h1>SFS Crusaders Live</h1>
+        <p>Seoul Foreign School &bull; Dashboard</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle" id="themeToggle">
+        <button class="theme-btn" id="btnLight" title="Light mode" onclick="setTheme('light')">&#9788;</button>
+        <button class="theme-btn active" id="btnDark" title="Dark mode" onclick="setTheme('dark')">&#9790;</button>
+      </div>
+      <div class="live-badge"><div class="live-dot"></div> LIVE</div>
+      <div class="clock" id="clock">--:--</div>
+    </div>
+  </div>
+</header>
+
+<!-- ===== AQI BAR ===== -->
+<a href="https://www.seoulforeign.org/aqi" target="_blank" class="aqi-bar fade-in stagger-1" id="aqi-bar">
+  <div class="aqi-left">
+    <div class="aqi-icon bg-green" id="aqi-icon-wrap"><span>&#127811;</span></div>
+    <div class="aqi-info">
+      <h3>Seoul Air Quality</h3>
+      <p>Real-time PM 2.5 &bull; Tap for SFS AQI page</p>
+    </div>
+  </div>
+  <div class="aqi-right">
+    <div class="aqi-value">
+      <div class="aqi-number" id="aqi-num" style="color:var(--accent-green);">--</div>
+      <div class="aqi-label">AQI</div>
+    </div>
+    <div class="aqi-status-pill" id="aqi-status" style="background:rgba(52,199,89,0.12);color:var(--accent-green);">Loading</div>
+  </div>
+</a>
+
+<!-- ===== ROW: News & Announcements + Today (side by side) ===== -->
+<div class="two-col fade-in stagger-2" style="margin-bottom:24px;">
+  <!-- News & Announcements -->
+  <div class="card">
+    <div class="card-header">
+      <h3>&#128227; News &amp; Announcements</h3>
+      <a href="https://www.seoulforeign.org/community/news" target="_blank" class="sfs-news-viewall">SFS News &#8594;</a>
+    </div>
+    <div class="card-body">
+      <div id="announcements-body">
+        <div class="news-item" style="text-align:center;color:var(--text-muted);padding:30px 0;">Loading feeds...</div>
+      </div>
+      <button class="expand-btn" id="announcements-expand" style="display:none;" onclick="toggleAnnouncements()">
+        <span id="expand-label">Show more</span> <span id="expand-arrow">&#9660;</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Today's Schedule -->
+  <div class="card">
+    <div class="card-header">
+      <h3>&#128197; Today</h3>
+      <span class="badge" style="background:var(--tag-academic-bg);color:var(--tag-academic-text);" id="today-date">Apr 4</span>
+    </div>
+    <div class="card-body">
+      <div class="schedule-item">
+        <div class="schedule-time">8:00</div>
+        <div class="desc">School Begins</div>
+      </div>
+      <div class="schedule-item">
+        <div class="schedule-time">10:15</div>
+        <div class="desc">Break (15 min)</div>
+      </div>
+      <div class="schedule-item">
+        <div class="schedule-time">12:05</div>
+        <div class="desc">Lunch Period</div>
+      </div>
+      <div class="schedule-item">
+        <div class="schedule-time">15:15</div>
+        <div class="desc">Dismissal</div>
+      </div>
+      <div class="schedule-item">
+        <div class="schedule-time">15:30</div>
+        <div class="desc">After-School Activities</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== QUICK LINKS ===== -->
+<div class="fade-in stagger-2">
+  <div class="section-title"><span class="icon">&#9889;</span> Quick Links</div>
+  <div class="links-grid" id="links-grid"></div>
+</div>
+
+<!-- ===== HS Lunch Menu (full width) ===== -->
+<div class="fade-in stagger-3" style="margin-bottom:24px;">
+  <div class="card">
+    <div class="card-header">
+      <h3>&#127860; HS Lunch Menu</h3>
+      <a href="https://sfs.cravefood.kr" target="_blank" class="sfs-news-viewall">CraveFood &#8594;</a>
+    </div>
+    <div class="card-body" id="lunch-body">
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;">
+        <div class="lunch-day" id="lunch-mon">
+          <div class="day-label">Monday</div>
+          <div class="menu-text">Chicken Katsu Curry, Steamed Rice, Miso Soup, Seasonal Salad</div>
+        </div>
+        <div class="lunch-day" id="lunch-tue">
+          <div class="day-label">Tuesday</div>
+          <div class="menu-text">Beef Bulgogi Bowl, Kimchi Fried Rice, Japchae, Fresh Fruit</div>
+        </div>
+        <div class="lunch-day" id="lunch-wed">
+          <div class="day-label">Wednesday</div>
+          <div class="menu-text">Margherita Pizza, Caesar Salad, Minestrone Soup, Garlic Bread</div>
+        </div>
+        <div class="lunch-day" id="lunch-thu">
+          <div class="day-label">Thursday</div>
+          <div class="menu-text">Bibimbap, Doenjang Jjigae, Kimbap Rolls, Yogurt Parfait</div>
+        </div>
+        <div class="lunch-day" id="lunch-fri">
+          <div class="day-label">Friday</div>
+          <div class="menu-text">Fish Tacos, Mexican Rice, Black Bean Soup, Churros</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ROW 2: Athletics + College News (side by side) ===== -->
+<div class="two-col fade-in stagger-4">
+  <!-- Athletics -->
+  <div class="card">
+    <div class="card-header">
+      <h3>&#9917; Athletics</h3>
+      <a href="https://sfscrusaderathletics.com/" target="_blank" class="sfs-news-viewall">All Sports &#8594;</a>
+    </div>
+    <div class="card-body" id="athletics-body">
+      <div style="text-align:center;color:var(--text-muted);padding:16px 0;font-size:12px;">Loading scores...</div>
+    </div>
+  </div>
+
+  <!-- College News -->
+  <div class="card">
+    <div class="card-header">
+      <h3>&#127891; College News</h3>
+      <span class="badge" style="background:var(--tag-event-bg);color:var(--tag-event-text);">US + UK</span>
+    </div>
+    <div class="card-body" id="college-merged-body">
+      <div class="news-item" style="text-align:center;color:var(--text-muted);padding:30px 0;">Loading feeds...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== INSTAGRAM CAROUSEL ===== -->
+<div class="fade-in stagger-5" style="margin-bottom:28px;">
+  <div class="section-title"><span class="icon">&#128247;</span> Instagram</div>
+  <div class="two-col">
+
+    <!-- SFS Official -->
+    <div class="card ig-carousel-card">
+      <div class="card-header">
+        <h3>&#127979; Seoul Foreign School</h3>
+        <a href="https://www.instagram.com/seoul_foreign_school/" target="_blank" class="sfs-news-viewall">@seoul_foreign_school &#8594;</a>
+      </div>
+      <div class="card-body">
+        <div class="ig-carousel" id="ig-carousel-sfs">
+          <div class="ig-carousel-track" id="ig-track-sfs">
+            <div class="ig-slide ig-slide-loading">Loading posts...</div>
+          </div>
+          <button class="ig-arrow ig-arrow-left" onclick="igSlide('sfs',-1)">&#8249;</button>
+          <button class="ig-arrow ig-arrow-right" onclick="igSlide('sfs',1)">&#8250;</button>
+        </div>
+        <div class="ig-dots" id="ig-dots-sfs"></div>
+      </div>
+    </div>
+
+    <!-- SFS Crusader Athletics -->
+    <div class="card ig-carousel-card">
+      <div class="card-header">
+        <h3>&#9917; Crusader Athletics</h3>
+        <a href="https://www.instagram.com/sfscrusaderathletics/" target="_blank" class="sfs-news-viewall">@sfscrusaderathletics &#8594;</a>
+      </div>
+      <div class="card-body">
+        <div class="ig-carousel" id="ig-carousel-athletics">
+          <div class="ig-carousel-track" id="ig-track-athletics">
+            <div class="ig-slide ig-slide-loading">Loading posts...</div>
+          </div>
+          <button class="ig-arrow ig-arrow-left" onclick="igSlide('athletics',-1)">&#8249;</button>
+          <button class="ig-arrow ig-arrow-right" onclick="igSlide('athletics',1)">&#8250;</button>
+        </div>
+        <div class="ig-dots" id="ig-dots-athletics"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== SFS SPIRIT Magazine & UNLOCKED ===== -->
+<div class="fade-in stagger-5">
+  <div class="section-title"><span class="icon">&#128240;</span> SFS Spirit Magazine &amp; Unlocked</div>
+  <div class="feature-grid">
+    <div class="feature-card" onclick="">
+      <div class="feature-inner">
+        <div class="feature-icon bg-sfs-red" style="font-size:26px;">&#128214;</div>
+        <div>
+          <h4>SFS Spirit Magazine</h4>
+          <p>Student-run magazine featuring stories, art, and campus life</p>
+        </div>
+      </div>
+    </div>
+    <div class="feature-card" onclick="">
+      <div class="feature-inner">
+        <div class="feature-icon bg-sfs-blue" style="font-size:26px;">&#128275;</div>
+        <div>
+          <h4>Unlocked</h4>
+          <p>SFS student voices, perspectives, and creative work</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+  <p><span class="footer-brand">SFS Crusaders Live</span> &bull; Built by Avery Kim &bull; Science National Honor Society &bull; Seoul Foreign School 2026</p>
+</footer>
+
+</div>
+
+<script>
+// ===== THEME SYSTEM =====
+function setTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('sfs-theme', theme);
+  document.getElementById('btnLight').classList.toggle('active', theme === 'light');
+  document.getElementById('btnDark').classList.toggle('active', theme === 'dark');
+}
+
+// Load saved theme
+const saved = localStorage.getItem('sfs-theme');
+if (saved) setTheme(saved);
+
+// ===== QUICK LINKS =====
+const links = [
+  { name: "Gmail", icon: "&#128231;", color: "bg-sfs-red", url: "https://mail.google.com" },
+  { name: "Google Drive", icon: "&#128193;", color: "bg-sfs-blue", url: "https://drive.google.com" },
+  { name: "Google Classroom", icon: "&#128218;", color: "bg-green", url: "https://classroom.google.com" },
+  { name: "Maia Learning", icon: "&#127919;", color: "bg-purple", url: "https://www.maialearning.com" },
+  { name: "Calendar", icon: "&#128197;", color: "bg-teal", url: "https://calendar.google.com" },
+  { name: "Canva", icon: "&#127912;", color: "bg-purple", url: "https://www.canva.com" },
+  { name: "CollegeBoard", icon: "&#127963;", color: "bg-sfs-blue", url: "https://www.collegeboard.org" },
+  { name: "ACT", icon: "&#128221;", color: "bg-sfs-red", url: "https://www.act.org" },
+  { name: "Air Quality", icon: "&#127807;", color: "bg-green", url: "https://www.seoulforeign.org/aqi" },
+  { name: "HS Digital Club", icon: "&#128187;", color: "bg-orange", url: "https://sites.google.com/seoulforeign.org/organization-guide/home" },
+  { name: "Library", icon: "&#128214;", color: "bg-orange", url: "https://library.seoulforeign.org/oliver/home/news" },
+  { name: "Web Print", icon: "&#128424;", color: "bg-teal", url: "https://fujifilm.sfs.or.kr/User" },
+  { name: "Doc Request", icon: "&#128203;", color: "bg-sfs-blue", url: "https://docs.google.com/forms/d/e/1FAIpQLScH5DW3v_tMNrx_Kfn5Acs56Y-SoCZe9JMizLvd9wSZtFO5ww/viewform" },
+  { name: "CraveFood", icon: "&#127869;", color: "bg-sfs-red", url: "https://sfs.cravefood.kr" },
+  { name: "Athletics", icon: "&#9917;", color: "bg-sfs-blue", url: "https://sfscrusaderathletics.com/" },
+  { name: "Instagram", icon: "&#128247;", color: "bg-pink", url: "https://www.instagram.com/seoul_foreign_school/" },
+];
+
+const grid = document.getElementById('links-grid');
+links.forEach(link => {
+  const a = document.createElement('a');
+  a.className = 'link-card';
+  a.href = link.url;
+  if (link.url.startsWith('http')) a.target = '_blank';
+  a.innerHTML = '<div class="link-icon ' + link.color + '"><span>' + link.icon + '</span></div><span class="link-label">' + link.name + '</span>';
+  grid.appendChild(a);
+});
+
+// ===== CLOCK =====
+function updateClock() {
+  const now = new Date();
+  const h = now.getHours().toString().padStart(2,'0');
+  const m = now.getMinutes().toString().padStart(2,'0');
+  const s = now.getSeconds().toString().padStart(2,'0');
+  document.getElementById('clock').textContent = h + ':' + m + ':' + s;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ===== HIGHLIGHT TODAY'S LUNCH =====
+var dayMap = { 1:'mon', 2:'tue', 3:'wed', 4:'thu', 5:'fri' };
+var todayDay = new Date().getDay();
+if (dayMap[todayDay]) {
+  var lunchEl = document.getElementById('lunch-' + dayMap[todayDay]);
+  if (lunchEl) lunchEl.classList.add('today');
+}
+
+// ===== ANNOUNCEMENTS EXPAND/COLLAPSE =====
+var announcementsExpanded = false;
+function toggleAnnouncements() {
+  var body = document.getElementById('announcements-body');
+  var label = document.getElementById('expand-label');
+  var arrow = document.getElementById('expand-arrow');
+  announcementsExpanded = !announcementsExpanded;
+  if (announcementsExpanded) {
+    body.classList.remove('collapsed');
+    label.textContent = 'Show less';
+    arrow.classList.add('rotated');
+  } else {
+    body.classList.add('collapsed');
+    label.textContent = 'Show more';
+    arrow.classList.remove('rotated');
+  }
+}
+
+// ===== AQI (Real-time via Open-Meteo) =====
+// Seoul coords: 37.5665, 126.9780 (SFS area)
+async function fetchRealAQI() {
+  var el = document.getElementById('aqi-num');
+  var status = document.getElementById('aqi-status');
+  var icon = document.getElementById('aqi-icon-wrap');
+
+  try {
+    var res = await fetch(
+      'https://air-quality-api.open-meteo.com/v1/air-quality?' +
+      'latitude=37.5665&longitude=126.9780' +
+      '&current=pm2_5,pm10,us_aqi' +
+      '&timezone=Asia%2FSeoul'
+    );
+    var data = await res.json();
+    var current = data.current;
+    var aqi = current.us_aqi;
+    var pm25 = current.pm2_5;
+
+    // Display AQI number
+    el.textContent = aqi;
+
+    // Update PM2.5 label
+    var label = document.querySelector('.aqi-label');
+    if (label) label.textContent = 'PM2.5: ' + pm25 + ' \u00B5g/m\u00B3';
+
+    // Color and status by US AQI scale
+    if (aqi <= 50) {
+      el.style.color = 'var(--accent-green)';
+      status.style.background = 'rgba(52,199,89,0.12)';
+      status.style.color = 'var(--accent-green)';
+      status.textContent = 'Good';
+      icon.className = 'aqi-icon bg-green';
+    } else if (aqi <= 100) {
+      el.style.color = 'var(--accent-orange)';
+      status.style.background = 'rgba(255,149,0,0.12)';
+      status.style.color = 'var(--accent-orange)';
+      status.textContent = 'Moderate';
+      icon.className = 'aqi-icon bg-orange';
+    } else if (aqi <= 150) {
+      el.style.color = 'var(--accent-red)';
+      status.style.background = 'rgba(255,59,48,0.12)';
+      status.style.color = 'var(--accent-red)';
+      status.textContent = 'Unhealthy (SG)';
+      icon.className = 'aqi-icon bg-sfs-red';
+    } else {
+      el.style.color = 'var(--accent-red)';
+      status.style.background = 'rgba(255,59,48,0.18)';
+      status.style.color = 'var(--accent-red)';
+      status.textContent = 'Unhealthy';
+      icon.className = 'aqi-icon bg-sfs-red';
+    }
+  } catch (e) {
+    el.textContent = '--';
+    status.textContent = 'Offline';
+    status.style.background = 'rgba(135,135,135,0.12)';
+    status.style.color = 'var(--sfs-gray)';
+  }
+}
+fetchRealAQI();
+// Refresh AQI every 10 minutes
+setInterval(fetchRealAQI, 600000);
+
+// ===== TODAY DATE BADGE =====
+const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const now = new Date();
+document.getElementById('today-date').textContent = months[now.getMonth()] + ' ' + now.getDate();
+
+// ===== RSS FEED SYSTEM =====
+const RSS_PROXY = 'https://api.rss2json.com/v1/api.json?rss_url=';
+
+function timeAgo(dateStr) {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return mins + 'm ago';
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return hrs + 'h ago';
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return days + 'd ago';
+  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+// Tag styles rotation for announcements
+const tagStyles = [
+  { label: 'News', bg: 'var(--tag-urgent-bg)', color: 'var(--tag-urgent-text)' },
+  { label: 'Update', bg: 'var(--tag-academic-bg)', color: 'var(--tag-academic-text)' },
+  { label: 'Event', bg: 'var(--tag-event-bg)', color: 'var(--tag-event-text)' },
+  { label: 'Info', bg: 'var(--tag-club-bg)', color: 'var(--tag-club-text)' },
+];
+
+async function fetchRSS(feedUrl) {
+  const res = await fetch(RSS_PROXY + encodeURIComponent(feedUrl));
+  const data = await res.json();
+  if (data.status !== 'ok') throw new Error('Feed error');
+  return data.items;
+}
+
+// ===== MERGED: SFS NEWS + ANNOUNCEMENTS =====
+// Fetch with timeout helper
+function fetchWithTimeout(url, ms) {
+  var controller = new AbortController();
+  var timer = setTimeout(function() { controller.abort(); }, ms);
+  return fetch(url, { signal: controller.signal }).finally(function() { clearTimeout(timer); });
+}
+
+// SFS Announcement tag
+var sfsTag = { label: 'Announcement', bg: 'var(--tag-urgent-bg)', color: 'var(--tag-urgent-text)' };
+
+// Scrape SFS news with 4s timeout
+async function scrapeSFSNews() {
+  var SFS_URL = 'https://www.seoulforeign.org/community/news';
+  var res = await fetchWithTimeout('https://api.allorigins.win/raw?url=' + encodeURIComponent(SFS_URL), 4000);
+  var html = await res.text();
+  var doc = new DOMParser().parseFromString(html, 'text/html');
+  var items = [];
+  var selectors = [
+    'a[href*="/community/news/"]',
+    'a[href*="~board/news"]',
+    '.fsListItem a',
+    'article a',
+    'h3 a', 'h4 a',
+  ];
+  for (var s = 0; s < selectors.length; s++) {
+    var els = doc.querySelectorAll(selectors[s]);
+    for (var j = 0; j < els.length; j++) {
+      var t = els[j].textContent.trim();
+      var h = els[j].getAttribute('href') || '';
+      if (t && t.length > 8 && t.length < 180) {
+        if (h && !h.startsWith('http')) h = 'https://www.seoulforeign.org' + h;
+        if (!items.find(function(x) { return x.title === t; })) {
+          items.push({ title: t, link: h || SFS_URL, source: 'SFS', tag: sfsTag });
+        }
+      }
+    }
+    if (items.length >= 4) break;
+  }
+  return items.slice(0, 4);
+}
+
+async function loadNewsAndAnnouncements() {
+  var container = document.getElementById('announcements-body');
+
+  // Run SFS scrape + RSS feeds in parallel, SFS has 4s timeout
+  var results = await Promise.allSettled([
+    scrapeSFSNews(),
+    fetchRSS('https://www.insidehighered.com/rss/news'),
+    fetchRSS('https://hechingerreport.org/feed/'),
+  ]);
+
+  var allItems = [];
+
+  // SFS items first (with Announcement tag)
+  if (results[0].status === 'fulfilled' && results[0].value.length > 0) {
+    allItems = allItems.concat(results[0].value);
+  }
+
+  // RSS items with rotating tags
+  var rssItems = [];
+  if (results[1].status === 'fulfilled') rssItems = rssItems.concat(results[1].value);
+  if (results[2].status === 'fulfilled') rssItems = rssItems.concat(results[2].value);
+  rssItems.sort(function(a, b) { return new Date(b.pubDate) - new Date(a.pubDate); });
+  rssItems = rssItems.slice(0, 4).map(function(item, i) {
+    return {
+      title: item.title,
+      link: item.link,
+      pubDate: item.pubDate,
+      source: new URL(item.link).hostname.replace('www.', ''),
+      tag: tagStyles[i % tagStyles.length]
+    };
+  });
+  allItems = allItems.concat(rssItems);
+
+  if (allItems.length === 0) {
+    container.innerHTML = '<div class="feed-error">Could not load feeds. <a href="https://www.seoulforeign.org/community/news" target="_blank" style="color:var(--sfs-red);">Visit SFS News</a></div>';
+    return;
+  }
+
+  container.innerHTML = allItems.map(function(item) {
+    var title = item.title.length > 72 ? item.title.slice(0, 69) + '...' : item.title;
+    var meta = item.source || 'SFS';
+    if (item.pubDate) meta += ' &bull; ' + timeAgo(item.pubDate);
+    return '<div class="news-item"><a href="' + item.link + '" target="_blank" rel="noopener">' +
+      '<div class="news-tag" style="background:' + item.tag.bg + ';color:' + item.tag.color + ';">' + item.tag.label + '</div>' +
+      '<h4>' + title + '</h4>' +
+      '<div class="meta">' + meta + '</div>' +
+      '</a></div>';
+  }).join('');
+
+  // Show expand button if more than 5 items, collapse by default
+  if (allItems.length > 5) {
+    container.classList.add('collapsed');
+    document.getElementById('announcements-expand').style.display = 'flex';
+  }
+}
+
+// ===== COLLEGE NEWS (merged: US News + Niche + THE) =====
+var collegeTags = {
+  usnews: { label: 'NY Times', bg: 'var(--tag-academic-bg)', color: 'var(--tag-academic-text)' },
+  the: { label: 'Guardian', bg: 'var(--tag-club-bg)', color: 'var(--tag-club-text)' },
+  niche: { label: 'Hechinger', bg: 'var(--tag-event-bg)', color: 'var(--tag-event-text)' },
+};
+
+async function loadCollegeFeeds() {
+  var container = document.getElementById('college-merged-body');
+  try {
+    var feeds = await Promise.allSettled([
+      fetchRSS('https://rss.nytimes.com/services/xml/rss/nyt/Education.xml'),
+      fetchRSS('https://www.theguardian.com/education/rss'),
+      fetchRSS('https://hechingerreport.org/feed/'),
+    ]);
+
+    var items = [];
+    var feedMeta = [
+      { tag: collegeTags.usnews, source: 'nytimes.com' },
+      { tag: collegeTags.the, source: 'theguardian.com' },
+      { tag: collegeTags.niche, source: 'hechingerreport.org' },
+    ];
+
+    feeds.forEach(function(f, idx) {
+      if (f.status === 'fulfilled') {
+        f.value.slice(0, 2).forEach(function(item) {
+          items.push({ title: item.title, link: item.link, pubDate: item.pubDate, tag: feedMeta[idx].tag, source: feedMeta[idx].source });
+        });
+      }
+    });
+
+    // Interleave: sort by date
+    items.sort(function(a, b) { return new Date(b.pubDate) - new Date(a.pubDate); });
+    items = items.slice(0, 6);
+
+    if (items.length === 0) throw new Error('empty');
+
+    container.innerHTML = items.map(function(item) {
+      var title = item.title.length > 72 ? item.title.slice(0, 69) + '...' : item.title;
+      return '<div class="news-item"><a href="' + item.link + '" target="_blank" rel="noopener">' +
+        '<div class="news-tag" style="background:' + item.tag.bg + ';color:' + item.tag.color + ';">' + item.tag.label + '</div>' +
+        '<h4>' + title + '</h4>' +
+        '<div class="meta">' + item.source + ' &bull; ' + timeAgo(item.pubDate) + '</div>' +
+        '</a></div>';
+    }).join('');
+  } catch (e) {
+    container.innerHTML = '<div class="feed-error">Could not load feeds. ' +
+      '<a href="https://www.usnews.com/education" target="_blank" style="color:var(--sfs-red);">US News</a> &bull; ' +
+      '<a href="https://www.timeshighereducation.com/academic/news" target="_blank" style="color:var(--sfs-red);">THE</a></div>';
+  }
+}
+
+// ===== CRUSADER ATHLETICS =====
+async function loadAthletics() {
+  var container = document.getElementById('athletics-body');
+  try {
+    var res = await fetchWithTimeout('https://api.allorigins.win/raw?url=' + encodeURIComponent('https://sfscrusaderathletics.com/'), 5000);
+    var html = await res.text();
+    var doc = new DOMParser().parseFromString(html, 'text/html');
+    var items = [];
+
+    // Look for score/game elements
+    var selectors = [
+      '.game-score', '.score-item', '.scoreboard-item',
+      '.event-item', '.game-card', 'table tr',
+      '.schedule-item', 'article', '.post-item',
+    ];
+
+    // Try to find links with game/news info
+    var allLinks = doc.querySelectorAll('a');
+    for (var i = 0; i < allLinks.length && items.length < 6; i++) {
+      var t = allLinks[i].textContent.trim();
+      var h = allLinks[i].getAttribute('href') || '';
+      if (t.length > 12 && t.length < 150 && !items.find(function(x) { return x.title === t; })) {
+        // Filter for sports-related content
+        var lower = t.toLowerCase();
+        if (lower.match(/soccer|basketball|volleyball|badminton|track|swim|tennis|baseball|game|season|win|loss|championship|tournament|varsity|crusader/)) {
+          if (h && !h.startsWith('http')) h = 'https://sfscrusaderathletics.com' + h;
+          items.push({ title: t, link: h || 'https://sfscrusaderathletics.com/' });
+        }
+      }
+    }
+
+    if (items.length === 0) throw new Error('empty');
+
+    container.innerHTML = items.slice(0, 5).map(function(item) {
+      var title = item.title.length > 50 ? item.title.slice(0, 47) + '...' : item.title;
+      return '<div class="news-item"><a href="' + item.link + '" target="_blank" rel="noopener">' +
+        '<div class="news-tag" style="background:var(--tag-academic-bg);color:var(--tag-academic-text);">Sports</div>' +
+        '<h4>' + title + '</h4></a></div>';
+    }).join('');
+  } catch (e) {
+    // Fallback with known recent results
+    container.innerHTML =
+      '<div class="news-item"><a href="https://sfscrusaderathletics.com/" target="_blank">' +
+      '<div class="news-tag" style="background:var(--tag-club-bg);color:var(--tag-club-text);">Result</div>' +
+      '<h4>V Girls Soccer vs Humphreys &mdash; W 8-0</h4></a></div>' +
+      '<div class="news-item"><a href="https://sfscrusaderathletics.com/" target="_blank">' +
+      '<div class="news-tag" style="background:var(--tag-club-bg);color:var(--tag-club-text);">Result</div>' +
+      '<h4>V Boys Soccer vs Humphreys &mdash; W 3-2</h4></a></div>' +
+      '<div class="news-item"><a href="https://sfscrusaderathletics.com/" target="_blank">' +
+      '<div class="news-tag" style="background:var(--tag-event-bg);color:var(--tag-event-text);">Upcoming</div>' +
+      '<h4>Soccer vs Chadwick &mdash; Apr 8</h4></a></div>' +
+      '<div class="news-item"><a href="https://sfscrusaderathletics.com/" target="_blank">' +
+      '<div class="news-tag" style="background:var(--tag-event-bg);color:var(--tag-event-text);">Upcoming</div>' +
+      '<h4>Badminton vs TCIS &mdash; Apr 8</h4></a></div>';
+  }
+}
+
+// ===== INSTAGRAM CAROUSEL =====
+var igState = {};
+
+function igSlide(id, dir) {
+  var state = igState[id];
+  if (!state || state.total === 0) return;
+  var next = state.current + dir;
+  if (next < 0) next = state.total - 1;
+  if (next >= state.total) next = 0;
+  igGoTo(id, next);
+}
+
+function igGoTo(id, idx) {
+  var state = igState[id];
+  if (!state) return;
+  state.current = idx;
+  var track = document.getElementById('ig-track-' + id);
+  track.style.transform = 'translateX(-' + (idx * 100) + '%)';
+  // Update dots
+  var dots = document.querySelectorAll('#ig-dots-' + id + ' .ig-dot');
+  dots.forEach(function(d, i) {
+    d.classList.toggle('active', i === idx);
+  });
+}
+
+function buildCarousel(id, shortcodes) {
+  var track = document.getElementById('ig-track-' + id);
+  var dotsWrap = document.getElementById('ig-dots-' + id);
+
+  if (shortcodes.length === 0) {
+    track.innerHTML = '<div class="ig-slide ig-slide-loading">No posts found</div>';
+    return;
+  }
+
+  // Build slides - each is an individual post embed iframe
+  track.innerHTML = shortcodes.map(function(code) {
+    return '<div class="ig-slide">' +
+      '<iframe src="https://www.instagram.com/p/' + code + '/embed/" ' +
+      'loading="lazy" allowtransparency="true" scrolling="no"></iframe>' +
+      '</div>';
+  }).join('');
+
+  // Build dots
+  dotsWrap.innerHTML = shortcodes.map(function(_, i) {
+    return '<button class="ig-dot' + (i === 0 ? ' active' : '') + '" onclick="igGoTo(\'' + id + '\',' + i + ')"></button>';
+  }).join('');
+
+  igState[id] = { current: 0, total: shortcodes.length };
+}
+
+async function loadInstagramCarousel(id, username) {
+  var profileUrl = 'https://www.instagram.com/' + username + '/';
+  try {
+    var res = await fetchWithTimeout(
+      'https://api.allorigins.win/raw?url=' + encodeURIComponent(profileUrl),
+      6000
+    );
+    var html = await res.text();
+
+    // Extract shortcodes from profile HTML
+    var regex = /\/p\/([A-Za-z0-9_-]{6,})\//g;
+    var match;
+    var codes = [];
+    while ((match = regex.exec(html)) !== null) {
+      if (codes.indexOf(match[1]) === -1) codes.push(match[1]);
+    }
+
+    // Also try /reel/ shortcodes
+    var reelRegex = /\/reel\/([A-Za-z0-9_-]{6,})\//g;
+    while ((match = reelRegex.exec(html)) !== null) {
+      if (codes.indexOf(match[1]) === -1) codes.push(match[1]);
+    }
+
+    codes = codes.slice(0, 4);
+
+    if (codes.length === 0) throw new Error('no codes');
+    buildCarousel(id, codes);
+  } catch (e) {
+    // Fallback: embed the profile feed as single slide
+    var track = document.getElementById('ig-track-' + id);
+    track.innerHTML =
+      '<div class="ig-slide">' +
+      '<iframe src="https://www.instagram.com/' + username + '/embed" ' +
+      'loading="lazy" allowtransparency="true" scrolling="yes"></iframe>' +
+      '</div>';
+    document.getElementById('ig-dots-' + id).innerHTML = '';
+    igState[id] = { current: 0, total: 1 };
+  }
+}
+
+// Load all feeds
+loadNewsAndAnnouncements();
+loadCollegeFeeds();
+loadAthletics();
+loadInstagramCarousel('sfs', 'seoul_foreign_school');
+loadInstagramCarousel('athletics', 'sfscrusaderathletics');
+</script>
+
+</body>
+</html>
