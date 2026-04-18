@@ -937,6 +937,109 @@ a.widget:hover { background: var(--bg-card-hover); }
 
 .feature-cta svg { width: 12px; height: 12px; }
 
+/* ===== SPIRIT (Issuu) ===== */
+.spirit-feature {
+  display: flex;
+  gap: 12px;
+  padding-bottom: 12px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+  text-decoration: none;
+  color: inherit;
+}
+
+.spirit-cover {
+  width: 66px;
+  height: 86px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+  background: var(--surface);
+}
+
+.spirit-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.spirit-badge {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.3px;
+  text-transform: uppercase;
+  color: var(--sfs-red);
+  margin-bottom: 5px;
+}
+
+.spirit-title {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--text);
+  transition: color 0.2s;
+}
+
+.spirit-date {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-top: 4px;
+  letter-spacing: 0.2px;
+}
+
+.spirit-feature:hover .spirit-title { color: var(--sfs-red); }
+
+.spirit-archive {
+  display: flex;
+  flex-direction: column;
+}
+
+.spirit-mini {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  text-decoration: none;
+  color: inherit;
+}
+
+.spirit-mini:last-child { border-bottom: none; }
+
+.spirit-mini-cover {
+  width: 28px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 3px;
+  flex-shrink: 0;
+  background: var(--surface);
+}
+
+.spirit-mini-info { flex: 1; min-width: 0; }
+
+.spirit-mini-title {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 0.2s;
+}
+
+.spirit-mini-date {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.spirit-mini:hover .spirit-mini-title { color: var(--sfs-red); }
+
 /* ===== ICON COLORS (tag backgrounds) ===== */
 .bg-red    { background: var(--tag-red-bg); color: var(--tag-red-fg); }
 .bg-blue   { background: var(--tag-blue-bg); color: var(--tag-blue-fg); }
@@ -1253,8 +1356,8 @@ footer p {
     </div>
   </div>
 
-  <!-- Spirit Magazine -->
-  <a href="https://www.seoulforeign.org/community/spirit-magazine" target="_blank" class="widget" data-wid="spirit">
+  <!-- Spirit Magazine (live from Issuu) -->
+  <div class="widget" data-wid="spirit">
     <div class="w-head">
       <div class="w-head-left">
         <div class="w-icon bg-red">
@@ -1262,18 +1365,15 @@ footer p {
         </div>
         <div class="w-title">Spirit Magazine</div>
       </div>
+      <a href="https://issuu.com/thesfhsspirit" target="_blank" class="w-link">
+        All issues
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
     </div>
-    <div class="w-body">
-      <div class="feature-content">
-        <h3>SFS Spirit</h3>
-        <p>Student-run magazine featuring stories, art, photography, and campus life from across the SFS community.</p>
-        <div class="feature-cta">
-          Read latest issue
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-        </div>
-      </div>
+    <div class="w-body" id="spirit-body">
+      <div class="feed-loading">Loading latest issue...</div>
     </div>
-  </a>
+  </div>
 
   <!-- Unlocked -->
   <a href="https://www.seoulforeign.org" target="_blank" class="widget" data-wid="unlocked">
@@ -1761,8 +1861,111 @@ async function loadInstagramCarousel(id, username) {
 loadNewsAndAnnouncements();
 loadCollegeFeeds();
 loadAthletics();
+loadSpirit();
 loadInstagramCarousel('sfs', 'seoul_foreign_school');
 loadInstagramCarousel('athletics', 'sfscrusaderathletics');
+
+// Refresh Spirit hourly so newly published issues appear without a manual reload
+setInterval(loadSpirit, 3600000);
+
+// ===== SPIRIT MAGAZINE (Issuu profile scrape) =====
+function cleanSpiritTitle(slug) {
+  var s = String(slug).replace(/_[a-f0-9]{10,}$/i, ''); // strip trailing dedupe hash
+  s = s.replace(/_s_/g, "'s ");
+  s = s.replace(/_-_|_/g, ' ');
+  s = s.replace(/\s+/g, ' ').trim();
+  // Capitalize first letter of each space-separated word (don't touch letters after apostrophes)
+  s = s.replace(/(^|\s)(\w)/g, function(_, pre, c) { return pre + c.toUpperCase(); });
+  s = s.replace(/\bApri\b/g, 'April')
+       .replace(/\bJanua\b/g, 'January')
+       .replace(/\bFebrua\b/g, 'February')
+       .replace(/\bDecemb\b/g, 'December');
+  return s;
+}
+
+function parseCoverDate(coverId) {
+  // format: YYMMDDHHMMSS-hex
+  var head = coverId.split('-')[0];
+  if (!/^\d{12}$/.test(head)) return null;
+  return new Date(2000 + +head.slice(0,2), +head.slice(2,4) - 1, +head.slice(4,6));
+}
+
+async function loadSpirit(attempt) {
+  var container = document.getElementById('spirit-body');
+  if (!container) return;
+  attempt = attempt || 1;
+  try {
+    var res = await fetchWithTimeout(
+      'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://issuu.com/thesfhsspirit'),
+      15000
+    );
+    var html = await res.text();
+    var coverSet = [];
+    var seen = {};
+    var re = /image\.isu\.pub\/(\d{12}-[a-f0-9]+)/g;
+    var m;
+    while ((m = re.exec(html)) !== null) {
+      if (!seen[m[1]]) { seen[m[1]] = 1; coverSet.push(m[1]); }
+    }
+    var slugSet = [];
+    var sseen = {};
+    var re2 = /\/docs\/([a-zA-Z0-9_-]+)/g;
+    while ((m = re2.exec(html)) !== null) {
+      if (!sseen[m[1]]) { sseen[m[1]] = 1; slugSet.push(m[1]); }
+    }
+    if (coverSet.length === 0 || slugSet.length === 0) throw new Error('empty');
+
+    var count = Math.min(5, coverSet.length, slugSet.length);
+    var issues = [];
+    for (var i = 0; i < count; i++) {
+      issues.push({
+        cover: 'https://image.isu.pub/' + coverSet[i] + '/jpg/page_1_thumb_large.jpg',
+        url:   'https://issuu.com/thesfhsspirit/docs/' + slugSet[i],
+        title: cleanSpiritTitle(slugSet[i]),
+        date:  parseCoverDate(coverSet[i])
+      });
+    }
+    renderSpirit(issues);
+  } catch (e) {
+    if (attempt < 2) {
+      setTimeout(function() { loadSpirit(attempt + 1); }, 1500);
+      return;
+    }
+    container.innerHTML = '<div class="feed-empty">Could not load issues. '
+      + '<a href="https://issuu.com/thesfhsspirit" target="_blank" style="color:var(--sfs-red);">Visit on Issuu</a></div>';
+  }
+}
+
+function renderSpirit(issues) {
+  var container = document.getElementById('spirit-body');
+  var MONTHS_SH = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  function fmt(d) { return d ? MONTHS_SH[d.getMonth()] + ' ' + d.getFullYear() : ''; }
+
+  var head = issues[0];
+  var rest = issues.slice(1, 4);
+
+  var out = '<a class="spirit-feature" href="' + head.url + '" target="_blank" rel="noopener">'
+    + '<img class="spirit-cover" src="' + head.cover + '" alt="Cover" loading="lazy">'
+    + '<div class="spirit-info">'
+    + '<div class="spirit-badge">Latest Issue</div>'
+    + '<div class="spirit-title">' + head.title + '</div>'
+    + '<div class="spirit-date">' + fmt(head.date) + '</div>'
+    + '</div></a>';
+
+  if (rest.length) {
+    out += '<div class="spirit-archive">';
+    rest.forEach(function(iss) {
+      out += '<a class="spirit-mini" href="' + iss.url + '" target="_blank" rel="noopener">'
+        + '<img class="spirit-mini-cover" src="' + iss.cover + '" alt="" loading="lazy">'
+        + '<div class="spirit-mini-info">'
+        + '<div class="spirit-mini-title">' + iss.title + '</div>'
+        + '<div class="spirit-mini-date">' + fmt(iss.date) + '</div>'
+        + '</div></a>';
+    });
+    out += '</div>';
+  }
+  container.innerHTML = out;
+}
 
 // ===== GRIDSTACK DRAG GRID =====
 var LAYOUT_KEY = 'sfs-grid-layout-v5';
