@@ -227,12 +227,12 @@ body {
 /* ===== HERO BANNER ===== */
 .hero {
   display: grid;
-  grid-template-columns: 1.5fr 1fr;
-  margin: 24px 0 28px;
-  border-radius: 18px;
+  grid-template-columns: 1.6fr 1fr;
+  margin: 20px 0 22px;
+  border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.3);
-  min-height: 340px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.28);
+  height: 220px;
 }
 
 .hero-media {
@@ -251,8 +251,8 @@ body {
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(20,20,28,0.75) 0%, rgba(20,20,28,0.45) 50%, rgba(20,20,28,0.2) 100%),
-              linear-gradient(180deg, rgba(43,49,96,0.35) 0%, rgba(20,20,28,0.5) 100%);
+  background: linear-gradient(90deg, rgba(20,20,28,0.72) 0%, rgba(20,20,28,0.38) 55%, rgba(20,20,28,0.12) 100%),
+              linear-gradient(180deg, rgba(43,49,96,0.25) 0%, rgba(20,20,28,0.5) 100%);
 }
 
 .hero-text {
@@ -260,45 +260,45 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  padding: 36px 40px 32px;
+  padding: 18px 28px 20px;
   color: white;
 }
 
 .hero-greet {
   font-family: 'Inter', sans-serif;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 3px;
+  letter-spacing: 2.5px;
   color: rgba(255,255,255,0.85);
   text-transform: uppercase;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .hero-day {
   font-family: 'Inter', sans-serif;
-  font-size: clamp(54px, 8vw, 110px);
+  font-size: clamp(38px, 5.2vw, 68px);
   font-weight: 900;
-  letter-spacing: -2px;
+  letter-spacing: -1.5px;
   line-height: 0.95;
   color: white;
-  text-shadow: 0 2px 12px rgba(0,0,0,0.25);
+  text-shadow: 0 2px 10px rgba(0,0,0,0.25);
 }
 
 .hero-date {
   font-family: 'Inter', sans-serif;
-  font-size: 13px;
+  font-size: 11.5px;
   font-weight: 600;
-  letter-spacing: 3px;
-  color: rgba(255,255,255,0.75);
+  letter-spacing: 2.4px;
+  color: rgba(255,255,255,0.78);
   text-transform: uppercase;
-  margin-top: 14px;
+  margin-top: 8px;
   font-variant-numeric: tabular-nums;
 }
 
 .hero-weather {
   background: var(--sfs-blue);
   color: white;
-  padding: 30px 36px;
+  padding: 18px 22px 16px;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -308,54 +308,54 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .hw-loc {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 2.5px;
+  letter-spacing: 2.2px;
   color: rgba(255,255,255,0.6);
   text-transform: uppercase;
 }
 
 .hw-icon { color: rgba(255,255,255,0.9); }
-.hw-icon svg { width: 32px; height: 32px; }
+.hw-icon svg { width: 26px; height: 26px; }
 
 .hw-temp {
   font-family: 'Inter', sans-serif;
-  font-size: 76px;
+  font-size: 52px;
   font-weight: 800;
   line-height: 1;
-  letter-spacing: -3px;
-  margin: 4px 0 2px;
+  letter-spacing: -2px;
+  margin: 2px 0 0;
   display: flex;
   align-items: flex-start;
   gap: 2px;
 }
 
 .hw-unit {
-  font-size: 22px;
+  font-size: 16px;
   font-weight: 700;
   color: rgba(255,255,255,0.7);
-  margin-top: 10px;
+  margin-top: 6px;
   letter-spacing: 0;
 }
 
 .hw-cond {
-  font-size: 14px;
+  font-size: 12.5px;
   font-weight: 600;
   color: rgba(255,255,255,0.85);
   margin-bottom: auto;
-  padding-bottom: 20px;
+  padding-bottom: 12px;
 }
 
 .hw-stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  gap: 10px;
   border-top: 1px solid rgba(255,255,255,0.18);
-  padding-top: 16px;
+  padding-top: 10px;
   position: relative;
 }
 
@@ -364,39 +364,39 @@ body {
   position: absolute;
   top: 0;
   left: 0;
-  width: 40px;
+  width: 32px;
   height: 1px;
   background: var(--sfs-red);
 }
 
 .hw-stat-label {
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
-  letter-spacing: 2px;
+  letter-spacing: 1.8px;
   color: rgba(255,255,255,0.55);
   text-transform: uppercase;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
 
 .hw-stat-val {
   font-family: 'Inter', sans-serif;
-  font-size: 16px;
+  font-size: 13.5px;
   font-weight: 800;
   color: white;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.2px;
   font-variant-numeric: tabular-nums;
 }
 
 .hw-stat-unit {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   color: rgba(255,255,255,0.6);
   margin-left: 2px;
 }
 
 @media (max-width: 1000px) {
-  .hero { grid-template-columns: 1fr; }
-  .hero-media { min-height: 220px; }
+  .hero { grid-template-columns: 1fr; height: auto; }
+  .hero-media { height: 180px; }
   .topnav-inner { gap: 12px; }
   .nav-links { gap: 18px; }
   .brand-tag { display: none; }
@@ -410,12 +410,12 @@ body {
   .nav-btn { padding: 6px 10px; font-size: 11px; }
   .nav-links { gap: 10px; flex-wrap: wrap; }
   .nav-link:not(.nav-btn):nth-child(n+3) { display: none; }
-  .hero-text { padding: 24px 24px 20px; }
-  .hero-day { font-size: 56px; letter-spacing: -1px; }
-  .hero-weather { padding: 22px 24px; }
-  .hw-temp { font-size: 60px; }
-  .hw-stats { gap: 10px; }
-  .hw-stat-val { font-size: 14px; }
+  .hero-text { padding: 14px 18px 14px; }
+  .hero-day { font-size: 42px; letter-spacing: -1px; }
+  .hero-weather { padding: 16px 18px 14px; }
+  .hw-temp { font-size: 44px; }
+  .hw-stats { gap: 8px; }
+  .hw-stat-val { font-size: 12px; }
 }
 
 .header-tools {
@@ -1765,7 +1765,7 @@ loadInstagramCarousel('sfs', 'seoul_foreign_school');
 loadInstagramCarousel('athletics', 'sfscrusaderathletics');
 
 // ===== GRIDSTACK DRAG GRID =====
-var LAYOUT_KEY = 'sfs-grid-layout-v4';
+var LAYOUT_KEY = 'sfs-grid-layout-v5';
 var CELL_W = 4;   // 12-col grid / 4 = 3 widgets per row
 var CELL_H = 6;   // 6 rows tall (row height 54 → ~344px with margin)
 var gridApi = null;
