@@ -2159,7 +2159,7 @@ async function fetchAndParseLunchPdf(fileId) {
   if (!buf) throw lastError || new Error('all-proxies-failed');
   var pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
 
-  // Collect all text items with positions across pages.
+  // Collect text items with positions (Y normalized top-down, pages stacked).
   var items = [];
   for (var i = 1; i <= pdf.numPages; i++) {
     var page = await pdf.getPage(i);
@@ -2171,75 +2171,88 @@ async function fetchAndParseLunchPdf(fileId) {
       items.push({
         text: s,
         x: it.transform[4],
-        y: pageHeight - it.transform[5] + (i - 1) * 10000  // top-down across pages
+        y: pageHeight - it.transform[5] + (i - 1) * 10000
       });
     });
   }
 
-  // Group items by row (similar Y, within ~4px), then sort each row by X.
-  items.sort(function(a, b) { return a.y - b.y || a.x - b.x; });
-  var rows = [];
-  var current = null;
-  items.forEach(function(it) {
-    if (current && Math.abs(it.y - current.y) < 4) {
-      current.cells.push(it);
-    } else {
-      current = { y: it.y, cells: [it] };
-      rows.push(current);
-    }
-  });
-
-  // Walk rows, identify sections (ALL-CAPS headers) and per-day items.
-  var sections = [];
-  var sectionMap = {};
   var DAY_RE = /^(Mon|Tue|Wed|Thu|Fri)\.?$/i;
   var SECTION_RE = /^[A-Z][A-Z\s&'\/]{3,}$/;
-  var ignoreLine = /^(crave|high school|page \d+|w\d|^\d+$|₩\d+)/i;
-  var currentSection = null;
+  // Crave's HS menu sections — used to filter out brand-name false positives
+  // (VOSS, ICE CREAM) that look like sections. Falls back to generic detection
+  // if we don't find at least 3 known names (handles other PDF layouts).
+  var KNOWN = /^(INTERNATIONAL|KOREAN|BURGER OF THE WEEK|SOUP OF THE WEEK|BUILD YOUR OWN|SALAD BAR|GRAB & GO|GRILL|BEVERAGES)$/;
+  var JUNK_RE = /^(₩|\d+[,.]?\d*|.*[-]\s*(Brazil|USA|Korea|China|Australia|Foreign|Vietnam)\s*|High School|crave|\d+\s*\/\s*\d+)$/i;
 
-  rows.forEach(function(row) {
-    row.cells.sort(function(a, b) { return a.x - b.x; });
-    var firstText = row.cells[0].text.trim();
+  var dayMarkers = items.filter(function(it) { return DAY_RE.test(it.text); });
+  var knownHits = items.filter(function(it) { return KNOWN.test(it.text); });
+  var sectionMarkers = (knownHits.length >= 3
+    ? knownHits
+    : items.filter(function(it) { return SECTION_RE.test(it.text) && it.text.length < 35; })
+  ).slice().sort(function(a, b) { return a.y - b.y; });
 
-    // Section header detection — single ALL-CAPS cell that spans the row's start.
-    if (SECTION_RE.test(firstText) && row.cells.length <= 3 && firstText.length < 40) {
-      currentSection = firstText.replace(/\s+/g, ' ').trim();
-      if (!sectionMap[currentSection]) {
-        sectionMap[currentSection] = { section: currentSection, days: {} };
-        sections.push(sectionMap[currentSection]);
-      }
-      return;
+  // Section labels in Crave PDFs sit in the MIDDLE of their cell, so use the
+  // midpoint between adjacent labels as the boundary instead of "label above".
+  function sectionFor(item) {
+    for (var i = 0; i < sectionMarkers.length; i++) {
+      var s = sectionMarkers[i];
+      var prev = sectionMarkers[i - 1];
+      var next = sectionMarkers[i + 1];
+      var lower = prev ? (prev.y + s.y) / 2 : -Infinity;
+      var upper = next ? (s.y + next.y) / 2 : Infinity;
+      if (item.y >= lower && item.y < upper) return s.text;
     }
+    return sectionMarkers.length ? sectionMarkers[0].text : null;
+  }
 
-    // Day row inside a section: starts with Mon/Tue/Wed/Thu/Fri, then items.
-    if (currentSection && DAY_RE.test(firstText)) {
-      var day = firstText.slice(0, 3).toLowerCase();
-      day = day.charAt(0).toUpperCase() + day.slice(1);
-      var rest = row.cells.slice(1)
-        .map(function(c) { return c.text.trim(); })
-        .filter(function(t) { return t && !ignoreLine.test(t) && !/^₩?\d+,?\d*$/.test(t); })
-        .join(' — ')
-        .replace(/\s+/g, ' ')
-        .trim();
-      if (rest) {
-        var bucket = sectionMap[currentSection];
-        bucket.days[day] = (bucket.days[day] ? bucket.days[day] + ' / ' : '') + rest;
-      }
+  // Day = the day-marker closest in Y AND positioned to the left of the item.
+  function dayFor(item) {
+    var nearest = null, minDist = 25;
+    for (var i = 0; i < dayMarkers.length; i++) {
+      var d = dayMarkers[i];
+      var dist = Math.abs(d.y - item.y);
+      if (dist < minDist && d.x < item.x - 10) { minDist = dist; nearest = d; }
+    }
+    if (!nearest) return null;
+    var s = nearest.text.slice(0, 3);
+    return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+  }
+
+  var grouped = {};
+  items.forEach(function(item) {
+    if (DAY_RE.test(item.text)) return;
+    if (KNOWN.test(item.text) || (sectionMarkers.length < 3 && SECTION_RE.test(item.text) && item.text.length < 35)) return;
+    if (JUNK_RE.test(item.text)) return;
+    if (item.text === '₩' || /^\d+[,.]?\d*$/.test(item.text)) return;
+
+    var section = sectionFor(item);
+    if (!section) return;
+    var day = dayFor(item) || 'Wk';
+    if (!grouped[section]) grouped[section] = { section: section, days: {}, _order: [] };
+    if (!grouped[section].days[day]) {
+      grouped[section].days[day] = item.text;
+      grouped[section]._order.push(day);
+    } else {
+      grouped[section].days[day] += ' / ' + item.text;
     }
   });
 
-  return sections.filter(function(s) { return Object.keys(s.days).length > 0; });
+  // Preserve section order from the markers list (top-down on the page).
+  return sectionMarkers
+    .map(function(s) { return grouped[s.text]; })
+    .filter(function(g) { return g && Object.keys(g.days).length > 0; });
 }
 
 function renderLunchSections(sections) {
   var todayIdx = new Date().getDay();
   var todayShort = LUNCH_DAYS_SHORT[todayIdx];
-  var ORDER = ['Mon','Tue','Wed','Thu','Fri'];
+  var ORDER = ['Mon','Tue','Wed','Thu','Fri','Wk'];
   return sections.map(function(s) {
     var rows = ORDER.filter(function(d) { return s.days[d]; }).map(function(d) {
       var isToday = (d === todayShort);
+      var dayLabel = d === 'Wk' ? 'This Week' : d;
       return '<div class="lunch-day-block' + (isToday ? ' today' : '') + '">' +
-               '<div class="day">' + d + '</div>' +
+               '<div class="day">' + dayLabel + '</div>' +
                '<div class="items">' + escapeLunchHtml(s.days[d]) + '</div>' +
              '</div>';
     }).join('');
