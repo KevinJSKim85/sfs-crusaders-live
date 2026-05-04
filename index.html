@@ -2132,9 +2132,31 @@ async function parseAndRenderLunch(fileId, menuEl, frame, note, silent) {
 async function fetchAndParseLunchPdf(fileId) {
   if (!window.pdfjsLib) throw new Error('pdfjs-not-loaded');
   var driveUrl = 'https://drive.google.com/uc?export=download&id=' + fileId;
-  var proxied = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(driveUrl);
-  var res = await fetchWithTimeout(proxied, 15000);
-  var buf = await res.arrayBuffer();
+  var enc = encodeURIComponent(driveUrl);
+  // Try multiple proxies — allorigins is currently 522, corsproxy.io is paid;
+  // codetabs has worked reliably for binary content.
+  var proxies = [
+    'https://api.codetabs.com/v1/proxy?quest=' + enc,
+    'https://api.allorigins.win/raw?url=' + enc
+  ];
+  var buf = null;
+  var lastError = null;
+  for (var p = 0; p < proxies.length; p++) {
+    try {
+      var res = await fetchWithTimeout(proxies[p], 15000);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      buf = await res.arrayBuffer();
+      if (buf.byteLength < 100) throw new Error('empty');
+      var head = new Uint8Array(buf, 0, 5);
+      var sig = String.fromCharCode(head[0], head[1], head[2], head[3], head[4]);
+      if (sig !== '%PDF-') throw new Error('not-a-pdf:' + sig);
+      break; // success
+    } catch (e) {
+      lastError = e;
+      buf = null;
+    }
+  }
+  if (!buf) throw lastError || new Error('all-proxies-failed');
   var pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
 
   // Collect all text items with positions across pages.
