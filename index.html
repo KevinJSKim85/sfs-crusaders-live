@@ -101,8 +101,17 @@ body {
 
 .container {
   width: 100%;
+  max-width: 1640px;
   margin: 0 auto;
-  padding: 0 28px 28px;
+  padding: 0 44px 36px;
+}
+
+@media (max-width: 1100px) {
+  .container { padding: 0 28px 28px; }
+}
+
+@media (max-width: 640px) {
+  .container { padding: 0 16px 24px; }
 }
 
 /* ===== TOP NAV ===== */
@@ -110,7 +119,15 @@ body {
   background: var(--sfs-blue);
   border-bottom: 3px solid var(--sfs-red);
   padding: 16px 32px;
-  margin: 0 -24px 0;
+  margin: 0 -44px 0;
+}
+
+@media (max-width: 1100px) {
+  .topnav { margin: 0 -28px 0; }
+}
+
+@media (max-width: 640px) {
+  .topnav { margin: 0 -16px 0; }
 }
 
 .topnav-inner {
@@ -845,6 +862,66 @@ a.widget:hover { background: var(--bg-card-hover); }
 }
 .lunch-week-label.show { display: block; }
 
+.lunch-menu {
+  flex: 1;
+  overflow-y: auto;
+  margin: 4px -4px 0;
+  padding: 0 4px;
+  display: none;
+}
+.lunch-menu.show { display: block; }
+.lunch-menu::-webkit-scrollbar { width: 4px; }
+.lunch-menu::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
+
+.lunch-section {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 12px 0 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+.lunch-section:first-child { margin-top: 0; }
+
+.lunch-day-block {
+  padding: 8px 10px;
+  margin-bottom: 4px;
+  border-radius: 8px;
+  background: transparent;
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+}
+.lunch-day-block.today {
+  background: var(--tag-red-bg);
+}
+.lunch-day-block .day {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  min-width: 32px;
+  text-transform: uppercase;
+}
+.lunch-day-block.today .day { color: var(--sfs-red); }
+.lunch-day-block .items {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  font-weight: 500;
+}
+.lunch-day-block.today .items { color: var(--text); font-weight: 600; }
+
+.lunch-loading {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 20px 0;
+  font-size: 12.5px;
+}
+
 /* ===== QUICK LINKS — FIXED HORIZONTAL TOOLBAR ===== */
 .quicklinks-bar {
   background: var(--bg-card);
@@ -1219,6 +1296,7 @@ footer p {
 </style>
 </head>
 <body>
+<div class="container">
 
 <nav class="topnav">
   <div class="topnav-inner">
@@ -1342,6 +1420,7 @@ footer p {
         <div class="lunch-today-banner"><span class="dot"></span><span id="lunch-today-label">Today's lunch</span></div>
         <div class="lunch-week-label" id="lunch-week-label"></div>
         <p class="lunch-note" id="lunch-note">Menu rotates weekly. Tap below for today's actual items, allergens, and serving times — CraveFood is the live source of truth.</p>
+        <div id="lunch-menu" class="lunch-menu"></div>
         <iframe id="lunch-pdf" class="lunch-pdf" title="Lunch menu PDF"></iframe>
         <div class="lunch-actions">
           <a href="https://sfs.cravefood.kr" target="_blank" rel="noopener" class="lunch-btn lunch-btn-primary">
@@ -1508,9 +1587,18 @@ footer p {
 
 </div>
 
+</div>
+
 <script src="firebase-config.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+  if (window.pdfjsLib) {
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+</script>
 <script src="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack-all.js"></script>
 <script>
 // ===== FIREBASE INIT (no-op when firebase-config.js still has REPLACE_ME) =====
@@ -1965,7 +2053,10 @@ async function loadInstagramCarousel(id, username) {
   }
 }
 
-// ===== LUNCH PDF FROM FIRESTORE (Google Drive embed) =====
+// ===== LUNCH FROM FIRESTORE — parses PDF text, falls back to iframe =====
+var LUNCH_DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+var LUNCH_DAYS_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
 async function loadLunchFromFirestore() {
   if (!FIREBASE_READY) return;
   try {
@@ -1973,21 +2064,171 @@ async function loadLunchFromFirestore() {
     if (!snap.exists) return;
     var d = snap.data() || {};
     if (!d.driveFileId) return;
-    var frame = document.getElementById('lunch-pdf');
-    var note  = document.getElementById('lunch-note');
-    var week  = document.getElementById('lunch-week-label');
-    if (frame) {
-      frame.src = 'https://drive.google.com/file/d/' + d.driveFileId + '/preview';
-      frame.classList.add('show');
-    }
-    if (note) note.style.display = 'none';
+    var week = document.getElementById('lunch-week-label');
     if (week && d.week) {
       week.textContent = d.week;
       week.classList.add('show');
     }
+    await renderLunchMenu(d.driveFileId);
   } catch (e) {
     console.warn('loadLunchFromFirestore failed:', e);
   }
+}
+
+async function renderLunchMenu(fileId) {
+  var menuEl = document.getElementById('lunch-menu');
+  var frame  = document.getElementById('lunch-pdf');
+  var note   = document.getElementById('lunch-note');
+  if (!menuEl) return;
+
+  var cacheKey = 'lunch-menu-' + fileId;
+  try {
+    var cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
+    if (cached && (Date.now() - cached.t) < 30 * 60 * 1000 && cached.html) {
+      menuEl.innerHTML = cached.html;
+      menuEl.classList.add('show');
+      if (frame) frame.classList.remove('show');
+      if (note) note.style.display = 'none';
+      // Refresh in background (don't await) so the next load is fresh
+      parseAndRenderLunch(fileId, menuEl, frame, note, true);
+      return;
+    }
+  } catch (e) {}
+
+  menuEl.innerHTML = '<div class="lunch-loading">Reading menu…</div>';
+  menuEl.classList.add('show');
+  if (frame) frame.classList.remove('show');
+  if (note) note.style.display = 'none';
+  await parseAndRenderLunch(fileId, menuEl, frame, note, false);
+}
+
+async function parseAndRenderLunch(fileId, menuEl, frame, note, silent) {
+  try {
+    var sections = await fetchAndParseLunchPdf(fileId);
+    if (!sections || sections.length === 0) throw new Error('empty');
+    var html = renderLunchSections(sections);
+    menuEl.innerHTML = html;
+    menuEl.classList.add('show');
+    if (frame) frame.classList.remove('show');
+    if (note) note.style.display = 'none';
+    try {
+      localStorage.setItem('lunch-menu-' + fileId, JSON.stringify({ t: Date.now(), html: html }));
+    } catch (e) {}
+  } catch (e) {
+    console.warn('PDF parse failed, falling back to iframe:', e);
+    if (silent) return;  // background refresh — don't disturb the UI
+    menuEl.classList.remove('show');
+    menuEl.innerHTML = '';
+    if (frame) {
+      frame.src = 'https://drive.google.com/file/d/' + fileId + '/preview';
+      frame.classList.add('show');
+    }
+  }
+}
+
+// Fetch the PDF binary through a CORS proxy, parse with PDF.js, and group
+// text by section header + day. Returns an array of
+// { section: "INTERNATIONAL", days: { Mon: "...", Tue: "..." } }.
+async function fetchAndParseLunchPdf(fileId) {
+  if (!window.pdfjsLib) throw new Error('pdfjs-not-loaded');
+  var driveUrl = 'https://drive.google.com/uc?export=download&id=' + fileId;
+  var proxied = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(driveUrl);
+  var res = await fetchWithTimeout(proxied, 15000);
+  var buf = await res.arrayBuffer();
+  var pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
+
+  // Collect all text items with positions across pages.
+  var items = [];
+  for (var i = 1; i <= pdf.numPages; i++) {
+    var page = await pdf.getPage(i);
+    var content = await page.getTextContent();
+    var pageHeight = (page.view && page.view[3]) || 0;
+    content.items.forEach(function(it) {
+      var s = (it.str || '').trim();
+      if (!s) return;
+      items.push({
+        text: s,
+        x: it.transform[4],
+        y: pageHeight - it.transform[5] + (i - 1) * 10000  // top-down across pages
+      });
+    });
+  }
+
+  // Group items by row (similar Y, within ~4px), then sort each row by X.
+  items.sort(function(a, b) { return a.y - b.y || a.x - b.x; });
+  var rows = [];
+  var current = null;
+  items.forEach(function(it) {
+    if (current && Math.abs(it.y - current.y) < 4) {
+      current.cells.push(it);
+    } else {
+      current = { y: it.y, cells: [it] };
+      rows.push(current);
+    }
+  });
+
+  // Walk rows, identify sections (ALL-CAPS headers) and per-day items.
+  var sections = [];
+  var sectionMap = {};
+  var DAY_RE = /^(Mon|Tue|Wed|Thu|Fri)\.?$/i;
+  var SECTION_RE = /^[A-Z][A-Z\s&'\/]{3,}$/;
+  var ignoreLine = /^(crave|high school|page \d+|w\d|^\d+$|₩\d+)/i;
+  var currentSection = null;
+
+  rows.forEach(function(row) {
+    row.cells.sort(function(a, b) { return a.x - b.x; });
+    var firstText = row.cells[0].text.trim();
+
+    // Section header detection — single ALL-CAPS cell that spans the row's start.
+    if (SECTION_RE.test(firstText) && row.cells.length <= 3 && firstText.length < 40) {
+      currentSection = firstText.replace(/\s+/g, ' ').trim();
+      if (!sectionMap[currentSection]) {
+        sectionMap[currentSection] = { section: currentSection, days: {} };
+        sections.push(sectionMap[currentSection]);
+      }
+      return;
+    }
+
+    // Day row inside a section: starts with Mon/Tue/Wed/Thu/Fri, then items.
+    if (currentSection && DAY_RE.test(firstText)) {
+      var day = firstText.slice(0, 3).toLowerCase();
+      day = day.charAt(0).toUpperCase() + day.slice(1);
+      var rest = row.cells.slice(1)
+        .map(function(c) { return c.text.trim(); })
+        .filter(function(t) { return t && !ignoreLine.test(t) && !/^₩?\d+,?\d*$/.test(t); })
+        .join(' — ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      if (rest) {
+        var bucket = sectionMap[currentSection];
+        bucket.days[day] = (bucket.days[day] ? bucket.days[day] + ' / ' : '') + rest;
+      }
+    }
+  });
+
+  return sections.filter(function(s) { return Object.keys(s.days).length > 0; });
+}
+
+function renderLunchSections(sections) {
+  var todayIdx = new Date().getDay();
+  var todayShort = LUNCH_DAYS_SHORT[todayIdx];
+  var ORDER = ['Mon','Tue','Wed','Thu','Fri'];
+  return sections.map(function(s) {
+    var rows = ORDER.filter(function(d) { return s.days[d]; }).map(function(d) {
+      var isToday = (d === todayShort);
+      return '<div class="lunch-day-block' + (isToday ? ' today' : '') + '">' +
+               '<div class="day">' + d + '</div>' +
+               '<div class="items">' + escapeLunchHtml(s.days[d]) + '</div>' +
+             '</div>';
+    }).join('');
+    return '<div class="lunch-section">' + escapeLunchHtml(s.section) + '</div>' + rows;
+  }).join('');
+}
+
+function escapeLunchHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, function(c) {
+    return ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c];
+  });
 }
 
 // ===== ADMIN ANNOUNCEMENTS FROM FIRESTORE =====
@@ -2258,7 +2499,7 @@ function initDragGrid() {
   gridApi = GridStack.init({
     column: 12,           // 12-col base grid (extra CSS covers 2-11 for breakpoints)
     cellHeight: 58,
-    margin: 16,
+    margin: 22,
     float: false,         // compact to top-left
     animate: true,
     handle: '.w-head',
