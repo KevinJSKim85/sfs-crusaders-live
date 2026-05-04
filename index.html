@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SFS Crusaders Live</title>
+<title>SFS Crusader Hub</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="icon" type="image/png" sizes="32x32" href="sfs-logo.png">
 <link rel="apple-touch-icon" href="sfs-logo.png">
 <meta name="theme-color" content="#2B3160">
-<meta name="description" content="SFS Crusaders Live — Seoul Foreign School student dashboard with news, lunch, athletics, weather, and more.">
-<meta property="og:title" content="SFS Crusaders Live">
+<meta name="description" content="SFS Crusader Hub — Seoul Foreign School student dashboard with news, lunch, athletics, weather, and more.">
+<meta property="og:title" content="SFS Crusader Hub">
 <meta property="og:description" content="Seoul Foreign School student dashboard">
 <meta property="og:image" content="hero-campus.jpg">
 <meta property="og:type" content="website">
@@ -102,7 +102,7 @@ body {
 .container {
   width: 100%;
   margin: 0 auto;
-  padding: 0 24px 24px;
+  padding: 0 28px 28px;
 }
 
 /* ===== TOP NAV ===== */
@@ -537,7 +537,7 @@ body {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 18px;
-  padding: 18px 20px;
+  padding: 22px 24px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -585,7 +585,7 @@ a.widget:hover { background: var(--bg-card-hover); }
 
 .w-title {
   font-family: 'Inter', sans-serif;
-  font-size: 12.5px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.4px;
   text-transform: uppercase;
@@ -593,7 +593,7 @@ a.widget:hover { background: var(--bg-card-hover); }
 }
 
 .w-link {
-  font-size: 11px;
+  font-size: 12.5px;
   font-weight: 600;
   color: var(--text-muted);
   text-decoration: none;
@@ -604,7 +604,7 @@ a.widget:hover { background: var(--bg-card-hover); }
 }
 
 .w-link:hover { color: var(--sfs-red); }
-.w-link svg { width: 11px; height: 11px; }
+.w-link svg { width: 12px; height: 12px; }
 
 .w-badge {
   font-size: 10px;
@@ -725,16 +725,16 @@ a.widget:hover { background: var(--bg-card-hover); }
 }
 
 .news-item h4 {
-  font-size: 13px;
+  font-size: 14.5px;
   font-weight: 600;
   line-height: 1.4;
-  margin-bottom: 4px;
+  margin-bottom: 5px;
   color: var(--text);
   transition: color 0.2s;
 }
 
 .news-item .meta {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-muted);
   font-weight: 500;
 }
@@ -746,84 +746,174 @@ a.widget:hover { background: var(--bg-card-hover); }
   font-size: 12px;
 }
 
-/* ===== LUNCH GRID ===== */
-.lunch-list {
+/* ===== LUNCH WIDGET ===== */
+.lunch-cta {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  height: 100%;
+  gap: 12px;
 }
 
-.lunch-day {
-  padding: 10px 0;
-  border-bottom: 1px solid var(--border);
-}
-.lunch-day:last-child { border-bottom: none; }
-
-.lunch-day.today {
+.lunch-today-banner {
   background: var(--tag-red-bg);
-  margin: 0 -8px;
-  padding: 10px 8px;
-  border-radius: 8px;
-  border-bottom: none;
+  color: var(--sfs-red);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.lunch-label {
-  font-size: 10px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 1.2px;
-  color: var(--text-muted);
-  margin-bottom: 4px;
+.lunch-today-banner .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--sfs-red);
+  flex-shrink: 0;
+  box-shadow: 0 0 0 3px var(--tag-red-bg);
 }
 
-.lunch-day.today .lunch-label { color: var(--sfs-red); }
-
-.lunch-text {
-  font-size: 12px;
+.lunch-note {
+  font-size: 13px;
   color: var(--text-secondary);
-  line-height: 1.5;
+  line-height: 1.55;
   font-weight: 500;
 }
 
-/* ===== QUICK LINKS GRID ===== */
-.links-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 6px;
+.lunch-actions {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
+
+.lunch-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  transition: transform 0.15s, background 0.2s, border-color 0.2s;
+}
+
+.lunch-btn:hover { transform: translateY(-1px); }
+.lunch-btn:active { transform: translateY(0); }
+
+.lunch-btn-primary {
+  background: var(--sfs-red);
+  color: white;
+}
+.lunch-btn-primary:hover { background: var(--sfs-red-dim); }
+
+.lunch-btn-secondary {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+}
+.lunch-btn-secondary:hover { background: var(--bg-card-hover); }
+
+.lunch-btn .lb-icon { display: flex; align-items: center; gap: 8px; }
+.lunch-btn .lb-icon svg { width: 18px; height: 18px; stroke-width: 2; }
+.lunch-btn .lb-arrow { width: 14px; height: 14px; opacity: 0.85; }
+
+.lunch-pdf {
+  width: 100%;
+  flex: 1;
+  min-height: 200px;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: var(--surface);
+  display: none;
+}
+.lunch-pdf.show { display: block; }
+
+.lunch-week-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  margin-top: 4px;
+  display: none;
+}
+.lunch-week-label.show { display: block; }
+
+/* ===== QUICK LINKS — FIXED HORIZONTAL TOOLBAR ===== */
+.quicklinks-bar {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 12px;
+  margin: 0 0 22px;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.quicklinks-bar::-webkit-scrollbar { height: 6px; }
+.quicklinks-bar::-webkit-scrollbar-track { background: transparent; }
+.quicklinks-bar::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
 
 .link-tile {
   background: var(--surface);
-  border-radius: 8px;
-  padding: 9px 10px;
+  border-radius: 12px;
+  padding: 12px 10px;
   text-decoration: none;
   color: var(--text-secondary);
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
-  transition: all 0.2s;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+  transition: all 0.18s;
+  flex: 1 1 0;
+  min-width: 92px;
+  min-height: 72px;
 }
 
 .link-tile:hover {
   background: var(--bg-card-hover);
   color: var(--text);
+  transform: translateY(-1px);
+}
+
+.link-tile:active {
+  transform: translateY(0);
 }
 
 .link-tile svg {
-  width: 15px;
-  height: 15px;
+  width: 24px;
+  height: 24px;
   stroke-width: 1.8;
   color: var(--sfs-red);
   flex-shrink: 0;
 }
 
 .link-name {
-  font-size: 11px;
+  font-size: 12.5px;
   font-weight: 600;
   line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+@media (max-width: 640px) {
+  .quicklinks-bar { padding: 10px; gap: 6px; margin-bottom: 18px; }
+  .link-tile { min-width: 80px; padding: 10px 8px; min-height: 64px; }
+  .link-tile svg { width: 22px; height: 22px; }
+  .link-name { font-size: 11.5px; }
 }
 
 /* ===== INSTAGRAM CAROUSEL ===== */
@@ -923,14 +1013,14 @@ a.widget:hover { background: var(--bg-card-hover); }
 
 .feature-content h3 {
   font-family: 'Cinzel', serif;
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 600;
   color: var(--text);
   letter-spacing: 0.5px;
 }
 
 .feature-content p {
-  font-size: 13px;
+  font-size: 14.5px;
   color: var(--text-secondary);
   line-height: 1.6;
   font-weight: 500;
@@ -1204,19 +1294,21 @@ footer p {
   </div>
 </section>
 
+<section class="quicklinks-bar" id="links-grid" aria-label="Quick links"></section>
+
 <div class="grid" id="grid">
 
-  <!-- News & Announcements -->
+  <!-- Clubs & Announcements -->
   <div class="widget" data-wid="news">
     <div class="w-head">
       <div class="w-head-left">
         <div class="w-icon bg-red">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
         </div>
-        <div class="w-title">News &amp; Announcements</div>
+        <div class="w-title">Clubs &amp; Announcements</div>
       </div>
-      <a href="https://www.seoulforeign.org/community/news" target="_blank" class="w-link">
-        SFS News
+      <a href="https://sites.google.com/seoulforeign.org/sfhsclubsorganizations25-26/home" target="_blank" class="w-link">
+        SFHS Hub
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
       </a>
     </div>
@@ -1238,7 +1330,7 @@ footer p {
         <div class="w-icon bg-amber">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11h18a9 9 0 0 1-18 0z"/><path d="M12 11V3"/><path d="M9 6c0-1.5 3-1.5 3-3M15 6c0-1.5-3-1.5-3-3"/></svg>
         </div>
-        <div class="w-title">High School Lunch Menu</div>
+        <div class="w-title">High School Lunch</div>
       </div>
       <a href="https://sfs.cravefood.kr" target="_blank" class="w-link">
         CraveFood
@@ -1246,26 +1338,23 @@ footer p {
       </a>
     </div>
     <div class="w-body">
-      <div class="lunch-list">
-        <div class="lunch-day" id="lunch-mon">
-          <div class="lunch-label">Monday</div>
-          <div class="lunch-text">Chicken Katsu Curry, Steamed Rice, Miso Soup, Seasonal Salad</div>
-        </div>
-        <div class="lunch-day" id="lunch-tue">
-          <div class="lunch-label">Tuesday</div>
-          <div class="lunch-text">Beef Bulgogi Bowl, Kimchi Fried Rice, Japchae, Fresh Fruit</div>
-        </div>
-        <div class="lunch-day" id="lunch-wed">
-          <div class="lunch-label">Wednesday</div>
-          <div class="lunch-text">Margherita Pizza, Caesar Salad, Minestrone Soup, Garlic Bread</div>
-        </div>
-        <div class="lunch-day" id="lunch-thu">
-          <div class="lunch-label">Thursday</div>
-          <div class="lunch-text">Bibimbap, Doenjang Jjigae, Kimbap Rolls, Yogurt Parfait</div>
-        </div>
-        <div class="lunch-day" id="lunch-fri">
-          <div class="lunch-label">Friday</div>
-          <div class="lunch-text">Fish Tacos, Mexican Rice, Black Bean Soup, Churros</div>
+      <div class="lunch-cta">
+        <div class="lunch-today-banner"><span class="dot"></span><span id="lunch-today-label">Today's lunch</span></div>
+        <div class="lunch-week-label" id="lunch-week-label"></div>
+        <p class="lunch-note" id="lunch-note">Menu rotates weekly. Tap below for today's actual items, allergens, and serving times — CraveFood is the live source of truth.</p>
+        <iframe id="lunch-pdf" class="lunch-pdf" title="Lunch menu PDF"></iframe>
+        <div class="lunch-actions">
+          <a href="https://sfs.cravefood.kr" target="_blank" rel="noopener" class="lunch-btn lunch-btn-primary">
+            <span class="lb-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11h18a9 9 0 0 1-18 0z"/><path d="M12 11V3"/></svg>
+              CraveFood Menu
+            </span>
+            <svg class="lb-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+          <a href="https://www.seoulforeign.org/community/lunch-menu" target="_blank" rel="noopener" class="lunch-btn lunch-btn-secondary">
+            <span class="lb-icon">School Weekly Menu</span>
+            <svg class="lb-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
         </div>
       </div>
     </div>
@@ -1290,19 +1379,35 @@ footer p {
     </div>
   </div>
 
-  <!-- College News -->
+  <!-- World & Reading -->
   <div class="widget" data-wid="college">
     <div class="w-head">
       <div class="w-head-left">
         <div class="w-icon bg-purple">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
         </div>
-        <div class="w-title">College News</div>
+        <div class="w-title">World &amp; Reading</div>
       </div>
-      <span class="w-badge bg-purple">US + UK</span>
+      <span class="w-badge bg-purple">News + Econ</span>
     </div>
     <div class="w-body" id="college-body">
       <div class="feed-loading">Loading feeds...</div>
+    </div>
+  </div>
+
+  <!-- Student Reads (curated long-form for HS) -->
+  <div class="widget" data-wid="reads">
+    <div class="w-head">
+      <div class="w-head-left">
+        <div class="w-icon bg-green">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2zM22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        </div>
+        <div class="w-title">Student Reads</div>
+      </div>
+      <span class="w-badge bg-green">Curated</span>
+    </div>
+    <div class="w-body" id="student-reads-body">
+      <div class="feed-loading">Loading reads...</div>
     </div>
   </div>
 
@@ -1354,21 +1459,6 @@ footer p {
     <div class="ig-dots" id="ig-dots-athletics"></div>
   </div>
 
-  <!-- Quick Links -->
-  <div class="widget" data-wid="links">
-    <div class="w-head">
-      <div class="w-head-left">
-        <div class="w-icon bg-amber">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-        </div>
-        <div class="w-title">Quick Links</div>
-      </div>
-    </div>
-    <div class="w-body">
-      <div class="links-grid" id="links-grid"></div>
-    </div>
-  </div>
-
   <!-- Spirit Magazine (live from Issuu) -->
   <div class="widget" data-wid="spirit">
     <div class="w-head">
@@ -1413,13 +1503,27 @@ footer p {
 </div>
 
 <footer>
-  <p><span class="footer-brand">SFS Crusaders Live</span> &middot; Built by Avery Kim &middot; Science National Honor Society &middot; Seoul Foreign School 2026</p>
+  <p><span class="footer-brand">SFS Crusader Hub</span> &middot; Built by Avery Kim &middot; Seoul Foreign School 2026</p>
 </footer>
 
 </div>
 
+<script src="firebase-config.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack-all.js"></script>
 <script>
+// ===== FIREBASE INIT (no-op when firebase-config.js still has REPLACE_ME) =====
+var FIREBASE_READY = false;
+if (typeof firebase !== 'undefined' && window.isFirebaseConfigured && window.isFirebaseConfigured()) {
+  try {
+    firebase.initializeApp(window.FIREBASE_CONFIG);
+    FIREBASE_READY = true;
+  } catch (e) {
+    console.warn('Firebase init failed:', e);
+  }
+}
+
 // ===== ICONS (Lucide-style stroke set) =====
 var ICONS = {
   mail:       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',
@@ -1470,36 +1574,37 @@ function updateHero() {
   if (dayEl) dayEl.textContent = day;
   if (greetEl) greetEl.textContent = greet;
   if (dateEl) dateEl.textContent = dateStr;
+  if (typeof updateLunchTodayLabel === 'function') updateLunchTodayLabel();
 }
 setInterval(updateHero, 30000);
 updateHero();
 
-// ===== HIGHLIGHT TODAY'S LUNCH =====
-var dayMap = { 1:'mon', 2:'tue', 3:'wed', 4:'thu', 5:'fri' };
-var todayDay = new Date().getDay();
-if (dayMap[todayDay]) {
-  var lunchEl = document.getElementById('lunch-' + dayMap[todayDay]);
-  if (lunchEl) lunchEl.classList.add('today');
+// ===== LUNCH TODAY LABEL (auto-refreshes via updateHero every 30s) =====
+function updateLunchTodayLabel() {
+  var lbl = document.getElementById('lunch-today-label');
+  if (!lbl) return;
+  var DAYS_LONG = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var d = new Date().getDay();
+  lbl.textContent = (d >= 1 && d <= 5)
+    ? "Today is " + DAYS_LONG[d]
+    : "Lunch resumes Monday";
 }
+updateLunchTodayLabel();
 
 // ===== QUICK LINKS =====
 var links = [
   { name: "Gmail",            icon: ICONS.mail,      url: "https://mail.google.com" },
   { name: "Drive",            icon: ICONS.drive,     url: "https://drive.google.com" },
   { name: "Classroom",        icon: ICONS.classroom, url: "https://classroom.google.com" },
-  { name: "Maia Learning",    icon: ICONS.target,    url: "https://www.maialearning.com" },
   { name: "Calendar",         icon: ICONS.calendar,  url: "https://calendar.google.com" },
-  { name: "Canva",            icon: ICONS.palette,   url: "https://www.canva.com" },
+  { name: "Maia Learning",    icon: ICONS.target,    url: "https://www.maialearning.com" },
   { name: "CollegeBoard",     icon: ICONS.building,  url: "https://www.collegeboard.org" },
-  { name: "ACT",              icon: ICONS.document,  url: "https://www.act.org" },
-  { name: "Air Quality",      icon: ICONS.wind,      url: "https://www.seoulforeign.org/aqi" },
-  { name: "Digital Club",     icon: ICONS.laptop,    url: "https://sites.google.com/seoulforeign.org/organization-guide/home" },
+  { name: "Canva",            icon: ICONS.palette,   url: "https://www.canva.com" },
   { name: "Library",          icon: ICONS.book,      url: "https://library.seoulforeign.org/oliver/home/news" },
-  { name: "Web Print",        icon: ICONS.printer,   url: "https://fujifilm.sfs.or.kr/User" },
-  { name: "Doc Request",      icon: ICONS.clipboard, url: "https://docs.google.com/forms/d/e/1FAIpQLScH5DW3v_tMNrx_Kfn5Acs56Y-SoCZe9JMizLvd9wSZtFO5ww/viewform" },
+  { name: "Clubs",            icon: ICONS.laptop,    url: "https://sites.google.com/seoulforeign.org/sfhsclubsorganizations25-26/home" },
   { name: "CraveFood",        icon: ICONS.utensils,  url: "https://sfs.cravefood.kr" },
-  { name: "Athletics",        icon: ICONS.trophy,    url: "https://sfscrusaderathletics.com/" },
-  { name: "Instagram",        icon: ICONS.instagram, url: "https://www.instagram.com/seoul_foreign_school/" }
+  { name: "Web Print",        icon: ICONS.printer,   url: "https://fujifilm.sfs.or.kr/User" },
+  { name: "Doc Request",      icon: ICONS.clipboard, url: "https://docs.google.com/forms/d/e/1FAIpQLScH5DW3v_tMNrx_Kfn5Acs56Y-SoCZe9JMizLvd9wSZtFO5ww/viewform" }
 ];
 
 var grid = document.getElementById('links-grid');
@@ -1667,32 +1772,19 @@ async function scrapeSFSNews() {
 
 async function loadNewsAndAnnouncements() {
   var container = document.getElementById('announcements-body');
+  // Admin-posted announcements (Firestore) take priority. SFS scrape fills out
+  // the rest. Inside Higher Ed / Hechinger were dropped — not student-relevant.
   var results = await Promise.allSettled([
-    scrapeSFSNews(),
-    fetchRSS('https://www.insidehighered.com/rss/news'),
-    fetchRSS('https://hechingerreport.org/feed/')
+    loadAdminAnnouncements(),
+    scrapeSFSNews()
   ]);
 
   var allItems = [];
   if (results[0].status === 'fulfilled' && results[0].value.length > 0) allItems = allItems.concat(results[0].value);
-
-  var rssItems = [];
-  if (results[1].status === 'fulfilled') rssItems = rssItems.concat(results[1].value);
-  if (results[2].status === 'fulfilled') rssItems = rssItems.concat(results[2].value);
-  rssItems.sort(function(a, b) { return new Date(b.pubDate) - new Date(a.pubDate); });
-  rssItems = rssItems.slice(0, 4).map(function(item, i) {
-    return {
-      title: item.title,
-      link: item.link,
-      pubDate: item.pubDate,
-      source: new URL(item.link).hostname.replace('www.', ''),
-      tag: tagStyles[i % tagStyles.length]
-    };
-  });
-  allItems = allItems.concat(rssItems);
+  if (results[1].status === 'fulfilled' && results[1].value.length > 0) allItems = allItems.concat(results[1].value);
 
   if (allItems.length === 0) {
-    container.innerHTML = '<div class="feed-empty">Could not load feeds. <a href="https://www.seoulforeign.org/community/news" target="_blank" style="color:var(--sfs-red);">Visit SFS News</a></div>';
+    container.innerHTML = '<div class="feed-empty">No announcements yet. <a href="https://sites.google.com/seoulforeign.org/sfhsclubsorganizations25-26/home" target="_blank" style="color:var(--sfs-red);">Visit SFHS Hub</a></div>';
     return;
   }
 
@@ -1713,27 +1805,30 @@ async function loadNewsAndAnnouncements() {
   }
 }
 
-// ===== COLLEGE NEWS =====
+// ===== WORLD & READING =====
 var collegeTags = {
-  nyt:    { label: 'NY Times',  bg: 'var(--tag-blue-bg)',   color: 'var(--tag-blue-fg)' },
-  guard:  { label: 'Guardian',  bg: 'var(--tag-green-bg)',  color: 'var(--tag-green-fg)' },
-  hech:   { label: 'Hechinger', bg: 'var(--tag-purple-bg)', color: 'var(--tag-purple-fg)' }
+  econ:  { label: 'Economist', bg: 'var(--tag-red-bg)',    color: 'var(--tag-red-fg)' },
+  bbc:   { label: 'BBC',       bg: 'var(--tag-blue-bg)',   color: 'var(--tag-blue-fg)' },
+  nyt:   { label: 'NY Times',  bg: 'var(--tag-amber-bg)',  color: 'var(--tag-amber-fg)' },
+  guard: { label: 'Guardian',  bg: 'var(--tag-green-bg)',  color: 'var(--tag-green-fg)' }
 };
 
 async function loadCollegeFeeds() {
   var container = document.getElementById('college-body');
   try {
     var feeds = await Promise.allSettled([
+      fetchRSS('https://www.economist.com/finance-and-economics/rss.xml'),
+      fetchRSS('http://feeds.bbci.co.uk/news/world/rss.xml'),
       fetchRSS('https://rss.nytimes.com/services/xml/rss/nyt/Education.xml'),
-      fetchRSS('https://www.theguardian.com/education/rss'),
-      fetchRSS('https://hechingerreport.org/feed/')
+      fetchRSS('https://www.theguardian.com/education/rss')
     ]);
 
     var items = [];
     var feedMeta = [
+      { tag: collegeTags.econ,  source: 'economist.com' },
+      { tag: collegeTags.bbc,   source: 'bbc.com' },
       { tag: collegeTags.nyt,   source: 'nytimes.com' },
-      { tag: collegeTags.guard, source: 'theguardian.com' },
-      { tag: collegeTags.hech,  source: 'hechingerreport.org' }
+      { tag: collegeTags.guard, source: 'theguardian.com' }
     ];
 
     feeds.forEach(function(f, idx) {
@@ -1758,7 +1853,7 @@ async function loadCollegeFeeds() {
         '</a></div>';
     }).join('');
   } catch (e) {
-    container.innerHTML = '<div class="feed-empty">Feed unavailable. <a href="https://www.nytimes.com/section/education" target="_blank" style="color:var(--sfs-red);">NY Times</a> &middot; <a href="https://www.theguardian.com/education" target="_blank" style="color:var(--sfs-red);">Guardian</a></div>';
+    container.innerHTML = '<div class="feed-empty">Feed unavailable. <a href="https://www.economist.com" target="_blank" style="color:var(--sfs-red);">Economist</a> &middot; <a href="https://www.bbc.com/news" target="_blank" style="color:var(--sfs-red);">BBC</a></div>';
   }
 }
 
@@ -1870,12 +1965,141 @@ async function loadInstagramCarousel(id, username) {
   }
 }
 
-// ===== KICKOFF =====
+// ===== LUNCH PDF FROM FIRESTORE (Google Drive embed) =====
+async function loadLunchFromFirestore() {
+  if (!FIREBASE_READY) return;
+  try {
+    var snap = await firebase.firestore().collection('config').doc('lunch').get();
+    if (!snap.exists) return;
+    var d = snap.data() || {};
+    if (!d.driveFileId) return;
+    var frame = document.getElementById('lunch-pdf');
+    var note  = document.getElementById('lunch-note');
+    var week  = document.getElementById('lunch-week-label');
+    if (frame) {
+      frame.src = 'https://drive.google.com/file/d/' + d.driveFileId + '/preview';
+      frame.classList.add('show');
+    }
+    if (note) note.style.display = 'none';
+    if (week && d.week) {
+      week.textContent = d.week;
+      week.classList.add('show');
+    }
+  } catch (e) {
+    console.warn('loadLunchFromFirestore failed:', e);
+  }
+}
+
+// ===== ADMIN ANNOUNCEMENTS FROM FIRESTORE =====
+// Tag colors for admin-posted announcements (by type).
+var ADMIN_ANN_TAGS = {
+  news:   { label: 'News',   bg: 'var(--tag-red-bg)',    color: 'var(--tag-red-fg)' },
+  event:  { label: 'Event',  bg: 'var(--tag-purple-bg)', color: 'var(--tag-purple-fg)' },
+  info:   { label: 'Info',   bg: 'var(--tag-green-bg)',  color: 'var(--tag-green-fg)' },
+  update: { label: 'Update', bg: 'var(--tag-blue-bg)',   color: 'var(--tag-blue-fg)' }
+};
+
+async function loadAdminAnnouncements() {
+  if (!FIREBASE_READY) return [];
+  try {
+    var snap = await firebase.firestore()
+      .collection('announcements')
+      .orderBy('createdAt', 'desc')
+      .limit(20)
+      .get();
+    var items = [];
+    snap.forEach(function(doc) {
+      var d = doc.data() || {};
+      if (d.active === false) return;
+      var tag = ADMIN_ANN_TAGS[d.tag] || ADMIN_ANN_TAGS.news;
+      items.push({
+        title: d.title || '(untitled)',
+        link: d.link || 'https://sites.google.com/seoulforeign.org/sfhsclubsorganizations25-26/home',
+        pubDate: d.createdAt && d.createdAt.toDate ? d.createdAt.toDate().toISOString() : null,
+        source: 'SFHS',
+        tag: tag,
+        body: d.body || ''
+      });
+    });
+    return items.slice(0, 6);
+  } catch (e) {
+    console.warn('loadAdminAnnouncements failed:', e);
+    return [];
+  }
+}
+
+// ===== KICKOFF + AUTO-REFRESH =====
+// Each loader is called once immediately, then re-runs on its own interval so
+// long-lived browser tabs keep getting fresh data without a page reload.
+// Intervals are tuned for source volatility and (for scraping) host friendliness.
 loadNewsAndAnnouncements();
+setInterval(loadNewsAndAnnouncements, 15 * 60 * 1000);   // SFS scrape + RSS — 15 min
+
 loadCollegeFeeds();
+setInterval(loadCollegeFeeds, 30 * 60 * 1000);           // Economist/BBC/NYT/Guardian — 30 min
+
 loadAthletics();
+setInterval(loadAthletics, 15 * 60 * 1000);              // Athletics scrape — 15 min
+
 loadInstagramCarousel('sfs', 'seoul_foreign_school');
 loadInstagramCarousel('athletics', 'sfscrusaderathletics');
+setInterval(function() {
+  loadInstagramCarousel('sfs', 'seoul_foreign_school');
+  loadInstagramCarousel('athletics', 'sfscrusaderathletics');
+}, 30 * 60 * 1000);                                       // IG scrape — 30 min (rate-limit aware)
+
+// ===== STUDENT READS (curated for HS students) =====
+var studentReadsTags = {
+  vox:    { label: 'Vox',          bg: 'var(--tag-blue-bg)',   color: 'var(--tag-blue-fg)' },
+  atl:    { label: 'The Atlantic', bg: 'var(--tag-amber-bg)',  color: 'var(--tag-amber-fg)' },
+  market: { label: 'Marketplace',  bg: 'var(--tag-green-bg)',  color: 'var(--tag-green-fg)' },
+  quanta: { label: 'Quanta',       bg: 'var(--tag-purple-bg)', color: 'var(--tag-purple-fg)' }
+};
+
+async function loadStudentReads() {
+  var container = document.getElementById('student-reads-body');
+  if (!container) return;
+  try {
+    var feeds = await Promise.allSettled([
+      fetchRSS('https://www.vox.com/rss/index.xml'),
+      fetchRSS('https://www.theatlantic.com/feed/all/'),
+      fetchRSS('https://www.marketplace.org/feed/'),
+      fetchRSS('https://www.quantamagazine.org/feed/')
+    ]);
+    var items = [];
+    var meta = [
+      { tag: studentReadsTags.vox,    source: 'vox.com' },
+      { tag: studentReadsTags.atl,    source: 'theatlantic.com' },
+      { tag: studentReadsTags.market, source: 'marketplace.org' },
+      { tag: studentReadsTags.quanta, source: 'quantamagazine.org' }
+    ];
+    feeds.forEach(function(f, idx) {
+      if (f.status === 'fulfilled') {
+        f.value.slice(0, 2).forEach(function(item) {
+          items.push({ title: item.title, link: item.link, pubDate: item.pubDate, tag: meta[idx].tag, source: meta[idx].source });
+        });
+      }
+    });
+    items.sort(function(a, b) { return new Date(b.pubDate) - new Date(a.pubDate); });
+    items = items.slice(0, 6);
+    if (items.length === 0) throw new Error('empty');
+    container.innerHTML = items.map(function(item) {
+      var title = item.title.length > 70 ? item.title.slice(0, 67) + '...' : item.title;
+      return '<div class="news-item"><a href="' + item.link + '" target="_blank" rel="noopener">' +
+        '<span class="news-tag" style="background:' + item.tag.bg + ';color:' + item.tag.color + ';">' + item.tag.label + '</span>' +
+        '<h4>' + title + '</h4>' +
+        '<div class="meta">' + item.source + ' &middot; ' + timeAgo(item.pubDate) + '</div>' +
+        '</a></div>';
+    }).join('');
+  } catch (e) {
+    container.innerHTML = '<div class="feed-empty">Feed unavailable. <a href="https://www.vox.com" target="_blank" style="color:var(--sfs-red);">Vox</a> &middot; <a href="https://www.theatlantic.com" target="_blank" style="color:var(--sfs-red);">The Atlantic</a></div>';
+  }
+}
+loadStudentReads();
+setInterval(loadStudentReads, 30 * 60 * 1000);            // Curated reading — 30 min
+
+loadLunchFromFirestore();
+setInterval(loadLunchFromFirestore, 5 * 60 * 1000);       // Lunch PDF — 5 min
 
 // ===== SPIRIT MAGAZINE (Issuu profile scrape, cached-first) =====
 var SPIRIT_CACHE_KEY = 'sfs-spirit-feed-v1';
@@ -2008,9 +2232,9 @@ loadSpirit();
 setInterval(loadSpirit, 300000);   // re-check Issuu every 5 minutes
 
 // ===== GRIDSTACK DRAG GRID =====
-var LAYOUT_KEY = 'sfs-grid-layout-v5';
+var LAYOUT_KEY = 'sfs-grid-layout-v8';
 var CELL_W = 4;   // 12-col grid / 4 = 3 widgets per row
-var CELL_H = 6;   // 6 rows tall (row height 54 → ~344px with margin)
+var CELL_H = 7;   // 7 rows tall (row height 58 → ~420px with margin) — bumped for larger fonts
 var gridApi = null;
 
 function initDragGrid() {
@@ -2033,8 +2257,8 @@ function initDragGrid() {
 
   gridApi = GridStack.init({
     column: 12,           // 12-col base grid (extra CSS covers 2-11 for breakpoints)
-    cellHeight: 54,
-    margin: 10,
+    cellHeight: 58,
+    margin: 16,
     float: false,         // compact to top-left
     animate: true,
     handle: '.w-head',

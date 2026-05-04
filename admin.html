@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SFS Crusader Hub — Admin</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="sfs-logo.png">
+<meta name="theme-color" content="#2B3160">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sfs-red: #C1282E;
+  --sfs-red-dim: #9A1F24;
+  --sfs-blue: #2B3160;
+  --bg: #0E0E14;
+  --bg-elev: #16161F;
+  --bg-card: #1A1A24;
+  --bg-card-hover: #20202C;
+  --surface: #22222E;
+  --border: rgba(255,255,255,0.06);
+  --border-strong: rgba(255,255,255,0.12);
+  --text: #ECECF1;
+  --text-secondary: #A0A0B0;
+  --text-muted: #62626E;
+  --accent-green: #34C759;
+  --accent-amber: #FF9F0A;
+  --accent-red: #FF453A;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { background: var(--bg); }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+.topnav {
+  background: var(--sfs-blue);
+  border-bottom: 3px solid var(--sfs-red);
+  padding: 16px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-decoration: none;
+  color: white;
+}
+.brand img {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+  background: white;
+  border-radius: 6px;
+  padding: 3px;
+}
+.brand-name {
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: white;
+  line-height: 1.1;
+}
+.brand-tag {
+  font-size: 10px;
+  color: rgba(255,255,255,0.65);
+  letter-spacing: 1.6px;
+  margin-top: 3px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: white;
+  font-size: 13px;
+}
+.user-chip img {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.3);
+}
+.btn-signout {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.25);
+  color: white;
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-signout:hover { background: rgba(255,255,255,0.18); }
+
+main {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 32px 24px 60px;
+}
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 22px;
+}
+
+h1 {
+  font-family: 'Inter', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.4px;
+  margin-bottom: 6px;
+}
+
+.subtitle {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+h2 {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--surface);
+  padding: 4px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  width: fit-content;
+}
+.tab {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 10px 18px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s;
+  letter-spacing: 0.3px;
+}
+.tab:hover { color: var(--text); }
+.tab.active {
+  background: var(--sfs-red);
+  color: white;
+}
+
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+.form-row { margin-bottom: 16px; }
+label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+input[type=text],
+input[type=url],
+textarea,
+select {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--sfs-red);
+}
+textarea {
+  min-height: 90px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+input[type=file] {
+  width: 100%;
+  background: var(--surface);
+  border: 1px dashed var(--border-strong);
+  border-radius: 10px;
+  padding: 16px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.btn {
+  background: var(--sfs-red);
+  color: white;
+  border: none;
+  padding: 12px 22px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn:hover { background: var(--sfs-red-dim); }
+.btn:active { transform: translateY(1px); }
+.btn:disabled {
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: not-allowed;
+  transform: none;
+}
+.btn-secondary {
+  background: var(--surface);
+  color: var(--text);
+}
+.btn-secondary:hover { background: var(--bg-card-hover); }
+.btn-danger {
+  background: transparent;
+  border: 1px solid var(--accent-red);
+  color: var(--accent-red);
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: 7px;
+}
+.btn-danger:hover { background: var(--accent-red); color: white; }
+
+.btn-google {
+  background: white;
+  color: #333;
+  font-weight: 600;
+  padding: 14px 24px;
+}
+.btn-google:hover { background: #f1f1f1; }
+.btn-google svg { width: 18px; height: 18px; }
+
+.signin-wrap {
+  max-width: 420px;
+  margin: 80px auto;
+  text-align: center;
+}
+.signin-wrap .card { padding: 40px 32px; }
+
+.status-msg {
+  margin-top: 14px;
+  padding: 10px 14px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 600;
+  display: none;
+}
+.status-msg.show { display: block; }
+.status-msg.success { background: rgba(52,199,89,0.12); color: var(--accent-green); }
+.status-msg.error   { background: rgba(255,69,58,0.12);  color: var(--accent-red); }
+
+.lunch-current {
+  background: var(--surface);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.lunch-current-info {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.lunch-current-week {
+  color: var(--text);
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+.lunch-current-meta { color: var(--text-muted); font-size: 11.5px; }
+.lunch-preview {
+  width: 100%;
+  height: 460px;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: var(--surface);
+  margin-top: 12px;
+}
+
+.ann-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+.ann-item {
+  background: var(--surface);
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  border-left: 3px solid transparent;
+}
+.ann-item.inactive { opacity: 0.55; border-left-color: var(--text-muted); }
+.ann-item.active { border-left-color: var(--accent-green); }
+.ann-info { flex: 1; min-width: 0; }
+.ann-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.ann-body { font-size: 12.5px; color: var(--text-secondary); line-height: 1.45; margin-bottom: 6px; }
+.ann-meta { font-size: 11px; color: var(--text-muted); display: flex; gap: 10px; }
+.ann-meta-tag {
+  text-transform: uppercase;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  background: rgba(193,40,46,0.14);
+  color: #E8585D;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.ann-actions { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+.toggle-active {
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  color: var(--text-secondary);
+  padding: 5px 10px;
+  border-radius: 7px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+.toggle-active:hover { color: var(--text); }
+.toggle-active.on { background: var(--accent-green); border-color: var(--accent-green); color: white; }
+
+.empty-state {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 28px 0;
+  font-size: 13px;
+}
+
+.warning-banner {
+  background: rgba(255,159,10,0.12);
+  border: 1px solid var(--accent-amber);
+  color: var(--accent-amber);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.field-help {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  margin-top: 6px;
+  line-height: 1.4;
+}
+
+@media (max-width: 640px) {
+  .topnav { padding: 12px 16px; }
+  .brand-name { font-size: 12px; }
+  main { padding: 20px 14px 40px; }
+  .card { padding: 18px; }
+  .lunch-current { flex-direction: column; align-items: flex-start; }
+}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a href="index.html" class="brand">
+    <img src="sfs-logo.png" alt="SFS">
+    <div>
+      <div class="brand-name">CRUSADER HUB · ADMIN</div>
+      <div class="brand-tag">Manage lunch &middot; Announcements</div>
+    </div>
+  </a>
+  <div id="user-area"></div>
+</nav>
+
+<main>
+
+<div id="not-configured" class="card" style="display:none;">
+  <h1>Firebase not configured</h1>
+  <p class="subtitle">
+    Edit <code>firebase-config.js</code> with your Firebase project's values, then reload this page.
+    See <code>FIREBASE-SETUP.md</code> for step-by-step instructions.
+  </p>
+</div>
+
+<div id="signin" class="signin-wrap" style="display:none;">
+  <div class="card">
+    <h1>Admin Sign-in</h1>
+    <p class="subtitle">Sign in with your Google account to manage the dashboard.</p>
+    <button class="btn btn-google" id="btn-google" type="button">
+      <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.84 14.1A6.6 6.6 0 0 1 5.5 12c0-.73.13-1.44.34-2.1V7.07H2.18A11 11 0 0 0 1 12c0 1.78.43 3.46 1.18 4.93l3.66-2.83z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.83C6.71 7.31 9.14 5.38 12 5.38z"/></svg>
+      Sign in with Google
+    </button>
+    <div class="status-msg error" id="signin-error"></div>
+  </div>
+</div>
+
+<div id="app" style="display:none;">
+
+  <div class="card">
+    <h1>Dashboard Admin</h1>
+    <p class="subtitle">Update the lunch menu and post announcements that appear on the live SFS Crusader Hub dashboard.</p>
+
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-tab="lunch">Lunch</button>
+      <button class="tab" data-tab="announcements">Announcements</button>
+    </div>
+
+    <!-- LUNCH TAB -->
+    <div class="tab-panel active" id="panel-lunch">
+
+      <h2>Current Lunch Menu</h2>
+      <div id="lunch-current-card" class="lunch-current">
+        <div class="lunch-current-info" id="lunch-current-info">
+          <div class="lunch-current-week">No menu set yet</div>
+          <div class="lunch-current-meta">Paste a Google Drive link below to publish.</div>
+        </div>
+      </div>
+      <iframe id="lunch-current-preview" class="lunch-preview" style="display:none;"></iframe>
+
+      <h2 style="margin-top:30px;">Set This Week's Menu</h2>
+      <div class="form-row">
+        <label for="lunch-week">Week label (shown on dashboard)</label>
+        <input type="text" id="lunch-week" placeholder="e.g. Week of May 5–9, 2026">
+      </div>
+      <div class="form-row">
+        <label for="lunch-url">Google Drive PDF link</label>
+        <input type="url" id="lunch-url" placeholder="https://drive.google.com/file/d/.../view?usp=sharing">
+        <div class="field-help">
+          Upload your PDF to Google Drive → right-click → <b>Share → Anyone with the link → Viewer</b> → Copy link → paste here.
+          The dashboard will embed the file within seconds.
+        </div>
+      </div>
+      <button class="btn" id="btn-save-lunch">Save &amp; Publish</button>
+      <div class="status-msg" id="lunch-status"></div>
+    </div>
+
+    <!-- ANNOUNCEMENTS TAB -->
+    <div class="tab-panel" id="panel-announcements">
+
+      <h2>Post a New Announcement</h2>
+      <div class="form-row">
+        <label for="ann-title">Title</label>
+        <input type="text" id="ann-title" placeholder="e.g. Spring book sale on Friday">
+      </div>
+      <div class="form-row">
+        <label for="ann-body">Body (1–2 sentences)</label>
+        <textarea id="ann-body" placeholder="What students need to know — when, where, why."></textarea>
+      </div>
+      <div class="form-row">
+        <label for="ann-link">Link (optional)</label>
+        <input type="url" id="ann-link" placeholder="https://...">
+      </div>
+      <div class="form-row">
+        <label for="ann-tag">Tag</label>
+        <select id="ann-tag">
+          <option value="news">News</option>
+          <option value="event">Event</option>
+          <option value="info">Info</option>
+          <option value="update">Update</option>
+        </select>
+      </div>
+      <button class="btn" id="btn-post-ann">Post Announcement</button>
+      <div class="status-msg" id="ann-status"></div>
+
+      <h2 style="margin-top:34px;">Active &amp; Recent</h2>
+      <div class="ann-list" id="ann-list">
+        <div class="empty-state">No announcements yet.</div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+</main>
+
+<script src="firebase-config.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<script>
+(function(){
+  var notConfiguredEl = document.getElementById('not-configured');
+  var signinEl = document.getElementById('signin');
+  var appEl = document.getElementById('app');
+  var userArea = document.getElementById('user-area');
+
+  if (!window.isFirebaseConfigured || !window.isFirebaseConfigured()) {
+    notConfiguredEl.style.display = 'block';
+    return;
+  }
+
+  firebase.initializeApp(window.FIREBASE_CONFIG);
+  var auth = firebase.auth();
+  var db = firebase.firestore();
+
+  // Extract a Google Drive file ID from a share URL or accept a bare ID.
+  function extractDriveId(input) {
+    if (!input) return null;
+    var s = String(input).trim();
+    var m = s.match(/\/file\/d\/([a-zA-Z0-9_-]{20,})/);
+    if (m) return m[1];
+    m = s.match(/[?&]id=([a-zA-Z0-9_-]{20,})/);
+    if (m) return m[1];
+    if (/^[a-zA-Z0-9_-]{20,}$/.test(s)) return s;
+    return null;
+  }
+
+  var ALLOWED = (window.ADMIN_EMAILS || []).map(function(e){ return e.toLowerCase(); });
+
+  function show(el) { el.style.display = 'block'; }
+  function hide(el) { el.style.display = 'none'; }
+  function status(el, msg, kind) {
+    el.textContent = msg;
+    el.className = 'status-msg show ' + (kind || '');
+    setTimeout(function(){ el.classList.remove('show'); }, 5000);
+  }
+
+  // ===== AUTH =====
+  document.getElementById('btn-google').addEventListener('click', function(){
+    var provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider).catch(function(err){
+      status(document.getElementById('signin-error'), err.message, 'error');
+    });
+  });
+
+  auth.onAuthStateChanged(function(user){
+    if (!user) {
+      hide(appEl); show(signinEl);
+      userArea.innerHTML = '';
+      return;
+    }
+    if (ALLOWED.indexOf((user.email || '').toLowerCase()) === -1) {
+      auth.signOut();
+      status(document.getElementById('signin-error'),
+             'Access denied: ' + user.email + ' is not in the admin allowlist.', 'error');
+      return;
+    }
+    hide(signinEl); show(appEl);
+    userArea.innerHTML =
+      '<div class="user-chip">' +
+        (user.photoURL ? '<img src="'+user.photoURL+'" alt="">' : '') +
+        '<span>'+user.email+'</span>' +
+        '<button class="btn-signout" id="btn-signout">Sign out</button>' +
+      '</div>';
+    document.getElementById('btn-signout').onclick = function(){ auth.signOut(); };
+    initApp();
+  });
+
+  // ===== TABS =====
+  var tabs = document.querySelectorAll('.tab');
+  tabs.forEach(function(t){
+    t.addEventListener('click', function(){
+      tabs.forEach(function(x){ x.classList.remove('active'); });
+      t.classList.add('active');
+      document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
+      document.getElementById('panel-' + t.dataset.tab).classList.add('active');
+    });
+  });
+
+  // ===== APP =====
+  var inited = false;
+  function initApp() {
+    if (inited) return;
+    inited = true;
+    loadCurrentLunch();
+    listenAnnouncements();
+    wireLunchUpload();
+    wireAnnouncementPost();
+  }
+
+  function loadCurrentLunch() {
+    db.collection('config').doc('lunch').get().then(function(snap){
+      var info = document.getElementById('lunch-current-info');
+      var preview = document.getElementById('lunch-current-preview');
+      if (!snap.exists) {
+        info.innerHTML = '<div class="lunch-current-week">No menu set yet</div>'
+                       + '<div class="lunch-current-meta">Paste a Google Drive link below to publish.</div>';
+        hide(preview);
+        return;
+      }
+      var data = snap.data() || {};
+      var when = data.updatedAt && data.updatedAt.toDate ? data.updatedAt.toDate() : null;
+      info.innerHTML =
+        '<div class="lunch-current-week">' + (data.week || 'Current menu') + '</div>' +
+        '<div class="lunch-current-meta">' +
+          (data.driveFileId ? 'drive.google.com/.../' + data.driveFileId.slice(0, 10) + '…' : 'menu') +
+          (when ? ' &middot; updated ' + when.toLocaleString() : '') +
+        '</div>';
+      if (data.driveFileId) {
+        preview.src = 'https://drive.google.com/file/d/' + data.driveFileId + '/preview';
+        show(preview);
+      } else {
+        hide(preview);
+      }
+    }).catch(function(err){
+      console.error('loadCurrentLunch error', err);
+    });
+  }
+
+  function wireLunchUpload() {
+    document.getElementById('btn-save-lunch').onclick = function(){
+      var weekInput = document.getElementById('lunch-week');
+      var urlInput  = document.getElementById('lunch-url');
+      var statusEl  = document.getElementById('lunch-status');
+      var btn = document.getElementById('btn-save-lunch');
+      var week = weekInput.value.trim();
+      var raw  = urlInput.value.trim();
+      if (!week) return status(statusEl, 'Please enter a week label.', 'error');
+      if (!raw)  return status(statusEl, 'Please paste a Google Drive link.', 'error');
+      var fileId = extractDriveId(raw);
+      if (!fileId) return status(statusEl, 'Could not parse a Drive file ID from that link.', 'error');
+
+      btn.disabled = true; btn.textContent = 'Saving…';
+      db.collection('config').doc('lunch').set({
+        driveFileId: fileId,
+        driveUrl: raw,
+        week: week,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(function(){
+        status(statusEl, 'Saved — live on the dashboard.', 'success');
+        weekInput.value = ''; urlInput.value = '';
+        loadCurrentLunch();
+      }).catch(function(err){
+        console.error(err);
+        status(statusEl, 'Save failed: ' + (err.message || err), 'error');
+      }).finally(function(){
+        btn.disabled = false; btn.textContent = 'Save & Publish';
+      });
+    };
+  }
+
+  function listenAnnouncements() {
+    db.collection('announcements').orderBy('createdAt', 'desc').limit(40)
+      .onSnapshot(function(qs){
+        var list = document.getElementById('ann-list');
+        if (qs.empty) {
+          list.innerHTML = '<div class="empty-state">No announcements yet.</div>';
+          return;
+        }
+        var html = '';
+        qs.forEach(function(doc){
+          var d = doc.data();
+          var when = d.createdAt && d.createdAt.toDate ? d.createdAt.toDate() : null;
+          var active = d.active !== false;
+          html += '<div class="ann-item ' + (active ? 'active' : 'inactive') + '">' +
+            '<div class="ann-info">' +
+              '<div class="ann-title">' + escapeHtml(d.title || '(no title)') + '</div>' +
+              (d.body ? '<div class="ann-body">' + escapeHtml(d.body) + '</div>' : '') +
+              '<div class="ann-meta">' +
+                '<span class="ann-meta-tag">' + escapeHtml(d.tag || 'news') + '</span>' +
+                (when ? '<span>' + when.toLocaleString() + '</span>' : '') +
+                (d.link ? '<a href="' + d.link + '" target="_blank" style="color:var(--text-secondary);">link</a>' : '') +
+              '</div>' +
+            '</div>' +
+            '<div class="ann-actions">' +
+              '<button class="toggle-active ' + (active ? 'on' : '') + '" data-id="' + doc.id + '" data-active="' + active + '">' +
+                (active ? 'Active' : 'Hidden') +
+              '</button>' +
+              '<button class="btn-danger" data-del="' + doc.id + '">Delete</button>' +
+            '</div>' +
+          '</div>';
+        });
+        list.innerHTML = html;
+        list.querySelectorAll('.toggle-active').forEach(function(b){
+          b.onclick = function(){
+            var id = b.dataset.id;
+            var current = b.dataset.active === 'true';
+            db.collection('announcements').doc(id).update({ active: !current });
+          };
+        });
+        list.querySelectorAll('[data-del]').forEach(function(b){
+          b.onclick = function(){
+            if (!confirm('Delete this announcement?')) return;
+            db.collection('announcements').doc(b.dataset.del).delete();
+          };
+        });
+      });
+  }
+
+  function wireAnnouncementPost() {
+    document.getElementById('btn-post-ann').onclick = function(){
+      var t = document.getElementById('ann-title');
+      var b = document.getElementById('ann-body');
+      var l = document.getElementById('ann-link');
+      var g = document.getElementById('ann-tag');
+      var statusEl = document.getElementById('ann-status');
+      var title = t.value.trim();
+      if (!title) return status(statusEl, 'Title is required.', 'error');
+      var btn = document.getElementById('btn-post-ann');
+      btn.disabled = true; btn.textContent = 'Posting…';
+      db.collection('announcements').add({
+        title: title,
+        body: b.value.trim(),
+        link: l.value.trim() || null,
+        tag: g.value || 'news',
+        active: true,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(function(){
+        t.value = ''; b.value = ''; l.value = ''; g.value = 'news';
+        status(statusEl, 'Posted — visible on the dashboard.', 'success');
+      }).catch(function(err){
+        status(statusEl, 'Failed: ' + (err.message || err), 'error');
+      }).finally(function(){
+        btn.disabled = false; btn.textContent = 'Post Announcement';
+      });
+    };
+  }
+
+  function escapeHtml(s) {
+    return String(s || '').replace(/[&<>"']/g, function(c){
+      return ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c];
+    });
+  }
+})();
+</script>
+
+</body>
+</html>
