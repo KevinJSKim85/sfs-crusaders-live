@@ -523,9 +523,11 @@ body {
 .grid-stack {
   background: transparent;
   min-height: 400px;
-  /* Pull the grid back so each row of widgets lines up flush with the hero
-     and Quick Links bar above. Offset = half of gridstack `margin` (40 / 2). */
-  margin: 0 -20px;
+  /* The gap between widgets is created by `.widget { inset: 20px }` below
+     (gridstack's own `margin` option proved unreliable). Pull the grid back
+     20px on all sides so the inset shifts widget edges to land flush with
+     the hero and Quick Links bar above. */
+  margin: -20px -20px;
 }
 
 .grid-stack-item-content {
@@ -553,7 +555,10 @@ body {
 
 .widget {
   position: absolute;
-  inset: 0;
+  /* 20 px buffer on every side of the cell creates a uniform 40 px visible
+     gap between widgets in both directions. Combined with .grid-stack's
+     -20 px outer margin, widget edges line up with hero / Quick Links above. */
+  inset: 20px;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 18px;
@@ -1367,8 +1372,8 @@ a.widget:hover { background: var(--bg-card-hover); }
 /* ===== FOOTER ===== */
 footer {
   text-align: center;
-  padding: 28px 0 4px;
-  margin-top: 16px;
+  padding: 0 0 28px;
+  margin-top: 40px;       /* 40 px gap from the grid, matching the rest */
 }
 
 footer p {
@@ -2750,7 +2755,7 @@ function initDragGrid() {
   gridApi = GridStack.init({
     column: 12,           // 12-col base grid (extra CSS covers 2-11 for breakpoints)
     cellHeight: 58,
-    margin: 40,
+    margin: 0,            /* Disabled — visible gap is created by .widget inset */
     float: false,         // compact to top-left
     animate: true,
     handle: '.w-head',
