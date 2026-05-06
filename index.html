@@ -3172,10 +3172,33 @@ loadSpirit();
 setInterval(loadSpirit, 300000);   // re-check Issuu every 5 minutes
 
 // ===== GRIDSTACK DRAG GRID =====
-var LAYOUT_KEY = 'sfs-grid-layout-v10';
+var LAYOUT_KEY = 'sfs-grid-layout-v11';
 var CELL_W = 4;   // 12-col grid / 4 = 3 widgets per row
 var CELL_H = 7;   // 7 rows tall (row height 58 → ~420px with margin) — bumped for larger fonts
 var gridApi = null;
+var DEFAULT_WIDGET_ORDER = [
+  'sfs-news',
+  'athletics',
+  'notes',
+  'news',
+  'ig-sfs',
+  'lunch',
+  'reads',
+  'college',
+  'ig-athletics',
+  'spirit'
+];
+
+function defaultLayoutFor(id) {
+  var idx = DEFAULT_WIDGET_ORDER.indexOf(id);
+  if (idx === -1) return null;
+  return {
+    x: (idx % 3) * CELL_W,
+    y: Math.floor(idx / 3) * CELL_H,
+    w: CELL_W,
+    h: CELL_H
+  };
+}
 
 function initDragGrid() {
   var gridEl = document.getElementById('grid');
@@ -3211,7 +3234,8 @@ function initDragGrid() {
   // state (w/h/x/y) is set consistently and the width CSS applies.
   origWidgets.forEach(function(widgetEl, i) {
     var wid = widgetEl.getAttribute('data-wid') || 'w' + i;
-    var pos = savedMap[wid];
+    var defaultPos = defaultLayoutFor(wid);
+    var pos = savedMap[wid] || defaultPos;
     var opts = {
       id: wid,
       w: (pos && pos.w) || CELL_W,
@@ -3255,9 +3279,8 @@ function initDragGrid() {
     gridApi.column(target, 'none');
 
     if (target === 12) {
-      // Returning to desktop. Prefer the user's saved arrangement; any widget
-      // without a saved slot (including everyone on a fresh session) gets a
-      // reading-order fallback at 3-per-row.
+      // Returning to desktop. Prefer the user's saved arrangement; otherwise
+      // fall back to the explicit default dashboard order.
       var saved = null;
       try { saved = JSON.parse(localStorage.getItem(LAYOUT_KEY) || 'null'); } catch (e) {}
       var savedMap = {};
@@ -3273,7 +3296,7 @@ function initDragGrid() {
       var fallbackIndex = 0;
       allItems.forEach(function(item) {
         var id = item.getAttribute('gs-id');
-        var pos = savedMap[id];
+        var pos = savedMap[id] || defaultLayoutFor(id);
         if (pos) {
           gridApi.update(item, { x: pos.x, y: pos.y, w: CELL_W, h: CELL_H });
         } else {
