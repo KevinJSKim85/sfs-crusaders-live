@@ -927,10 +927,10 @@ a.widget:hover { background: var(--bg-card-hover); }
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 16px;
-  padding: 12px;
-  margin: 0 0 22px;
+  padding: 14px;
+  margin: 0 0 26px;
   display: flex;
-  gap: 8px;
+  gap: 14px;
   overflow-x: auto;
   scrollbar-width: thin;
   -webkit-overflow-scrolling: touch;
@@ -987,7 +987,7 @@ a.widget:hover { background: var(--bg-card-hover); }
 }
 
 @media (max-width: 640px) {
-  .quicklinks-bar { padding: 10px; gap: 6px; margin-bottom: 18px; }
+  .quicklinks-bar { padding: 12px; gap: 10px; margin-bottom: 20px; }
   .link-tile { min-width: 80px; padding: 10px 8px; min-height: 64px; }
   .link-tile svg { width: 22px; height: 22px; }
   .link-name { font-size: 11.5px; }
@@ -1104,24 +1104,77 @@ a.widget:hover { background: var(--bg-card-hover); }
 }
 
 /* ===== NOTES WIDGET ===== */
-.notes-textarea {
+.notes-toolbar {
+  display: flex;
+  gap: 2px;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.notes-toolbar button {
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  padding: 0;
+  line-height: 1;
+}
+.notes-toolbar button:hover {
+  background: var(--surface);
+  color: var(--text);
+}
+.notes-toolbar button:active {
+  background: var(--bg-card-hover);
+  transform: translateY(0.5px);
+}
+.notes-toolbar-divider {
+  width: 1px;
+  height: 16px;
+  background: var(--border);
+  margin: 0 4px;
+}
+
+.notes-editor {
   flex: 1;
   width: 100%;
   background: transparent;
   border: none;
-  resize: none;
+  outline: none;
   color: var(--text);
   font-family: 'Inter', sans-serif;
   font-size: 14px;
   line-height: 1.55;
-  padding: 0;
-  outline: none;
   letter-spacing: -0.005em;
+  overflow-y: auto;
+  word-break: break-word;
 }
-.notes-textarea::placeholder {
+.notes-editor:empty::before {
+  content: attr(data-placeholder);
   color: var(--text-muted);
-  line-height: 1.55;
+  pointer-events: none;
 }
+.notes-editor ul,
+.notes-editor ol {
+  padding-left: 22px;
+  margin: 4px 0;
+}
+.notes-editor li { margin-bottom: 2px; }
+.notes-editor p { margin: 0 0 6px; }
+.notes-editor::-webkit-scrollbar { width: 4px; }
+.notes-editor::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
 
 .notes-status {
   font-size: 11px;
@@ -1132,7 +1185,7 @@ a.widget:hover { background: var(--bg-card-hover); }
   transition: color 0.2s;
 }
 .notes-status.saving { color: var(--accent-amber); }
-.notes-status.saved { color: var(--accent-green); }
+.notes-status.saved  { color: var(--accent-green); }
 
 .feature-cta {
   margin-top: auto;
@@ -1600,7 +1653,18 @@ footer p {
       <span class="notes-status" id="notes-status">Saved</span>
     </div>
     <div class="w-body">
-      <textarea id="notes-textarea" class="notes-textarea" placeholder="Type anything here — reminders, to-do, ideas. Auto-saves to this browser."></textarea>
+      <div class="notes-toolbar" id="notes-toolbar">
+        <button type="button" data-cmd="bold"               title="Bold (⌘B)"><b>B</b></button>
+        <button type="button" data-cmd="italic"             title="Italic (⌘I)"><i>I</i></button>
+        <button type="button" data-cmd="underline"          title="Underline (⌘U)"><u>U</u></button>
+        <button type="button" data-cmd="strikeThrough"      title="Strikethrough"><s>S</s></button>
+        <span class="notes-toolbar-divider"></span>
+        <button type="button" data-cmd="insertUnorderedList" title="Bullet list">&bull;</button>
+        <button type="button" data-cmd="insertOrderedList"   title="Numbered list">1.</button>
+        <span class="notes-toolbar-divider"></span>
+        <button type="button" data-cmd="removeFormat"        title="Clear formatting">✕</button>
+      </div>
+      <div id="notes-editor" class="notes-editor" contenteditable="true" spellcheck="true" data-placeholder="Type anything here — reminders, to-do, ideas. Auto-saves to this browser."></div>
     </div>
   </div>
 
@@ -2402,37 +2466,73 @@ async function loadCollegeNews() {
 loadCollegeNews();
 setInterval(loadCollegeNews, 30 * 60 * 1000);             // College feeds — 30 min
 
-// ===== NOTES (localStorage-backed memo) =====
+// ===== NOTES (localStorage-backed memo with basic rich-text toolbar) =====
 (function() {
-  var ta     = document.getElementById('notes-textarea');
-  var status = document.getElementById('notes-status');
-  if (!ta) return;
-  var KEY = 'sfs-notes-v1';
+  var editor  = document.getElementById('notes-editor');
+  var status  = document.getElementById('notes-status');
+  var toolbar = document.getElementById('notes-toolbar');
+  if (!editor) return;
+  var KEY = 'sfs-notes-v2';      // HTML payload
+  var OLD = 'sfs-notes-v1';      // plain-text payload from previous version
 
-  // Load saved text on page open
-  try { ta.value = localStorage.getItem(KEY) || ''; } catch (e) {}
-  if (status) { status.textContent = ta.value ? 'Saved' : ''; status.classList.add('saved'); }
-
-  // Debounced save on every keystroke
-  var saveTimer;
   function setStatus(text, cls) {
     if (!status) return;
     status.textContent = text;
     status.classList.remove('saving', 'saved');
     if (cls) status.classList.add(cls);
   }
-  ta.addEventListener('input', function() {
+
+  // Load saved HTML, or migrate plain-text v1 → v2 once
+  try {
+    var saved = localStorage.getItem(KEY);
+    if (saved !== null) {
+      editor.innerHTML = saved;
+    } else {
+      var legacy = localStorage.getItem(OLD);
+      if (legacy) {
+        editor.innerHTML = legacy
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/\n/g, '<br>');
+        localStorage.setItem(KEY, editor.innerHTML);
+      }
+    }
+  } catch (e) {}
+  setStatus(editor.textContent.trim() ? 'Saved' : '', editor.textContent.trim() ? 'saved' : '');
+
+  // Toolbar: B / I / U / S / lists / clear formatting
+  if (toolbar) {
+    // Don't let button clicks steal focus from the editor — keeps the selection
+    // intact so execCommand applies to the right range.
+    toolbar.addEventListener('mousedown', function(e) {
+      if (e.target.closest('button')) e.preventDefault();
+    });
+    toolbar.addEventListener('click', function(e) {
+      var btn = e.target.closest('button[data-cmd]');
+      if (!btn) return;
+      e.preventDefault();
+      editor.focus();
+      try { document.execCommand(btn.dataset.cmd, false, null); } catch (err) {}
+      scheduleSave();
+    });
+  }
+
+  // Debounced save on every edit
+  var saveTimer;
+  function scheduleSave() {
     setStatus('Saving…', 'saving');
     clearTimeout(saveTimer);
     saveTimer = setTimeout(function() {
       try {
-        localStorage.setItem(KEY, ta.value);
+        localStorage.setItem(KEY, editor.innerHTML);
         setStatus('Saved', 'saved');
-      } catch (e) {
+      } catch (err) {
         setStatus('Save failed', '');
       }
     }, 350);
-  });
+  }
+  editor.addEventListener('input', scheduleSave);
 })();
 
 loadLunchFromFirestore();
