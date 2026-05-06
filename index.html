@@ -2212,13 +2212,16 @@ function thumbHtml(thumbUrl, source) {
 
 function richNewsItemHtml(item) {
   var title = item.title.length > 95 ? item.title.slice(0, 92) + '...' : item.title;
-  var meta  = item.meta || (item.source ? (item.source + (item.pubDate ? ' &middot; ' + timeAgo(item.pubDate) : ''))
-                         : (item.pubDate ? timeAgo(item.pubDate) : ''));
-  return '<div class="news-item-rich">' + thumbHtml(extractThumb(item), item.source) +
+  var meta = item.meta || (item.hideSourceMeta
+    ? (item.pubDate ? timeAgo(item.pubDate) : '')
+    : (item.source ? (item.source + (item.pubDate ? ' &middot; ' + timeAgo(item.pubDate) : ''))
+       : (item.pubDate ? timeAgo(item.pubDate) : '')));
+  var tagHtml = item.tag
+    ? '<div class="news-kicker"><span class="news-tag" style="background:' + item.tag.bg + ';color:' + item.tag.color + ';">' + item.tag.label + '</span></div>'
+    : '';
+  return '<div class="news-item-rich">' + thumbHtml(extractThumb(item), item.thumbSource || item.source) +
     '<a href="' + item.link + '" target="_blank" rel="noopener">' +
-      '<div class="news-kicker">' +
-        (item.tag ? '<span class="news-tag" style="background:' + item.tag.bg + ';color:' + item.tag.color + ';">' + item.tag.label + '</span>' : '') +
-      '</div>' +
+      tagHtml +
       '<h4>' + title + '</h4>' +
       (meta ? '<div class="meta">' + meta + '</div>' : '') +
     '</a>' +
@@ -2442,7 +2445,11 @@ async function loadSFSNews() {
 
     container.innerHTML = items.slice(0, 5).map(function(item) {
       item.thumbnail = item.image;
-      if (item.date) item.meta = item.date + ' &middot; seoulforeign.org';
+      item.thumbSource = item.source;
+      item.source = '';
+      item.tag = null;
+      item.hideSourceMeta = true;
+      if (item.date) item.meta = item.date;
       return richNewsItemHtml(item);
     }).join('');
   } catch (e) {
