@@ -1103,6 +1103,37 @@ a.widget:hover { background: var(--bg-card-hover); }
   font-weight: 500;
 }
 
+/* ===== NOTES WIDGET ===== */
+.notes-textarea {
+  flex: 1;
+  width: 100%;
+  background: transparent;
+  border: none;
+  resize: none;
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  line-height: 1.55;
+  padding: 0;
+  outline: none;
+  letter-spacing: -0.005em;
+}
+.notes-textarea::placeholder {
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+.notes-status {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  transition: color 0.2s;
+}
+.notes-status.saving { color: var(--accent-amber); }
+.notes-status.saved { color: var(--accent-green); }
+
 .feature-cta {
   margin-top: auto;
   font-size: 11.5px;
@@ -1474,19 +1505,19 @@ footer p {
     </div>
   </div>
 
-  <!-- Student Reads (curated long-form for HS) -->
+  <!-- College News (admissions + top US universities) -->
   <div class="widget" data-wid="reads">
     <div class="w-head">
       <div class="w-head-left">
         <div class="w-icon bg-green">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2zM22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
         </div>
-        <div class="w-title">Student Reads</div>
+        <div class="w-title">College News</div>
       </div>
-      <span class="w-badge bg-green">Curated</span>
+      <span class="w-badge bg-green">Top US</span>
     </div>
     <div class="w-body" id="student-reads-body">
-      <div class="feed-loading">Loading reads...</div>
+      <div class="feed-loading">Loading feeds...</div>
     </div>
   </div>
 
@@ -1557,27 +1588,21 @@ footer p {
     </div>
   </div>
 
-  <!-- Unlocked -->
-  <a href="https://www.seoulforeign.org" target="_blank" class="widget" data-wid="unlocked">
+  <!-- Notes (autosaves to localStorage; persists until cookies/site data are cleared) -->
+  <div class="widget" data-wid="notes">
     <div class="w-head">
       <div class="w-head-left">
         <div class="w-icon bg-blue">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
         </div>
-        <div class="w-title">Unlocked</div>
+        <div class="w-title">Notes</div>
       </div>
+      <span class="notes-status" id="notes-status">Saved</span>
     </div>
     <div class="w-body">
-      <div class="feature-content">
-        <h3>Unlocked</h3>
-        <p>SFS student voices, perspectives, and creative work explored through long-form journalism and essays.</p>
-        <div class="feature-cta">
-          Browse stories
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-        </div>
-      </div>
+      <textarea id="notes-textarea" class="notes-textarea" placeholder="Type anything here — reminders, to-do, ideas. Auto-saves to this browser."></textarea>
     </div>
-  </a>
+  </div>
 
 </div>
 
@@ -2325,29 +2350,32 @@ setInterval(function() {
 }, 30 * 60 * 1000);                                       // IG scrape — 30 min (rate-limit aware)
 
 // ===== STUDENT READS (curated for HS students) =====
-var studentReadsTags = {
-  vox:    { label: 'Vox',          bg: 'var(--tag-blue-bg)',   color: 'var(--tag-blue-fg)' },
-  atl:    { label: 'The Atlantic', bg: 'var(--tag-amber-bg)',  color: 'var(--tag-amber-fg)' },
-  market: { label: 'Marketplace',  bg: 'var(--tag-green-bg)',  color: 'var(--tag-green-fg)' },
-  quanta: { label: 'Quanta',       bg: 'var(--tag-purple-bg)', color: 'var(--tag-purple-fg)' }
+var collegeNewsTags = {
+  ihe:  { label: 'Inside Higher Ed', bg: 'var(--tag-red-bg)',    color: 'var(--tag-red-fg)' },
+  hech: { label: 'Hechinger',        bg: 'var(--tag-purple-bg)', color: 'var(--tag-purple-fg)' },
+  harv: { label: 'Harvard',          bg: 'var(--tag-amber-bg)',  color: 'var(--tag-amber-fg)' },
+  mit:  { label: 'MIT',              bg: 'var(--tag-blue-bg)',   color: 'var(--tag-blue-fg)' },
+  stan: { label: 'Stanford',         bg: 'var(--tag-green-bg)',  color: 'var(--tag-green-fg)' }
 };
 
-async function loadStudentReads() {
+async function loadCollegeNews() {
   var container = document.getElementById('student-reads-body');
   if (!container) return;
   try {
     var feeds = await Promise.allSettled([
-      fetchRSS('https://www.vox.com/rss/index.xml'),
-      fetchRSS('https://www.theatlantic.com/feed/all/'),
-      fetchRSS('https://www.marketplace.org/feed/'),
-      fetchRSS('https://www.quantamagazine.org/feed/')
+      fetchRSS('https://www.insidehighered.com/rss.xml'),
+      fetchRSS('https://hechingerreport.org/feed/'),
+      fetchRSS('https://news.harvard.edu/gazette/feed/'),
+      fetchRSS('https://news.mit.edu/rss/feed'),
+      fetchRSS('https://news.stanford.edu/feed/')
     ]);
     var items = [];
     var meta = [
-      { tag: studentReadsTags.vox,    source: 'vox.com' },
-      { tag: studentReadsTags.atl,    source: 'theatlantic.com' },
-      { tag: studentReadsTags.market, source: 'marketplace.org' },
-      { tag: studentReadsTags.quanta, source: 'quantamagazine.org' }
+      { tag: collegeNewsTags.ihe,  source: 'insidehighered.com' },
+      { tag: collegeNewsTags.hech, source: 'hechingerreport.org' },
+      { tag: collegeNewsTags.harv, source: 'harvard.edu' },
+      { tag: collegeNewsTags.mit,  source: 'mit.edu' },
+      { tag: collegeNewsTags.stan, source: 'stanford.edu' }
     ];
     feeds.forEach(function(f, idx) {
       if (f.status === 'fulfilled') {
@@ -2368,11 +2396,44 @@ async function loadStudentReads() {
         '</a></div>';
     }).join('');
   } catch (e) {
-    container.innerHTML = '<div class="feed-empty">Feed unavailable. <a href="https://www.vox.com" target="_blank" style="color:var(--sfs-red);">Vox</a> &middot; <a href="https://www.theatlantic.com" target="_blank" style="color:var(--sfs-red);">The Atlantic</a></div>';
+    container.innerHTML = '<div class="feed-empty">Feed unavailable. <a href="https://www.insidehighered.com" target="_blank" style="color:var(--sfs-red);">Inside Higher Ed</a> &middot; <a href="https://news.harvard.edu/gazette/" target="_blank" style="color:var(--sfs-red);">Harvard</a></div>';
   }
 }
-loadStudentReads();
-setInterval(loadStudentReads, 30 * 60 * 1000);            // Curated reading — 30 min
+loadCollegeNews();
+setInterval(loadCollegeNews, 30 * 60 * 1000);             // College feeds — 30 min
+
+// ===== NOTES (localStorage-backed memo) =====
+(function() {
+  var ta     = document.getElementById('notes-textarea');
+  var status = document.getElementById('notes-status');
+  if (!ta) return;
+  var KEY = 'sfs-notes-v1';
+
+  // Load saved text on page open
+  try { ta.value = localStorage.getItem(KEY) || ''; } catch (e) {}
+  if (status) { status.textContent = ta.value ? 'Saved' : ''; status.classList.add('saved'); }
+
+  // Debounced save on every keystroke
+  var saveTimer;
+  function setStatus(text, cls) {
+    if (!status) return;
+    status.textContent = text;
+    status.classList.remove('saving', 'saved');
+    if (cls) status.classList.add(cls);
+  }
+  ta.addEventListener('input', function() {
+    setStatus('Saving…', 'saving');
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(function() {
+      try {
+        localStorage.setItem(KEY, ta.value);
+        setStatus('Saved', 'saved');
+      } catch (e) {
+        setStatus('Save failed', '');
+      }
+    }, 350);
+  });
+})();
 
 loadLunchFromFirestore();
 setInterval(loadLunchFromFirestore, 5 * 60 * 1000);       // Lunch PDF — 5 min
@@ -2508,7 +2569,7 @@ loadSpirit();
 setInterval(loadSpirit, 300000);   // re-check Issuu every 5 minutes
 
 // ===== GRIDSTACK DRAG GRID =====
-var LAYOUT_KEY = 'sfs-grid-layout-v8';
+var LAYOUT_KEY = 'sfs-grid-layout-v9';
 var CELL_W = 4;   // 12-col grid / 4 = 3 widgets per row
 var CELL_H = 7;   // 7 rows tall (row height 58 → ~420px with margin) — bumped for larger fonts
 var gridApi = null;
