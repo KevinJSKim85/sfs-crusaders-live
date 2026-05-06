@@ -863,9 +863,9 @@ a.widget:hover { background: var(--bg-card-hover); }
 /* Athletics row with sport icon */
 .athletic-row {
   display: flex;
-  gap: 10px;
+  gap: 9px;
   align-items: flex-start;
-  padding: 11px 0;
+  padding: 8px 0;
   border-bottom: 1px solid var(--border);
 }
 .athletic-row:last-child { border-bottom: none; }
@@ -879,15 +879,39 @@ a.widget:hover { background: var(--bg-card-hover); }
 .athletic-row > a:hover h4 { color: var(--sfs-red); }
 .athletic-row h4 {
   font-size: 13.5px;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.35;
   color: var(--text);
-  margin-top: 3px;
+  margin-top: 4px;
   transition: color 0.2s;
 }
+.athletic-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.athletic-result {
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+  padding: 4px 7px;
+  border-radius: 999px;
+  color: var(--text);
+  background: var(--surface);
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+.athletic-meta {
+  margin-top: 3px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  line-height: 1.25;
+}
 .sport-icon {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   border-radius: 9px;
   background: var(--tag-blue-bg);
   color: var(--tag-blue-fg);
@@ -2308,18 +2332,101 @@ function sportFor(text) {
 }
 
 function athleticItemHtml(item, tagLabel, tagClass) {
-  var title = item.title.length > 60 ? item.title.slice(0, 57) + '...' : item.title;
+  var rawTitle = item.title.length > 74 ? item.title.slice(0, 71) + '...' : item.title;
+  var title = htmlEscape(rawTitle);
   var sport = sportFor(item.title);
   var tagStyle = tagClass === 'green' ? 'background:var(--tag-green-bg);color:var(--tag-green-fg);'
               : tagClass === 'purple' ? 'background:var(--tag-purple-bg);color:var(--tag-purple-fg);'
+              : tagClass === 'red' ? 'background:var(--tag-red-bg);color:var(--tag-red-fg);'
               : 'background:var(--tag-blue-bg);color:var(--tag-blue-fg);';
+  var resultClass = item.resultClass === 'green' ? 'background:var(--tag-green-bg);color:var(--tag-green-fg);'
+                  : item.resultClass === 'red' ? 'background:var(--tag-red-bg);color:var(--tag-red-fg);'
+                  : item.resultClass === 'purple' ? 'background:var(--tag-purple-bg);color:var(--tag-purple-fg);'
+                  : 'background:var(--surface);color:var(--text-secondary);';
+  var resultHtml = item.result ? '<span class="athletic-result" style="' + resultClass + '">' + htmlEscape(item.result) + '</span>' : '';
+  var metaHtml = item.meta ? '<div class="athletic-meta">' + htmlEscape(item.meta) + '</div>' : '';
   return '<div class="athletic-row">' +
     '<div class="sport-icon sport-' + sport + '">' + SPORT_ICONS[sport] + '</div>' +
     '<a href="' + item.link + '" target="_blank" rel="noopener">' +
-      '<span class="news-tag" style="' + tagStyle + '">' + tagLabel + '</span>' +
+      '<div class="athletic-topline"><span class="news-tag" style="' + tagStyle + '">' + tagLabel + '</span>' + resultHtml + '</div>' +
       '<h4>' + title + '</h4>' +
+      metaHtml +
     '</a>' +
   '</div>';
+}
+
+function formatAthleticDate(value) {
+  if (!value) return '';
+  var date = new Date(value);
+  if (isNaN(date.getTime())) return '';
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function htmlEscape(value) {
+  return String(value || '').replace(/[&<>"']/g, function(ch) {
+    return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch];
+  });
+}
+
+function parseSidearmEvents(doc) {
+  var scripts = doc.querySelectorAll('script');
+  var events = [];
+  for (var i = 0; i < scripts.length; i++) {
+    var text = scripts[i].textContent || '';
+    if (text.indexOf('sidearmComponents.push(obj)') === -1 || text.indexOf('"type":"events"') === -1) continue;
+    var start = text.indexOf('var obj = ');
+    if (start === -1) continue;
+    start += 'var obj = '.length;
+    var end = text.indexOf(';\n    if (!("sidearmComponents"', start);
+    if (end === -1) end = text.indexOf(';\r\n    if (!("sidearmComponents"', start);
+    if (end === -1) end = text.indexOf(';\n    window.sidearmComponents', start);
+    if (end === -1) continue;
+    try {
+      var obj = JSON.parse(text.slice(start, end));
+      if (obj && Array.isArray(obj.data)) events = events.concat(obj.data);
+    } catch (e) {}
+  }
+  return events;
+}
+
+function eventToAthleticItem(event) {
+  var sportTitle = event.sport && (event.sport.abbreviation || event.sport.title || event.sport.short_title);
+  var opponent = event.opponent && (event.opponent.title || event.opponent.name);
+  if (!sportTitle || !opponent) return null;
+  var isAway = event.location_indicator === 'A';
+  var connector = isAway ? 'at' : 'vs';
+  var dateLabel = formatAthleticDate(event.date);
+  var locationLabel = event.location_indicator === 'H' ? 'Home'
+                    : event.location_indicator === 'A' ? 'Away'
+                    : event.location_indicator === 'N' ? 'Neutral'
+                    : '';
+  var result = '';
+  var resultClass = '';
+  var tag = 'Upcoming';
+  var tagColor = 'purple';
+  if (event.result && event.result.status) {
+    result = event.result.status;
+    if (event.result.team_score || event.result.opponent_score) {
+      result += ' ' + (event.result.team_score || '-') + '-' + (event.result.opponent_score || '-');
+    }
+    resultClass = event.result.status === 'W' ? 'green'
+                : event.result.status === 'L' ? 'red'
+                : 'purple';
+    tag = 'Result';
+    tagColor = resultClass;
+  }
+  var meta = [dateLabel, locationLabel, event.conference_abbrev || event.conference].filter(Boolean).join(' · ');
+  var link = event.schedule && event.schedule.url ? event.schedule.url : 'https://sfscrusaderathletics.com/';
+  return {
+    title: sportTitle + ' ' + connector + ' ' + opponent,
+    link: link,
+    meta: meta,
+    result: result,
+    resultClass: resultClass,
+    tag: tag,
+    color: tagColor,
+    sortDate: event.date ? new Date(event.date).getTime() : 0
+  };
 }
 
 async function loadAthletics() {
@@ -2328,29 +2435,19 @@ async function loadAthletics() {
     var res = await fetchWithTimeout('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent('https://sfscrusaderathletics.com/'), 7000);
     var html = await res.text();
     var doc = new DOMParser().parseFromString(html, 'text/html');
-    var items = [];
-    var allLinks = doc.querySelectorAll('a');
-    for (var i = 0; i < allLinks.length && items.length < 6; i++) {
-      var t = allLinks[i].textContent.trim();
-      var h = allLinks[i].getAttribute('href') || '';
-      if (t.length > 12 && t.length < 150 && !items.find(function(x) { return x.title === t; })) {
-        var lower = t.toLowerCase();
-        if (lower.match(/soccer|basketball|volleyball|badminton|track|swim|tennis|baseball|game|season|win|loss|championship|tournament|varsity|crusader/)) {
-          if (h && !h.startsWith('http')) h = 'https://sfscrusaderathletics.com' + h;
-          items.push({ title: t, link: h || 'https://sfscrusaderathletics.com/' });
-        }
-      }
-    }
+    var events = parseSidearmEvents(doc);
+    var items = events.map(eventToAthleticItem).filter(Boolean)
+      .sort(function(a, b) { return b.sortDate - a.sortDate; });
     if (items.length === 0) throw new Error('empty');
-    container.innerHTML = items.slice(0, 5).map(function(item) {
-      return athleticItemHtml(item, 'Sports', 'blue');
+    container.innerHTML = items.slice(0, 4).map(function(item) {
+      return athleticItemHtml(item, item.tag, item.color);
     }).join('');
   } catch (e) {
     var fallback = [
-      { title: 'V Girls Soccer vs Humphreys — W 8-0',  link: 'https://sfscrusaderathletics.com/', tag: 'Result',   color: 'green' },
-      { title: 'V Boys Soccer vs Humphreys — W 3-2',   link: 'https://sfscrusaderathletics.com/', tag: 'Result',   color: 'green' },
-      { title: 'Soccer vs Chadwick — Apr 8',           link: 'https://sfscrusaderathletics.com/', tag: 'Upcoming', color: 'purple' },
-      { title: 'Badminton vs TCIS — Apr 8',            link: 'https://sfscrusaderathletics.com/', tag: 'Upcoming', color: 'purple' }
+      { title: 'Varsity Girls Soccer at Humphreys', link: 'https://sfscrusaderathletics.com/', tag: 'Result', color: 'green', result: 'W 7-1', resultClass: 'green', meta: 'Apr 10 · Away · KAIAC' },
+      { title: 'Varsity Boys Soccer at Humphreys',  link: 'https://sfscrusaderathletics.com/', tag: 'Result', color: 'green', result: 'W 3-1', resultClass: 'green', meta: 'Apr 10 · Away · KAIAC' },
+      { title: 'Badminton vs TCIS',                 link: 'https://sfscrusaderathletics.com/', tag: 'Result', color: 'red',   result: 'L 9-11', resultClass: 'red',   meta: 'Apr 8 · Home · KAIAC' },
+      { title: 'Varsity Girls Soccer vs Chadwick',  link: 'https://sfscrusaderathletics.com/', tag: 'Result', color: 'green', result: 'W 3-1', resultClass: 'green', meta: 'Apr 8 · Home · KAIAC' }
     ];
     container.innerHTML = fallback.map(function(it) { return athleticItemHtml(it, it.tag, it.color); }).join('');
   }
