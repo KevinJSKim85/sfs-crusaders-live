@@ -526,7 +526,7 @@ body {
 }
 
 .grid-stack-item-content {
-  inset: 0 !important;
+  inset: 8px !important;       /* breathing room on top of gridstack margin */
   overflow: visible !important;
   padding: 0 !important;
   background: transparent !important;
@@ -1028,6 +1028,37 @@ a.widget:hover { background: var(--bg-card-hover); }
 .ig-loading {
   color: var(--text-muted);
   font-size: 12px;
+}
+
+.ig-fallback {
+  flex-direction: column;
+  gap: 12px;
+  background: linear-gradient(135deg, rgba(193,40,46,0.10), rgba(74,82,144,0.10));
+  text-decoration: none;
+  color: var(--text);
+  padding: 24px;
+  text-align: center;
+  transition: background 0.2s;
+}
+.ig-fallback:hover {
+  background: linear-gradient(135deg, rgba(193,40,46,0.18), rgba(74,82,144,0.18));
+}
+.ig-fallback-icon {
+  width: 44px;
+  height: 44px;
+  color: var(--sfs-red);
+}
+.ig-fallback-handle {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+.ig-fallback-cta {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--sfs-red);
 }
 
 .ig-arrow {
@@ -2135,8 +2166,17 @@ async function loadInstagramCarousel(id, username) {
     if (codes.length === 0) throw new Error('no codes');
     buildCarousel(id, codes);
   } catch (e) {
+    // Profile-level /USERNAME/embed is blocked by Instagram (X-Frame-Options).
+    // Show a clean CTA card linking to the profile instead of a broken iframe.
     var track = document.getElementById('ig-track-' + id);
-    track.innerHTML = '<div class="ig-slide"><iframe src="https://www.instagram.com/' + username + '/embed" loading="lazy" allowtransparency="true" scrolling="yes"></iframe></div>';
+    track.innerHTML =
+      '<a class="ig-slide ig-fallback" href="https://www.instagram.com/' + username + '/" target="_blank" rel="noopener">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="ig-fallback-icon">' +
+          '<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/>' +
+        '</svg>' +
+        '<div class="ig-fallback-handle">@' + username + '</div>' +
+        '<div class="ig-fallback-cta">Open in Instagram &rarr;</div>' +
+      '</a>';
     document.getElementById('ig-dots-' + id).innerHTML = '';
     igState[id] = { current: 0, total: 1 };
   }
