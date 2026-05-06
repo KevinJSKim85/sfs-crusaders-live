@@ -1993,13 +1993,13 @@ async function loadNewsAndAnnouncements() {
   }
 
   container.innerHTML = allItems.map(function(item) {
-    var title = item.title.length > 80 ? item.title.slice(0, 77) + '...' : item.title;
-    var meta = item.source || 'SFS';
-    if (item.pubDate) meta += ' &middot; ' + timeAgo(item.pubDate);
+    var title = item.title.length > 110 ? item.title.slice(0, 107) + '...' : item.title;
+    var meta = item.source ? (item.source + (item.pubDate ? ' &middot; ' + timeAgo(item.pubDate) : ''))
+                           : (item.pubDate ? timeAgo(item.pubDate) : '');
     return '<div class="news-item"><a href="' + item.link + '" target="_blank" rel="noopener">' +
       '<span class="news-tag" style="background:' + item.tag.bg + ';color:' + item.tag.color + ';">' + item.tag.label + '</span>' +
       '<h4>' + title + '</h4>' +
-      '<div class="meta">' + meta + '</div>' +
+      (meta ? '<div class="meta">' + meta + '</div>' : '') +
       '</a></div>';
   }).join('');
 
@@ -2411,14 +2411,22 @@ function escapeLunchHtml(s) {
   });
 }
 
-// ===== ADMIN ANNOUNCEMENTS FROM FIRESTORE =====
-// Tag colors for admin-posted announcements (by type).
-var ADMIN_ANN_TAGS = {
-  news:   { label: 'News',   bg: 'var(--tag-red-bg)',    color: 'var(--tag-red-fg)' },
-  event:  { label: 'Event',  bg: 'var(--tag-purple-bg)', color: 'var(--tag-purple-fg)' },
-  info:   { label: 'Info',   bg: 'var(--tag-green-bg)',  color: 'var(--tag-green-fg)' },
-  update: { label: 'Update', bg: 'var(--tag-blue-bg)',   color: 'var(--tag-blue-fg)' }
-};
+// ===== ADMIN ANNOUNCEMENTS (per-club updates) FROM FIRESTORE =====
+// Each club gets a stable color from this palette (hash of club name → index).
+var CLUB_TAG_PALETTE = [
+  { bg: 'var(--tag-red-bg)',    color: 'var(--tag-red-fg)' },
+  { bg: 'var(--tag-blue-bg)',   color: 'var(--tag-blue-fg)' },
+  { bg: 'var(--tag-green-bg)',  color: 'var(--tag-green-fg)' },
+  { bg: 'var(--tag-amber-bg)',  color: 'var(--tag-amber-fg)' },
+  { bg: 'var(--tag-purple-bg)', color: 'var(--tag-purple-fg)' }
+];
+function clubTagFor(name) {
+  var s = String(name || 'Club');
+  var hash = 0;
+  for (var i = 0; i < s.length; i++) hash = ((hash << 5) - hash + s.charCodeAt(i)) | 0;
+  var p = CLUB_TAG_PALETTE[Math.abs(hash) % CLUB_TAG_PALETTE.length];
+  return { label: s, bg: p.bg, color: p.color };
+}
 
 async function loadAdminAnnouncements() {
   if (!FIREBASE_READY) return [];
@@ -2432,14 +2440,16 @@ async function loadAdminAnnouncements() {
     snap.forEach(function(doc) {
       var d = doc.data() || {};
       if (d.active === false) return;
-      var tag = ADMIN_ANN_TAGS[d.tag] || ADMIN_ANN_TAGS.news;
+      // Prefer new schema (club + news); fall back to old (title + body) so any
+      // pre-rename docs still render without a one-off migration.
+      var club = d.club || d.title || 'SFHS';
+      var news = d.news || d.body || '';
       items.push({
-        title: d.title || '(untitled)',
+        title: news || club,                // body of the news-item
         link: d.link || 'https://sites.google.com/seoulforeign.org/sfhsclubsorganizations25-26/home',
         pubDate: d.createdAt && d.createdAt.toDate ? d.createdAt.toDate().toISOString() : null,
-        source: 'SFHS',
-        tag: tag,
-        body: d.body || ''
+        source: '',                         // club name lives in the tag now
+        tag: clubTagFor(club)
       });
     });
     return items.slice(0, 6);

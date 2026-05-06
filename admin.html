@@ -500,6 +500,7 @@ select { appearance: none; background-image: url("data:image/svg+xml;utf8,<svg x
 .ann-tag-event  { background: rgba(123,47,160,0.10); color: #7B2FA0; }
 .ann-tag-info   { background: rgba(40,167,69,0.10);  color: var(--accent-green); }
 .ann-tag-update { background: rgba(43,49,96,0.10);   color: var(--sfs-blue); }
+.ann-tag-club   { background: rgba(193,40,46,0.10);  color: var(--sfs-red); }
 .ann-meta a { color: var(--text-secondary); text-decoration: none; border-bottom: 1px dotted var(--border-strong); }
 .ann-meta a:hover { color: var(--sfs-red); }
 
@@ -666,32 +667,22 @@ select { appearance: none; background-image: url("data:image/svg+xml;utf8,<svg x
   <!-- ANNOUNCEMENTS TAB -->
   <div class="tab-panel" id="panel-announcements">
 
-    <div class="section-title">Post a New Announcement</div>
+    <div class="section-title">Post a New Club Update</div>
     <div class="card">
       <div class="form-row">
-        <label for="ann-title">Title</label>
-        <input type="text" id="ann-title" placeholder="e.g. Spring book sale on Friday">
+        <label for="ann-club">Club name</label>
+        <input type="text" id="ann-club" placeholder="e.g. Drama Club, Robotics, Debate Team, Student Council">
       </div>
       <div class="form-row">
-        <label for="ann-body">Body (1–2 sentences)</label>
-        <textarea id="ann-body" placeholder="What students need to know — when, where, why."></textarea>
+        <label for="ann-news">News from this club</label>
+        <textarea id="ann-news" placeholder="What's happening — meeting times, results, recruiting, events."></textarea>
       </div>
-      <div class="form-row" style="display:grid; grid-template-columns:1fr 160px; gap:12px;">
-        <div>
-          <label for="ann-link">Link (optional)</label>
-          <input type="url" id="ann-link" placeholder="https://...">
-        </div>
-        <div>
-          <label for="ann-tag">Tag</label>
-          <select id="ann-tag">
-            <option value="news">News</option>
-            <option value="event">Event</option>
-            <option value="info">Info</option>
-            <option value="update">Update</option>
-          </select>
-        </div>
+      <div class="form-row">
+        <label for="ann-link">Link (optional)</label>
+        <input type="url" id="ann-link" placeholder="https://...">
+        <div class="field-help">If the club has a sign-up form, sheet, or detail page, paste the URL here.</div>
       </div>
-      <button class="btn" id="btn-post-ann" type="button">Post Announcement</button>
+      <button class="btn" id="btn-post-ann" type="button">Post Update</button>
       <div class="status-msg" id="ann-status"></div>
     </div>
 
@@ -903,15 +894,18 @@ function setTheme(theme) {
         var html = '';
         qs.forEach(function(doc) {
           var d = doc.data();
+          // Prefer new fields (club/news); fall back to old (title/body/tag) for
+          // any docs created before the schema rename.
+          var club = d.club || d.title || '(no club)';
+          var news = d.news || d.body || '';
           var when = d.createdAt && d.createdAt.toDate ? d.createdAt.toDate() : null;
           var active = d.active !== false;
-          var tagClass = 'ann-tag-' + (d.tag || 'news');
           html += '<div class="ann-item ' + (active ? '' : 'inactive') + '">' +
             '<div class="ann-info">' +
-              '<div class="ann-title">' + escapeHtml(d.title || '(no title)') + '</div>' +
-              (d.body ? '<div class="ann-body">' + escapeHtml(d.body) + '</div>' : '') +
+              '<div class="ann-title">' + escapeHtml(club) + '</div>' +
+              (news ? '<div class="ann-body">' + escapeHtml(news) + '</div>' : '') +
               '<div class="ann-meta">' +
-                '<span class="ann-meta-tag ' + tagClass + '">' + escapeHtml(d.tag || 'news') + '</span>' +
+                '<span class="ann-meta-tag ann-tag-club">Club</span>' +
                 (when ? '<span>' + escapeHtml(when.toLocaleString()) + '</span>' : '') +
                 (d.link ? '<a href="' + escapeHtml(d.link) + '" target="_blank" rel="noopener">link</a>' : '') +
               '</div>' +
@@ -943,29 +937,29 @@ function setTheme(theme) {
 
   function wireAnnouncementPost() {
     document.getElementById('btn-post-ann').onclick = function() {
-      var t = document.getElementById('ann-title');
-      var b = document.getElementById('ann-body');
+      var c = document.getElementById('ann-club');
+      var n = document.getElementById('ann-news');
       var l = document.getElementById('ann-link');
-      var g = document.getElementById('ann-tag');
       var statusEl = document.getElementById('ann-status');
-      var title = t.value.trim();
-      if (!title) return status(statusEl, 'Title is required.', 'error');
+      var club = c.value.trim();
+      var news = n.value.trim();
+      if (!club) return status(statusEl, 'Club name is required.', 'error');
+      if (!news) return status(statusEl, 'News content is required.', 'error');
       var btn = document.getElementById('btn-post-ann');
       btn.disabled = true; btn.textContent = 'Posting…';
       db.collection('announcements').add({
-        title: title,
-        body: b.value.trim(),
+        club: club,
+        news: news,
         link: l.value.trim() || null,
-        tag: g.value || 'news',
         active: true,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       }).then(function() {
-        t.value = ''; b.value = ''; l.value = ''; g.value = 'news';
+        c.value = ''; n.value = ''; l.value = '';
         status(statusEl, 'Posted — visible on the dashboard.', 'success');
       }).catch(function(err) {
         status(statusEl, 'Failed: ' + (err.message || err), 'error');
       }).finally(function() {
-        btn.disabled = false; btn.textContent = 'Post Announcement';
+        btn.disabled = false; btn.textContent = 'Post Update';
       });
     };
   }
