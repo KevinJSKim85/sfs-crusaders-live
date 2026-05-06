@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,34 +12,62 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root {
-  --sfs-red: #C1282E;
-  --sfs-red-dim: #9A1F24;
-  --sfs-blue: #2B3160;
-  --bg: #0E0E14;
-  --bg-elev: #16161F;
-  --bg-card: #1A1A24;
-  --bg-card-hover: #20202C;
-  --surface: #22222E;
-  --border: rgba(255,255,255,0.06);
-  --border-strong: rgba(255,255,255,0.12);
-  --text: #ECECF1;
+/* ===== Same brand tokens as the dashboard ===== */
+:root, [data-theme="light"] {
+  --sfs-red:        #C1282E;
+  --sfs-red-dim:    #9A1F24;
+  --sfs-blue:       #2B3160;
+
+  --bg:             #F2F2F5;
+  --bg-elev:        #FFFFFF;
+  --bg-card:        #FFFFFF;
+  --bg-card-hover:  #F8F8FB;
+  --surface:        #ECECEF;
+  --border:         rgba(0,0,0,0.07);
+  --border-strong:  rgba(0,0,0,0.14);
+
+  --text:           #14141C;
+  --text-secondary: #4A4A55;
+  --text-muted:     #8C8C95;
+
+  --accent-green:   #1E8B3E;
+  --accent-amber:   #B86A00;
+  --accent-red:     #D32F2F;
+
+  --shadow:         0 1px 2px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.05);
+}
+[data-theme="dark"] {
+  --bg:             #0E0E14;
+  --bg-elev:        #16161F;
+  --bg-card:        #1A1A24;
+  --bg-card-hover:  #20202C;
+  --surface:        #22222E;
+  --border:         rgba(255,255,255,0.06);
+  --border-strong:  rgba(255,255,255,0.12);
+
+  --text:           #ECECF1;
   --text-secondary: #A0A0B0;
-  --text-muted: #62626E;
-  --accent-green: #34C759;
-  --accent-amber: #FF9F0A;
-  --accent-red: #FF453A;
+  --text-muted:     #62626E;
+
+  --accent-green:   #34C759;
+  --accent-amber:   #FF9F0A;
+  --accent-red:     #FF453A;
+
+  --shadow:         0 2px 4px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { background: var(--bg); }
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   color: var(--text);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.005em;
 }
 
+/* ===== Topnav (matches dashboard) ===== */
 .topnav {
   background: var(--sfs-blue);
   border-bottom: 3px solid var(--sfs-red);
@@ -47,8 +75,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
 }
-
 .brand {
   display: flex;
   align-items: center;
@@ -74,12 +103,45 @@ body {
 }
 .brand-tag {
   font-size: 10px;
-  color: rgba(255,255,255,0.65);
+  color: rgba(255,255,255,0.7);
   letter-spacing: 1.6px;
   margin-top: 3px;
   font-weight: 600;
   text-transform: uppercase;
 }
+
+.nav-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.theme-toggle {
+  display: inline-flex;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+}
+.theme-btn {
+  width: 28px;
+  height: 26px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,0.6);
+  transition: all 0.15s;
+}
+.theme-btn:hover { color: white; }
+.theme-btn.active {
+  background: var(--sfs-red);
+  color: white;
+}
+.theme-btn svg { width: 13px; height: 13px; }
 
 .user-chip {
   display: flex;
@@ -87,103 +149,127 @@ body {
   gap: 10px;
   color: white;
   font-size: 13px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.18);
+  padding: 5px 12px 5px 5px;
+  border-radius: 999px;
 }
 .user-chip img {
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   border: 1px solid rgba(255,255,255,0.3);
 }
+.user-chip .email { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .btn-signout {
-  background: rgba(255,255,255,0.1);
+  background: transparent;
   border: 1px solid rgba(255,255,255,0.25);
   color: white;
-  padding: 7px 14px;
+  padding: 6px 12px;
   border-radius: 8px;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.15s;
 }
-.btn-signout:hover { background: rgba(255,255,255,0.18); }
+.btn-signout:hover { background: rgba(255,255,255,0.12); }
 
+/* ===== Page layout ===== */
 main {
-  max-width: 920px;
+  max-width: 880px;
   margin: 0 auto;
-  padding: 32px 24px 60px;
+  padding: 32px 24px 80px;
+}
+
+.page-header {
+  margin-bottom: 28px;
+}
+.page-header h1 {
+  font-family: 'Inter', sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: var(--text);
+}
+.page-header p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-top: 6px;
 }
 
 .card {
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 28px;
-  margin-bottom: 22px;
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+  margin-bottom: 20px;
 }
 
-h1 {
-  font-family: 'Inter', sans-serif;
-  font-size: 22px;
+.section-title {
+  font-size: 11px;
   font-weight: 800;
-  letter-spacing: -0.4px;
-  margin-bottom: 6px;
-}
-
-.subtitle {
-  color: var(--text-secondary);
-  font-size: 14px;
-  margin-bottom: 24px;
-  line-height: 1.5;
-}
-
-h2 {
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 1.4px;
+  letter-spacing: 1.6px;
   text-transform: uppercase;
   color: var(--text-muted);
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
+.section-title + .card { margin-top: 0; }
 
+/* ===== Tabs ===== */
 .tabs {
-  display: flex;
-  gap: 4px;
+  display: inline-flex;
   background: var(--surface);
   padding: 4px;
-  border-radius: 12px;
-  margin-bottom: 20px;
-  width: fit-content;
+  border-radius: 10px;
+  margin-bottom: 22px;
+  gap: 2px;
 }
 .tab {
   background: transparent;
   border: none;
   color: var(--text-secondary);
-  padding: 10px 18px;
-  border-radius: 9px;
+  padding: 9px 18px;
+  border-radius: 7px;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.18s;
-  letter-spacing: 0.3px;
+  transition: all 0.15s;
+  letter-spacing: 0.2px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
 }
+.tab svg { width: 14px; height: 14px; }
 .tab:hover { color: var(--text); }
 .tab.active {
-  background: var(--sfs-red);
-  color: white;
+  background: var(--bg-card);
+  color: var(--text);
+  box-shadow: var(--shadow);
 }
 
 .tab-panel { display: none; }
 .tab-panel.active { display: block; }
 
+/* ===== Forms ===== */
 .form-row { margin-bottom: 16px; }
+.form-row:last-child { margin-bottom: 0; }
 label {
   display: block;
   font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.6px;
-  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.field-help {
+  font-size: 12px;
   color: var(--text-muted);
-  margin-bottom: 8px;
+  margin-top: 6px;
+  line-height: 1.45;
 }
 
 input[type=text],
@@ -191,49 +277,44 @@ input[type=url],
 textarea,
 select {
   width: 100%;
-  background: var(--surface);
-  border: 1px solid var(--border-strong);
+  background: var(--bg-elev);
+  border: 1.5px solid var(--border);
   border-radius: 10px;
-  padding: 12px 14px;
+  padding: 11px 14px;
   color: var(--text);
-  font-family: 'Inter', sans-serif;
+  font-family: inherit;
   font-size: 14px;
-  transition: border-color 0.2s;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
+input::placeholder, textarea::placeholder { color: var(--text-muted); }
 input:focus, textarea:focus, select:focus {
   outline: none;
   border-color: var(--sfs-red);
+  box-shadow: 0 0 0 3px rgba(193,40,46,0.12);
 }
 textarea {
-  min-height: 90px;
+  min-height: 88px;
   resize: vertical;
-  font-family: inherit;
+  line-height: 1.5;
 }
+select { appearance: none; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none' stroke='%238C8C95' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M1 1l5 5 5-5'/></svg>"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
 
-input[type=file] {
-  width: 100%;
-  background: var(--surface);
-  border: 1px dashed var(--border-strong);
-  border-radius: 10px;
-  padding: 16px;
-  color: var(--text-secondary);
-  font-size: 13px;
-  cursor: pointer;
-}
-
+/* ===== Buttons ===== */
 .btn {
   background: var(--sfs-red);
   color: white;
   border: none;
-  padding: 12px 22px;
-  border-radius: 10px;
-  font-size: 14px;
+  padding: 11px 20px;
+  border-radius: 9px;
+  font-size: 13.5px;
   font-weight: 700;
+  letter-spacing: 0.2px;
   cursor: pointer;
-  transition: background 0.2s, transform 0.15s;
+  transition: background 0.15s, transform 0.1s;
   font-family: inherit;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
 }
 .btn:hover { background: var(--sfs-red-dim); }
@@ -244,37 +325,74 @@ input[type=file] {
   cursor: not-allowed;
   transform: none;
 }
+.btn-block { width: 100%; }
 .btn-secondary {
   background: var(--surface);
   color: var(--text);
+  border: 1px solid var(--border-strong);
 }
 .btn-secondary:hover { background: var(--bg-card-hover); }
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+  padding: 5px 10px;
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover { background: var(--surface); color: var(--text); }
 .btn-danger {
   background: transparent;
   border: 1px solid var(--accent-red);
   color: var(--accent-red);
-  padding: 6px 12px;
-  font-size: 12px;
+  padding: 5px 11px;
+  font-size: 11.5px;
   border-radius: 7px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
 }
 .btn-danger:hover { background: var(--accent-red); color: white; }
 
-.btn-google {
-  background: white;
-  color: #333;
-  font-weight: 600;
-  padding: 14px 24px;
-}
-.btn-google:hover { background: #f1f1f1; }
-.btn-google svg { width: 18px; height: 18px; }
-
+/* ===== Sign-in ===== */
 .signin-wrap {
   max-width: 420px;
-  margin: 80px auto;
-  text-align: center;
+  margin: 80px auto 60px;
 }
-.signin-wrap .card { padding: 40px 32px; }
+.signin-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 36px 32px;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+.signin-card h1 {
+  font-family: 'Cinzel', serif;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+.signin-card .sub {
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  margin-bottom: 24px;
+}
+.btn-google {
+  background: white;
+  color: #1f1f1f;
+  font-weight: 600;
+  padding: 12px 22px;
+  border: 1px solid rgba(0,0,0,0.1);
+  width: 100%;
+  font-size: 14px;
+}
+.btn-google:hover { background: #f6f6f6; }
+.btn-google svg { width: 18px; height: 18px; }
 
+/* ===== Status messages ===== */
 .status-msg {
   margin-top: 14px;
   padding: 10px 14px;
@@ -282,24 +400,30 @@ input[type=file] {
   font-size: 13px;
   font-weight: 600;
   display: none;
+  border: 1px solid transparent;
 }
 .status-msg.show { display: block; }
-.status-msg.success { background: rgba(52,199,89,0.12); color: var(--accent-green); }
-.status-msg.error   { background: rgba(255,69,58,0.12);  color: var(--accent-red); }
+.status-msg.success {
+  background: rgba(52,199,89,0.10);
+  color: var(--accent-green);
+  border-color: rgba(52,199,89,0.25);
+}
+.status-msg.error {
+  background: rgba(255,69,58,0.08);
+  color: var(--accent-red);
+  border-color: rgba(255,69,58,0.25);
+}
 
+/* ===== Lunch panel ===== */
 .lunch-current {
   background: var(--surface);
   border-radius: 10px;
   padding: 14px 16px;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-}
-.lunch-current-info {
-  font-size: 13px;
-  color: var(--text-secondary);
 }
 .lunch-current-week {
   color: var(--text);
@@ -307,93 +431,138 @@ input[type=file] {
   font-size: 14px;
   margin-bottom: 2px;
 }
-.lunch-current-meta { color: var(--text-muted); font-size: 11.5px; }
+.lunch-current-meta {
+  color: var(--text-muted);
+  font-size: 11.5px;
+  letter-spacing: 0.2px;
+}
 .lunch-preview {
   width: 100%;
   height: 460px;
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--border);
   border-radius: 10px;
-  background: var(--surface);
-  margin-top: 12px;
+  background: var(--bg-elev);
+  margin-bottom: 22px;
 }
 
+/* ===== Announcements list ===== */
 .ann-list {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-top: 20px;
 }
 .ann-item {
-  background: var(--surface);
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent-green);
   border-radius: 10px;
   padding: 14px 16px;
   display: flex;
   gap: 14px;
   align-items: flex-start;
-  border-left: 3px solid transparent;
 }
-.ann-item.inactive { opacity: 0.55; border-left-color: var(--text-muted); }
-.ann-item.active { border-left-color: var(--accent-green); }
+.ann-item.inactive {
+  opacity: 0.55;
+  border-left-color: var(--text-muted);
+}
 .ann-info { flex: 1; min-width: 0; }
-.ann-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
-.ann-body { font-size: 12.5px; color: var(--text-secondary); line-height: 1.45; margin-bottom: 6px; }
-.ann-meta { font-size: 11px; color: var(--text-muted); display: flex; gap: 10px; }
+.ann-title {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+.ann-body {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 8px;
+  white-space: pre-wrap;
+}
+.ann-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
 .ann-meta-tag {
   text-transform: uppercase;
   font-weight: 800;
   letter-spacing: 0.6px;
-  background: rgba(193,40,46,0.14);
-  color: #E8585D;
-  padding: 2px 6px;
+  padding: 2px 7px;
   border-radius: 4px;
+  font-size: 9.5px;
 }
-.ann-actions { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+.ann-tag-news   { background: rgba(193,40,46,0.10);  color: var(--sfs-red); }
+.ann-tag-event  { background: rgba(123,47,160,0.10); color: #7B2FA0; }
+.ann-tag-info   { background: rgba(40,167,69,0.10);  color: var(--accent-green); }
+.ann-tag-update { background: rgba(43,49,96,0.10);   color: var(--sfs-blue); }
+.ann-meta a { color: var(--text-secondary); text-decoration: none; border-bottom: 1px dotted var(--border-strong); }
+.ann-meta a:hover { color: var(--sfs-red); }
+
+.ann-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
 .toggle-active {
   background: transparent;
   border: 1px solid var(--border-strong);
   color: var(--text-secondary);
-  padding: 5px 10px;
-  border-radius: 7px;
-  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 10.5px;
   font-weight: 700;
   cursor: pointer;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.5px;
   text-transform: uppercase;
 }
 .toggle-active:hover { color: var(--text); }
-.toggle-active.on { background: var(--accent-green); border-color: var(--accent-green); color: white; }
+.toggle-active.on {
+  background: var(--accent-green);
+  border-color: var(--accent-green);
+  color: white;
+}
 
 .empty-state {
   text-align: center;
   color: var(--text-muted);
-  padding: 28px 0;
-  font-size: 13px;
+  padding: 36px 16px;
+  font-size: 13.5px;
+  background: var(--surface);
+  border-radius: 10px;
 }
 
 .warning-banner {
-  background: rgba(255,159,10,0.12);
-  border: 1px solid var(--accent-amber);
+  background: rgba(255,159,10,0.10);
+  border: 1px solid rgba(255,159,10,0.35);
   color: var(--accent-amber);
   border-radius: 10px;
   padding: 12px 16px;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
   font-size: 13px;
   font-weight: 600;
 }
 
-.field-help {
-  font-size: 11.5px;
-  color: var(--text-muted);
-  margin-top: 6px;
-  line-height: 1.4;
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 26px 0 22px;
 }
 
 @media (max-width: 640px) {
   .topnav { padding: 12px 16px; }
   .brand-name { font-size: 12px; }
-  main { padding: 20px 14px 40px; }
+  main { padding: 22px 14px 60px; }
   .card { padding: 18px; }
   .lunch-current { flex-direction: column; align-items: flex-start; }
+  .ann-item { flex-direction: column; }
+  .ann-actions { flex-direction: row; align-self: flex-start; align-items: center; }
 }
 </style>
 </head>
@@ -404,26 +573,37 @@ input[type=file] {
     <img src="sfs-logo.png" alt="SFS">
     <div>
       <div class="brand-name">CRUSADER HUB · ADMIN</div>
-      <div class="brand-tag">Manage lunch &middot; Announcements</div>
+      <div class="brand-tag">Lunch &middot; Announcements</div>
     </div>
   </a>
-  <div id="user-area"></div>
+  <div class="nav-tools">
+    <div class="theme-toggle">
+      <button class="theme-btn" id="btnLight" type="button" title="Light" onclick="setTheme('light')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      </button>
+      <button class="theme-btn" id="btnDark" type="button" title="Dark" onclick="setTheme('dark')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+    <div id="user-area"></div>
+  </div>
 </nav>
 
 <main>
 
 <div id="not-configured" class="card" style="display:none;">
-  <h1>Firebase not configured</h1>
-  <p class="subtitle">
-    Edit <code>firebase-config.js</code> with your Firebase project's values, then reload this page.
-    See <code>FIREBASE-SETUP.md</code> for step-by-step instructions.
+  <h1 style="font-size:20px; margin-bottom:6px;">Firebase not configured</h1>
+  <p style="color:var(--text-secondary); font-size:13.5px; line-height:1.5;">
+    Edit <code style="background:var(--surface); padding:2px 6px; border-radius:4px;">firebase-config.js</code>
+    with your project values, then reload. See <code style="background:var(--surface); padding:2px 6px; border-radius:4px;">FIREBASE-SETUP.md</code>
+    for step-by-step instructions.
   </p>
 </div>
 
 <div id="signin" class="signin-wrap" style="display:none;">
-  <div class="card">
+  <div class="signin-card">
     <h1>Admin Sign-in</h1>
-    <p class="subtitle">Sign in with your Google account to manage the dashboard.</p>
+    <p class="sub">Sign in with the admin Google account to manage the dashboard.</p>
     <button class="btn btn-google" id="btn-google" type="button">
       <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.84 14.1A6.6 6.6 0 0 1 5.5 12c0-.73.13-1.44.34-2.1V7.07H2.18A11 11 0 0 0 1 12c0 1.78.43 3.46 1.18 4.93l3.66-2.83z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.83C6.71 7.31 9.14 5.38 12 5.38z"/></svg>
       Sign in with Google
@@ -434,28 +614,38 @@ input[type=file] {
 
 <div id="app" style="display:none;">
 
-  <div class="card">
+  <div class="page-header">
     <h1>Dashboard Admin</h1>
-    <p class="subtitle">Update the lunch menu and post announcements that appear on the live SFS Crusader Hub dashboard.</p>
+    <p>Update the lunch menu and post announcements that appear on the live SFS Crusader Hub.</p>
+  </div>
 
-    <div class="tabs" role="tablist">
-      <button class="tab active" data-tab="lunch">Lunch</button>
-      <button class="tab" data-tab="announcements">Announcements</button>
-    </div>
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="lunch" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11h18a9 9 0 0 1-18 0z"/><path d="M12 11V3"/></svg>
+      Lunch
+    </button>
+    <button class="tab" data-tab="announcements" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+      Announcements
+    </button>
+  </div>
 
-    <!-- LUNCH TAB -->
-    <div class="tab-panel active" id="panel-lunch">
+  <!-- LUNCH TAB -->
+  <div class="tab-panel active" id="panel-lunch">
 
-      <h2>Current Lunch Menu</h2>
-      <div id="lunch-current-card" class="lunch-current">
+    <div class="section-title">Current Menu</div>
+    <div class="card">
+      <div class="lunch-current">
         <div class="lunch-current-info" id="lunch-current-info">
           <div class="lunch-current-week">No menu set yet</div>
           <div class="lunch-current-meta">Paste a Google Drive link below to publish.</div>
         </div>
       </div>
       <iframe id="lunch-current-preview" class="lunch-preview" style="display:none;"></iframe>
+    </div>
 
-      <h2 style="margin-top:30px;">Set This Week's Menu</h2>
+    <div class="section-title">Set This Week's Menu</div>
+    <div class="card">
       <div class="form-row">
         <label for="lunch-week">Week label (shown on dashboard)</label>
         <input type="text" id="lunch-week" placeholder="e.g. Week of May 5–9, 2026">
@@ -464,18 +654,20 @@ input[type=file] {
         <label for="lunch-url">Google Drive PDF link</label>
         <input type="url" id="lunch-url" placeholder="https://drive.google.com/file/d/.../view?usp=sharing">
         <div class="field-help">
-          Upload your PDF to Google Drive → right-click → <b>Share → Anyone with the link → Viewer</b> → Copy link → paste here.
-          The dashboard will embed the file within seconds.
+          Upload PDF to Google Drive → right-click → <b>Share → Anyone with the link → Viewer</b> → Copy link → paste here.
         </div>
       </div>
-      <button class="btn" id="btn-save-lunch">Save &amp; Publish</button>
+      <button class="btn" id="btn-save-lunch" type="button">Save &amp; Publish</button>
       <div class="status-msg" id="lunch-status"></div>
     </div>
 
-    <!-- ANNOUNCEMENTS TAB -->
-    <div class="tab-panel" id="panel-announcements">
+  </div>
 
-      <h2>Post a New Announcement</h2>
+  <!-- ANNOUNCEMENTS TAB -->
+  <div class="tab-panel" id="panel-announcements">
+
+    <div class="section-title">Post a New Announcement</div>
+    <div class="card">
       <div class="form-row">
         <label for="ann-title">Title</label>
         <input type="text" id="ann-title" placeholder="e.g. Spring book sale on Friday">
@@ -484,26 +676,28 @@ input[type=file] {
         <label for="ann-body">Body (1–2 sentences)</label>
         <textarea id="ann-body" placeholder="What students need to know — when, where, why."></textarea>
       </div>
-      <div class="form-row">
-        <label for="ann-link">Link (optional)</label>
-        <input type="url" id="ann-link" placeholder="https://...">
+      <div class="form-row" style="display:grid; grid-template-columns:1fr 160px; gap:12px;">
+        <div>
+          <label for="ann-link">Link (optional)</label>
+          <input type="url" id="ann-link" placeholder="https://...">
+        </div>
+        <div>
+          <label for="ann-tag">Tag</label>
+          <select id="ann-tag">
+            <option value="news">News</option>
+            <option value="event">Event</option>
+            <option value="info">Info</option>
+            <option value="update">Update</option>
+          </select>
+        </div>
       </div>
-      <div class="form-row">
-        <label for="ann-tag">Tag</label>
-        <select id="ann-tag">
-          <option value="news">News</option>
-          <option value="event">Event</option>
-          <option value="info">Info</option>
-          <option value="update">Update</option>
-        </select>
-      </div>
-      <button class="btn" id="btn-post-ann">Post Announcement</button>
+      <button class="btn" id="btn-post-ann" type="button">Post Announcement</button>
       <div class="status-msg" id="ann-status"></div>
+    </div>
 
-      <h2 style="margin-top:34px;">Active &amp; Recent</h2>
-      <div class="ann-list" id="ann-list">
-        <div class="empty-state">No announcements yet.</div>
-      </div>
+    <div class="section-title">Active &amp; Recent</div>
+    <div class="ann-list" id="ann-list">
+      <div class="empty-state">No announcements yet.</div>
     </div>
 
   </div>
@@ -517,10 +711,30 @@ input[type=file] {
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
-(function(){
+// ===== Theme (matches dashboard's light/dark contract) =====
+function setTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  try { localStorage.setItem('sfs-theme', theme); } catch (e) {}
+  var l = document.getElementById('btnLight');
+  var d = document.getElementById('btnDark');
+  if (l) l.classList.toggle('active', theme === 'light');
+  if (d) d.classList.toggle('active', theme === 'dark');
+}
+(function initTheme() {
+  var saved = null;
+  try { saved = localStorage.getItem('sfs-theme'); } catch (e) {}
+  if (saved === 'light' || saved === 'dark') {
+    setTheme(saved);
+  } else {
+    var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    setTheme(prefersDark ? 'dark' : 'light');
+  }
+})();
+
+(function() {
   var notConfiguredEl = document.getElementById('not-configured');
   var signinEl = document.getElementById('signin');
-  var appEl = document.getElementById('app');
+  var appEl    = document.getElementById('app');
   var userArea = document.getElementById('user-area');
 
   if (!window.isFirebaseConfigured || !window.isFirebaseConfigured()) {
@@ -530,8 +744,24 @@ input[type=file] {
 
   firebase.initializeApp(window.FIREBASE_CONFIG);
   var auth = firebase.auth();
-  var db = firebase.firestore();
+  var db   = firebase.firestore();
 
+  var ALLOWED = (window.ADMIN_EMAILS || []).map(function(e) { return e.toLowerCase(); });
+
+  function show(el) { el.style.display = ''; }
+  function hide(el) { el.style.display = 'none'; }
+  function status(el, msg, kind) {
+    el.textContent = msg;
+    el.className = 'status-msg show ' + (kind || '');
+    if (kind === 'success') {
+      setTimeout(function() { el.classList.remove('show'); }, 4000);
+    }
+  }
+  function escapeHtml(s) {
+    return String(s || '').replace(/[&<>"']/g, function(c) {
+      return ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c];
+    });
+  }
   // Extract a Google Drive file ID from a share URL or accept a bare ID.
   function extractDriveId(input) {
     if (!input) return null;
@@ -544,27 +774,18 @@ input[type=file] {
     return null;
   }
 
-  var ALLOWED = (window.ADMIN_EMAILS || []).map(function(e){ return e.toLowerCase(); });
-
-  function show(el) { el.style.display = 'block'; }
-  function hide(el) { el.style.display = 'none'; }
-  function status(el, msg, kind) {
-    el.textContent = msg;
-    el.className = 'status-msg show ' + (kind || '');
-    setTimeout(function(){ el.classList.remove('show'); }, 5000);
-  }
-
   // ===== AUTH =====
-  document.getElementById('btn-google').addEventListener('click', function(){
+  document.getElementById('btn-google').addEventListener('click', function() {
     var provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider).catch(function(err){
+    auth.signInWithPopup(provider).catch(function(err) {
       status(document.getElementById('signin-error'), err.message, 'error');
     });
   });
 
-  auth.onAuthStateChanged(function(user){
+  auth.onAuthStateChanged(function(user) {
     if (!user) {
-      hide(appEl); show(signinEl);
+      hide(appEl);
+      show(signinEl);
       userArea.innerHTML = '';
       return;
     }
@@ -574,24 +795,25 @@ input[type=file] {
              'Access denied: ' + user.email + ' is not in the admin allowlist.', 'error');
       return;
     }
-    hide(signinEl); show(appEl);
+    hide(signinEl);
+    show(appEl);
     userArea.innerHTML =
       '<div class="user-chip">' +
-        (user.photoURL ? '<img src="'+user.photoURL+'" alt="">' : '') +
-        '<span>'+user.email+'</span>' +
-        '<button class="btn-signout" id="btn-signout">Sign out</button>' +
+        (user.photoURL ? '<img src="' + user.photoURL + '" alt="">' : '') +
+        '<span class="email">' + escapeHtml(user.email) + '</span>' +
+        '<button class="btn-signout" id="btn-signout" type="button">Sign out</button>' +
       '</div>';
-    document.getElementById('btn-signout').onclick = function(){ auth.signOut(); };
+    document.getElementById('btn-signout').onclick = function() { auth.signOut(); };
     initApp();
   });
 
   // ===== TABS =====
   var tabs = document.querySelectorAll('.tab');
-  tabs.forEach(function(t){
-    t.addEventListener('click', function(){
-      tabs.forEach(function(x){ x.classList.remove('active'); });
+  tabs.forEach(function(t) {
+    t.addEventListener('click', function() {
+      tabs.forEach(function(x) { x.classList.remove('active'); });
       t.classList.add('active');
-      document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
+      document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
       document.getElementById('panel-' + t.dataset.tab).classList.add('active');
     });
   });
@@ -603,13 +825,13 @@ input[type=file] {
     inited = true;
     loadCurrentLunch();
     listenAnnouncements();
-    wireLunchUpload();
+    wireLunchSave();
     wireAnnouncementPost();
   }
 
   function loadCurrentLunch() {
-    db.collection('config').doc('lunch').get().then(function(snap){
-      var info = document.getElementById('lunch-current-info');
+    db.collection('config').doc('lunch').get().then(function(snap) {
+      var info    = document.getElementById('lunch-current-info');
       var preview = document.getElementById('lunch-current-preview');
       if (!snap.exists) {
         info.innerHTML = '<div class="lunch-current-week">No menu set yet</div>'
@@ -620,10 +842,12 @@ input[type=file] {
       var data = snap.data() || {};
       var when = data.updatedAt && data.updatedAt.toDate ? data.updatedAt.toDate() : null;
       info.innerHTML =
-        '<div class="lunch-current-week">' + (data.week || 'Current menu') + '</div>' +
-        '<div class="lunch-current-meta">' +
-          (data.driveFileId ? 'drive.google.com/.../' + data.driveFileId.slice(0, 10) + '…' : 'menu') +
-          (when ? ' &middot; updated ' + when.toLocaleString() : '') +
+        '<div>' +
+          '<div class="lunch-current-week">' + escapeHtml(data.week || 'Current menu') + '</div>' +
+          '<div class="lunch-current-meta">' +
+            (data.driveFileId ? 'drive.google.com/.../' + escapeHtml(data.driveFileId.slice(0, 10)) + '…' : 'menu') +
+            (when ? ' &middot; updated ' + escapeHtml(when.toLocaleString()) : '') +
+          '</div>' +
         '</div>';
       if (data.driveFileId) {
         preview.src = 'https://drive.google.com/file/d/' + data.driveFileId + '/preview';
@@ -631,13 +855,13 @@ input[type=file] {
       } else {
         hide(preview);
       }
-    }).catch(function(err){
+    }).catch(function(err) {
       console.error('loadCurrentLunch error', err);
     });
   }
 
-  function wireLunchUpload() {
-    document.getElementById('btn-save-lunch').onclick = function(){
+  function wireLunchSave() {
+    document.getElementById('btn-save-lunch').onclick = function() {
       var weekInput = document.getElementById('lunch-week');
       var urlInput  = document.getElementById('lunch-url');
       var statusEl  = document.getElementById('lunch-status');
@@ -655,14 +879,14 @@ input[type=file] {
         driveUrl: raw,
         week: week,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(function(){
+      }).then(function() {
         status(statusEl, 'Saved — live on the dashboard.', 'success');
         weekInput.value = ''; urlInput.value = '';
         loadCurrentLunch();
-      }).catch(function(err){
+      }).catch(function(err) {
         console.error(err);
         status(statusEl, 'Save failed: ' + (err.message || err), 'error');
-      }).finally(function(){
+      }).finally(function() {
         btn.disabled = false; btn.textContent = 'Save & Publish';
       });
     };
@@ -670,45 +894,46 @@ input[type=file] {
 
   function listenAnnouncements() {
     db.collection('announcements').orderBy('createdAt', 'desc').limit(40)
-      .onSnapshot(function(qs){
+      .onSnapshot(function(qs) {
         var list = document.getElementById('ann-list');
         if (qs.empty) {
-          list.innerHTML = '<div class="empty-state">No announcements yet.</div>';
+          list.innerHTML = '<div class="empty-state">No announcements yet — post your first above.</div>';
           return;
         }
         var html = '';
-        qs.forEach(function(doc){
+        qs.forEach(function(doc) {
           var d = doc.data();
           var when = d.createdAt && d.createdAt.toDate ? d.createdAt.toDate() : null;
           var active = d.active !== false;
-          html += '<div class="ann-item ' + (active ? 'active' : 'inactive') + '">' +
+          var tagClass = 'ann-tag-' + (d.tag || 'news');
+          html += '<div class="ann-item ' + (active ? '' : 'inactive') + '">' +
             '<div class="ann-info">' +
               '<div class="ann-title">' + escapeHtml(d.title || '(no title)') + '</div>' +
               (d.body ? '<div class="ann-body">' + escapeHtml(d.body) + '</div>' : '') +
               '<div class="ann-meta">' +
-                '<span class="ann-meta-tag">' + escapeHtml(d.tag || 'news') + '</span>' +
-                (when ? '<span>' + when.toLocaleString() + '</span>' : '') +
-                (d.link ? '<a href="' + d.link + '" target="_blank" style="color:var(--text-secondary);">link</a>' : '') +
+                '<span class="ann-meta-tag ' + tagClass + '">' + escapeHtml(d.tag || 'news') + '</span>' +
+                (when ? '<span>' + escapeHtml(when.toLocaleString()) + '</span>' : '') +
+                (d.link ? '<a href="' + escapeHtml(d.link) + '" target="_blank" rel="noopener">link</a>' : '') +
               '</div>' +
             '</div>' +
             '<div class="ann-actions">' +
-              '<button class="toggle-active ' + (active ? 'on' : '') + '" data-id="' + doc.id + '" data-active="' + active + '">' +
+              '<button class="toggle-active ' + (active ? 'on' : '') + '" type="button" data-id="' + doc.id + '" data-active="' + active + '">' +
                 (active ? 'Active' : 'Hidden') +
               '</button>' +
-              '<button class="btn-danger" data-del="' + doc.id + '">Delete</button>' +
+              '<button class="btn-danger" type="button" data-del="' + doc.id + '">Delete</button>' +
             '</div>' +
           '</div>';
         });
         list.innerHTML = html;
-        list.querySelectorAll('.toggle-active').forEach(function(b){
-          b.onclick = function(){
+        list.querySelectorAll('.toggle-active').forEach(function(b) {
+          b.onclick = function() {
             var id = b.dataset.id;
             var current = b.dataset.active === 'true';
             db.collection('announcements').doc(id).update({ active: !current });
           };
         });
-        list.querySelectorAll('[data-del]').forEach(function(b){
-          b.onclick = function(){
+        list.querySelectorAll('[data-del]').forEach(function(b) {
+          b.onclick = function() {
             if (!confirm('Delete this announcement?')) return;
             db.collection('announcements').doc(b.dataset.del).delete();
           };
@@ -717,7 +942,7 @@ input[type=file] {
   }
 
   function wireAnnouncementPost() {
-    document.getElementById('btn-post-ann').onclick = function(){
+    document.getElementById('btn-post-ann').onclick = function() {
       var t = document.getElementById('ann-title');
       var b = document.getElementById('ann-body');
       var l = document.getElementById('ann-link');
@@ -734,21 +959,15 @@ input[type=file] {
         tag: g.value || 'news',
         active: true,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(function(){
+      }).then(function() {
         t.value = ''; b.value = ''; l.value = ''; g.value = 'news';
         status(statusEl, 'Posted — visible on the dashboard.', 'success');
-      }).catch(function(err){
+      }).catch(function(err) {
         status(statusEl, 'Failed: ' + (err.message || err), 'error');
-      }).finally(function(){
+      }).finally(function() {
         btn.disabled = false; btn.textContent = 'Post Announcement';
       });
     };
-  }
-
-  function escapeHtml(s) {
-    return String(s || '').replace(/[&<>"']/g, function(c){
-      return ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c];
-    });
   }
 })();
 </script>

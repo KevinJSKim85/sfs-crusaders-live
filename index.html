@@ -1980,18 +1980,14 @@ async function scrapeSFSNews() {
 
 async function loadNewsAndAnnouncements() {
   var container = document.getElementById('announcements-body');
-  // Admin-posted announcements (Firestore) take priority. SFS scrape fills out
-  // the rest. Inside Higher Ed / Hechinger were dropped — not student-relevant.
-  var results = await Promise.allSettled([
-    loadAdminAnnouncements(),
-    scrapeSFSNews()
-  ]);
-
+  // Admin-curated announcements only. SFS scrape was removed — anything that
+  // appears here is something an admin explicitly posted via /admin.
   var allItems = [];
-  if (results[0].status === 'fulfilled' && results[0].value.length > 0) allItems = allItems.concat(results[0].value);
-  if (results[1].status === 'fulfilled' && results[1].value.length > 0) allItems = allItems.concat(results[1].value);
+  try {
+    allItems = await loadAdminAnnouncements();
+  } catch (e) {}
 
-  if (allItems.length === 0) {
+  if (!allItems || allItems.length === 0) {
     container.innerHTML = '<div class="feed-empty">No announcements yet. <a href="https://sites.google.com/seoulforeign.org/sfhsclubsorganizations25-26/home" target="_blank" style="color:var(--sfs-red);">Visit SFHS Hub</a></div>';
     return;
   }
@@ -2458,7 +2454,7 @@ async function loadAdminAnnouncements() {
 // long-lived browser tabs keep getting fresh data without a page reload.
 // Intervals are tuned for source volatility and (for scraping) host friendliness.
 loadNewsAndAnnouncements();
-setInterval(loadNewsAndAnnouncements, 15 * 60 * 1000);   // SFS scrape + RSS — 15 min
+setInterval(loadNewsAndAnnouncements, 5 * 60 * 1000);    // Admin announcements only — 5 min
 
 loadCollegeFeeds();
 setInterval(loadCollegeFeeds, 30 * 60 * 1000);           // Economist/BBC/NYT/Guardian — 30 min
