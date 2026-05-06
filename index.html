@@ -2205,7 +2205,7 @@ async function renderLunchMenu(fileId) {
   var note   = document.getElementById('lunch-note');
   if (!menuEl) return;
 
-  var cacheKey = 'lunch-menu-' + fileId;
+  var cacheKey = 'lunch-menu-v2-' + fileId;
   try {
     var cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
     if (cached && (Date.now() - cached.t) < 30 * 60 * 1000 && cached.html) {
@@ -2236,7 +2236,7 @@ async function parseAndRenderLunch(fileId, menuEl, frame, note, silent) {
     if (frame) frame.classList.remove('show');
     if (note) note.style.display = 'none';
     try {
-      localStorage.setItem('lunch-menu-' + fileId, JSON.stringify({ t: Date.now(), html: html }));
+      localStorage.setItem('lunch-menu-v2-' + fileId, JSON.stringify({ t: Date.now(), html: html }));
     } catch (e) {}
   } catch (e) {
     console.warn('PDF parse failed, falling back to iframe:', e);
