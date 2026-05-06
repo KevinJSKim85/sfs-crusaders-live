@@ -743,10 +743,12 @@ a.widget:hover { background: var(--bg-card-hover); }
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 1px;
-  margin-bottom: 5px;
+  margin: 0;
   display: inline-block;
   padding: 2px 7px;
   border-radius: 4px;
+  line-height: 1.35;
+  flex-shrink: 0;
 }
 
 .news-item h4 {
@@ -767,13 +769,17 @@ a.widget:hover { background: var(--bg-card-hover); }
 /* News item with thumbnail (College News, World & Reading) */
 .news-item-rich {
   display: grid;
-  grid-template-columns: 56px 1fr;
-  gap: 12px;
-  padding: 12px 0;
+  grid-template-columns: 76px minmax(0, 1fr);
+  gap: 14px;
+  padding: 12px;
   border-bottom: 1px solid var(--border);
-  align-items: start;
+  border-radius: 10px;
+  align-items: center;
+  min-height: 100px;
+  transition: background 0.18s, border-color 0.18s;
 }
 .news-item-rich:last-child { border-bottom: none; }
+.news-item-rich:hover { background: var(--bg-card-hover); }
 .news-item-rich > a {
   text-decoration: none;
   color: inherit;
@@ -781,24 +787,40 @@ a.widget:hover { background: var(--bg-card-hover); }
   min-width: 0;
 }
 .news-item-rich > a:hover h4 { color: var(--sfs-red); }
+.news-kicker {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  margin-bottom: 6px;
+}
 .news-item-rich h4 {
-  font-size: 13.5px;
-  font-weight: 600;
-  line-height: 1.35;
-  margin: 4px 0 4px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.32;
+  margin: 0;
   color: var(--text);
   transition: color 0.2s;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 .news-item-rich .meta {
   font-size: 11.5px;
   color: var(--text-muted);
-  font-weight: 500;
+  font-weight: 600;
+  line-height: 1.25;
+  margin-top: 7px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .news-thumb,
 .news-thumb-fallback {
-  width: 56px;
-  height: 56px;
-  border-radius: 8px;
+  width: 76px;
+  height: 76px;
+  border-radius: 11px;
   display: block;
   flex-shrink: 0;
 }
@@ -2169,11 +2191,13 @@ function thumbHtml(thumbUrl, source) {
 
 function richNewsItemHtml(item) {
   var title = item.title.length > 95 ? item.title.slice(0, 92) + '...' : item.title;
-  var meta  = item.source ? (item.source + (item.pubDate ? ' &middot; ' + timeAgo(item.pubDate) : ''))
-                         : (item.pubDate ? timeAgo(item.pubDate) : '');
+  var meta  = item.meta || (item.source ? (item.source + (item.pubDate ? ' &middot; ' + timeAgo(item.pubDate) : ''))
+                         : (item.pubDate ? timeAgo(item.pubDate) : ''));
   return '<div class="news-item-rich">' + thumbHtml(extractThumb(item), item.source) +
     '<a href="' + item.link + '" target="_blank" rel="noopener">' +
-      (item.tag ? '<span class="news-tag" style="background:' + item.tag.bg + ';color:' + item.tag.color + ';">' + item.tag.label + '</span>' : '') +
+      '<div class="news-kicker">' +
+        (item.tag ? '<span class="news-tag" style="background:' + item.tag.bg + ';color:' + item.tag.color + ';">' + item.tag.label + '</span>' : '') +
+      '</div>' +
       '<h4>' + title + '</h4>' +
       (meta ? '<div class="meta">' + meta + '</div>' : '') +
     '</a>' +
@@ -2356,7 +2380,7 @@ async function loadSFSNews() {
       items.push({
         title: title, link: abs(link), image: abs(image),
         date: (date || '').trim(), source: 'seoulforeign.org',
-        pubDate: null
+        pubDate: null, tag: sfsTag
       });
     }
 
@@ -2396,14 +2420,9 @@ async function loadSFSNews() {
     if (items.length === 0) throw new Error('empty');
 
     container.innerHTML = items.slice(0, 5).map(function(item) {
-      var title = item.title.length > 95 ? item.title.slice(0, 92) + '...' : item.title;
-      var meta = item.date || 'seoulforeign.org';
-      return '<div class="news-item-rich">' + thumbHtml(item.image, item.source) +
-        '<a href="' + item.link + '" target="_blank" rel="noopener">' +
-          '<div class="meta">' + meta + '</div>' +
-          '<h4>' + title + '</h4>' +
-        '</a>' +
-      '</div>';
+      item.thumbnail = item.image;
+      if (item.date) item.meta = item.date + ' &middot; seoulforeign.org';
+      return richNewsItemHtml(item);
     }).join('');
   } catch (e) {
     container.innerHTML =
