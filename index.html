@@ -2329,6 +2329,25 @@ async function loadSFSNews() {
       return origin + '/' + u;
     }
 
+    function finalsiteImageUrl(el) {
+      if (!el) return '';
+      var direct = el.getAttribute && (el.getAttribute('data-src') || el.getAttribute('src'));
+      if (direct && !/pixel|blank|spacer/i.test(direct)) return direct;
+      var holder = el.matches && el.matches('[data-image-sizes]') ? el : el.querySelector('[data-image-sizes]');
+      var raw = holder && holder.getAttribute('data-image-sizes');
+      if (!raw) return '';
+      try {
+        var sizes = JSON.parse(raw.indexOf('%22') >= 0 ? decodeURIComponent(raw) : raw);
+        if (!Array.isArray(sizes) || sizes.length === 0) return '';
+        var sorted = sizes.slice().sort(function(a, b) { return (a.width || 0) - (b.width || 0); });
+        var pick = sorted.find(function(img) { return (img.width || 0) >= 512; }) || sorted[sorted.length - 1];
+        return pick && pick.url ? pick.url : '';
+      } catch (e) {
+        var m = raw.match(/https?:[^"'\]}]+/);
+        return m ? m[0] : '';
+      }
+    }
+
     var items = [];
     function add(title, link, image, date) {
       title = (title || '').trim();
@@ -2347,12 +2366,12 @@ async function loadSFSNews() {
       var a = articles[i];
       var t = a.querySelector('.fsTitle, h2 a, h3 a, h4 a, h2, h3, h4, .title');
       var lnk = a.querySelector('a[href]');
-      var img = a.querySelector('img');
+      var img = a.querySelector('.fsThumbnail [data-image-sizes], [class*="Thumbnail"] [data-image-sizes], img[data-image-sizes], img');
       var dt = a.querySelector('.fsDateTime, time, [class*="Date"], .date');
       add(
         t && t.textContent,
         lnk && lnk.getAttribute('href'),
-        img && (img.getAttribute('data-src') || img.getAttribute('src')),
+        finalsiteImageUrl(img),
         dt && dt.textContent
       );
     }
@@ -2363,12 +2382,12 @@ async function loadSFSNews() {
       for (var j = 0; j < links.length && items.length < 8; j++) {
         var l = links[j];
         var parent = l.closest('article, li, div') || l.parentElement;
-        var pImg = parent && parent.querySelector('img');
+        var pImg = parent && parent.querySelector('.fsThumbnail [data-image-sizes], [class*="Thumbnail"] [data-image-sizes], img[data-image-sizes], img');
         var pDate = parent && parent.querySelector('time, .date, [class*="Date"]');
         add(
           l.textContent,
           l.getAttribute('href'),
-          pImg && (pImg.getAttribute('data-src') || pImg.getAttribute('src')),
+          finalsiteImageUrl(pImg),
           pDate && pDate.textContent
         );
       }
