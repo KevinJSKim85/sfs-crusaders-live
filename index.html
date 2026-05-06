@@ -1120,14 +1120,22 @@ a.widget:hover { background: var(--bg-card-hover); }
   border-radius: 10px;
   overflow: hidden;
   border: 1px solid var(--border);
+  display: block;
+  text-decoration: none;
+  transition: opacity 0.2s, transform 0.2s, border-color 0.2s;
 }
 
-.ig-post iframe {
+.ig-post:hover {
+  border-color: var(--border-strong);
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+
+.ig-post img {
   width: 100%;
-  height: calc(100% + 62px);
-  border: none;
+  height: 100%;
   display: block;
-  transform: translateY(-62px);
+  object-fit: cover;
 }
 
 .ig-loading {
@@ -2399,7 +2407,11 @@ function buildInstagramGrid(id, username, shortcodes) {
   }
   var posts = shortcodes.slice(0, 8).map(function(code, i) {
     var loading = i < 4 ? 'eager' : 'lazy';
-    return '<div class="ig-post"><iframe src="https://www.instagram.com/p/' + code + '/embed/" title="Instagram post" loading="' + loading + '" allowtransparency="true" scrolling="no"></iframe></div>';
+    var postUrl = 'https://www.instagram.com/p/' + code + '/';
+    var mediaUrl = 'https://images.weserv.nl/?url=' + encodeURIComponent('https://www.instagram.com/p/' + code + '/media/?size=l');
+    return '<a class="ig-post" href="' + postUrl + '" target="_blank" rel="noopener">' +
+      '<img src="' + mediaUrl + '" alt="Instagram post" loading="' + loading + '">' +
+    '</a>';
   }).join('');
   track.innerHTML = posts +
     '<a class="ig-more" href="https://www.instagram.com/' + username + '/" target="_blank" rel="noopener">More on Instagram &rarr;</a>';
