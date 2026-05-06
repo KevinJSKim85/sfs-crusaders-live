@@ -253,7 +253,7 @@ body {
 .hero {
   display: grid;
   grid-template-columns: 1.6fr 1fr;
-  margin: 40px 0;
+  margin: 20px 0;
   border-radius: 14px;
   overflow: hidden;
   box-shadow: 0 4px 20px rgba(0,0,0,0.28);
@@ -523,11 +523,11 @@ body {
 .grid-stack {
   background: transparent;
   min-height: 400px;
-  /* The gap between widgets is created by `.widget { inset: 20px }` below
+  /* The gap between widgets is created by `.widget { inset: 10px }` below
      (gridstack's own `margin` option proved unreliable). Pull the grid back
-     20px on all sides so the inset shifts widget edges to land flush with
+     10px on all sides so the inset shifts widget edges to land flush with
      the hero and Quick Links bar above. */
-  margin: -20px -20px;
+  margin: -10px -10px;
 }
 
 .grid-stack-item-content {
@@ -555,10 +555,10 @@ body {
 
 .widget {
   position: absolute;
-  /* 20 px buffer on every side of the cell creates a uniform 40 px visible
+  /* 10 px buffer on every side of the cell creates a uniform 20 px visible
      gap between widgets in both directions. Combined with .grid-stack's
-     -20 px outer margin, widget edges line up with hero / Quick Links above. */
-  inset: 20px;
+     -10 px outer margin, widget edges line up with hero / Quick Links above. */
+  inset: 10px;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 18px;
@@ -928,7 +928,7 @@ a.widget:hover { background: var(--bg-card-hover); }
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: 14px;
-  margin: 0 0 40px;
+  margin: 0 0 20px;
   display: flex;
   gap: 14px;
   overflow-x: auto;
@@ -1373,7 +1373,7 @@ a.widget:hover { background: var(--bg-card-hover); }
 footer {
   text-align: center;
   padding: 0 0 28px;
-  margin-top: 40px;       /* 40 px gap from the grid, matching the rest */
+  margin-top: 20px;       /* 20 px gap from the grid, matching the rest */
 }
 
 footer p {
