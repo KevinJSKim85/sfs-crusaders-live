@@ -1836,7 +1836,7 @@ var sfsTag = { label: 'SFS', bg: 'var(--tag-red-bg)', color: 'var(--tag-red-fg)'
 
 async function scrapeSFSNews() {
   var SFS_URL = 'https://www.seoulforeign.org/community/news';
-  var res = await fetchWithTimeout('https://api.allorigins.win/raw?url=' + encodeURIComponent(SFS_URL), 4000);
+  var res = await fetchWithTimeout('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(SFS_URL), 6000);
   var html = await res.text();
   var doc = new DOMParser().parseFromString(html, 'text/html');
   var items = [];
@@ -1949,7 +1949,7 @@ async function loadCollegeFeeds() {
 async function loadAthletics() {
   var container = document.getElementById('athletics-body');
   try {
-    var res = await fetchWithTimeout('https://api.allorigins.win/raw?url=' + encodeURIComponent('https://sfscrusaderathletics.com/'), 5000);
+    var res = await fetchWithTimeout('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent('https://sfscrusaderathletics.com/'), 7000);
     var html = await res.text();
     var doc = new DOMParser().parseFromString(html, 'text/html');
     var items = [];
@@ -2030,7 +2030,7 @@ function buildCarousel(id, shortcodes) {
 async function loadInstagramCarousel(id, username) {
   var profileUrl = 'https://www.instagram.com/' + username + '/';
   try {
-    var res = await fetchWithTimeout('https://api.allorigins.win/raw?url=' + encodeURIComponent(profileUrl), 6000);
+    var res = await fetchWithTimeout('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(profileUrl), 8000);
     var html = await res.text();
     var regex = /\/p\/([A-Za-z0-9_-]{6,})\//g;
     var match;
@@ -2433,7 +2433,7 @@ async function loadSpirit(attempt) {
   attempt = attempt || 1;
   try {
     var res = await fetchWithTimeout(
-      'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://issuu.com/thesfhsspirit'),
+      'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent('https://issuu.com/thesfhsspirit'),
       15000
     );
     var html = await res.text();
