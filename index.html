@@ -2402,6 +2402,10 @@ async function loadSFSNews() {
 
 // ===== INSTAGRAM CAROUSEL =====
 var igState = {};
+var IG_SEED_SHORTCODES = {
+  sfs: ['CikU03zjeVJ', 'Cigv1gpjPp0', 'Ch_qi7EDu4m', 'ChtkT84jyVB'],
+  athletics: ['CjsYUsBganw', 'CjFZeeDgsQa', 'CWQXZyRgMQj', 'CSgHRHABW7-']
+};
 
 function igSlide(id, dir) {
   var st = igState[id];
@@ -2429,7 +2433,7 @@ function buildCarousel(id, shortcodes) {
     return;
   }
   track.innerHTML = shortcodes.map(function(code) {
-    return '<div class="ig-slide"><iframe src="https://www.instagram.com/p/' + code + '/embed/" loading="lazy" allowtransparency="true" scrolling="no"></iframe></div>';
+    return '<div class="ig-slide"><iframe src="https://www.instagram.com/p/' + code + '/embed/" title="Instagram post" loading="eager" allowtransparency="true" scrolling="no"></iframe></div>';
   }).join('');
   dotsWrap.innerHTML = shortcodes.map(function(_, i) {
     return '<button class="ig-dot' + (i === 0 ? ' active' : '') + '" onclick="igGoTo(\'' + id + '\',' + i + ')"></button>';
@@ -2439,6 +2443,9 @@ function buildCarousel(id, shortcodes) {
 
 async function loadInstagramCarousel(id, username) {
   var profileUrl = 'https://www.instagram.com/' + username + '/';
+  var seedCodes = IG_SEED_SHORTCODES[id] || [];
+  if (seedCodes.length > 0) buildCarousel(id, seedCodes);
+
   try {
     var res = await fetchWithTimeout('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(profileUrl), 8000);
     var html = await res.text();
@@ -2456,6 +2463,8 @@ async function loadInstagramCarousel(id, username) {
     if (codes.length === 0) throw new Error('no codes');
     buildCarousel(id, codes);
   } catch (e) {
+    if (seedCodes.length > 0) return;
+
     // Profile-level /USERNAME/embed is blocked by Instagram (X-Frame-Options).
     // Show a clean CTA card linking to the profile instead of a broken iframe.
     var track = document.getElementById('ig-track-' + id);
