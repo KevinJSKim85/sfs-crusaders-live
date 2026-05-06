@@ -2924,8 +2924,7 @@ var collegeNewsTags = {
   ihe:  { label: 'Inside Higher Ed', bg: 'var(--tag-red-bg)',    color: 'var(--tag-red-fg)' },
   hech: { label: 'Hechinger',        bg: 'var(--tag-purple-bg)', color: 'var(--tag-purple-fg)' },
   harv: { label: 'Harvard',          bg: 'var(--tag-amber-bg)',  color: 'var(--tag-amber-fg)' },
-  mit:  { label: 'MIT',              bg: 'var(--tag-blue-bg)',   color: 'var(--tag-blue-fg)' },
-  stan: { label: 'Stanford',         bg: 'var(--tag-green-bg)',  color: 'var(--tag-green-fg)' }
+  mit:  { label: 'MIT',              bg: 'var(--tag-blue-bg)',   color: 'var(--tag-blue-fg)' }
 };
 
 async function loadCollegeNews() {
@@ -2936,16 +2935,14 @@ async function loadCollegeNews() {
       fetchRSS('https://www.insidehighered.com/rss.xml'),
       fetchRSS('https://hechingerreport.org/feed/'),
       fetchRSS('https://news.harvard.edu/gazette/feed/'),
-      fetchRSS('https://news.mit.edu/rss/feed'),
-      fetchRSS('https://news.stanford.edu/feed/')
+      fetchRSS('https://news.mit.edu/rss/feed')
     ]);
     var items = [];
     var meta = [
       { tag: collegeNewsTags.ihe,  source: 'insidehighered.com' },
       { tag: collegeNewsTags.hech, source: 'hechingerreport.org' },
       { tag: collegeNewsTags.harv, source: 'harvard.edu' },
-      { tag: collegeNewsTags.mit,  source: 'mit.edu' },
-      { tag: collegeNewsTags.stan, source: 'stanford.edu' }
+      { tag: collegeNewsTags.mit,  source: 'mit.edu' }
     ];
     feeds.forEach(function(f, idx) {
       if (f.status === 'fulfilled') {
