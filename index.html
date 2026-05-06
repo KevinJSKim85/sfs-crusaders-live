@@ -810,18 +810,21 @@ a.widget:hover { background: var(--bg-card-hover); }
   gap: 8px;
 }
 
+.lunch-actions { display: flex; gap: 8px; }
 .lunch-btn {
+  flex: 1;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 14px 16px;
-  border-radius: 12px;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 12px;
+  border-radius: 8px;
   text-decoration: none;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.2px;
+  letter-spacing: 0.3px;
   transition: transform 0.15s, background 0.2s, border-color 0.2s;
+  white-space: nowrap;
 }
 
 .lunch-btn:hover { transform: translateY(-1px); }
@@ -840,9 +843,9 @@ a.widget:hover { background: var(--bg-card-hover); }
 }
 .lunch-btn-secondary:hover { background: var(--bg-card-hover); }
 
-.lunch-btn .lb-icon { display: flex; align-items: center; gap: 8px; }
-.lunch-btn .lb-icon svg { width: 18px; height: 18px; stroke-width: 2; }
-.lunch-btn .lb-arrow { width: 14px; height: 14px; opacity: 0.85; }
+.lunch-btn .lb-icon { display: flex; align-items: center; gap: 6px; }
+.lunch-btn .lb-icon svg { width: 14px; height: 14px; stroke-width: 2; }
+.lunch-btn .lb-arrow { width: 11px; height: 11px; opacity: 0.85; }
 
 .lunch-pdf {
   width: 100%;
@@ -876,47 +879,36 @@ a.widget:hover { background: var(--bg-card-hover); }
 .lunch-menu::-webkit-scrollbar { width: 4px; }
 .lunch-menu::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
 
-.lunch-section {
-  font-size: 10.5px;
-  font-weight: 800;
-  letter-spacing: 1.4px;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin: 12px 0 6px;
-  padding-bottom: 4px;
-  border-bottom: 1px solid var(--border);
-}
-.lunch-section:first-child { margin-top: 0; }
-
-.lunch-day-block {
-  padding: 8px 10px;
-  margin-bottom: 4px;
-  border-radius: 8px;
-  background: transparent;
+.lunch-today-list {
   display: flex;
-  gap: 12px;
+  flex-direction: column;
+  gap: 8px;
+  margin: 4px 0 12px;
+}
+.lunch-row {
+  display: flex;
+  gap: 10px;
   align-items: baseline;
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--border);
 }
-.lunch-day-block.today {
-  background: var(--tag-red-bg);
-}
-.lunch-day-block .day {
-  font-size: 11px;
+.lunch-row:last-child { border-bottom: none; }
+.lunch-row .label {
+  font-size: 10px;
   font-weight: 800;
-  letter-spacing: 0.6px;
-  color: var(--text-muted);
-  flex-shrink: 0;
-  min-width: 32px;
+  letter-spacing: 1.1px;
   text-transform: uppercase;
+  color: var(--sfs-red);
+  flex-shrink: 0;
+  min-width: 78px;
+  line-height: 1.4;
 }
-.lunch-day-block.today .day { color: var(--sfs-red); }
-.lunch-day-block .items {
+.lunch-row .items {
   font-size: 13px;
-  color: var(--text-secondary);
-  line-height: 1.5;
+  color: var(--text);
+  line-height: 1.45;
   font-weight: 500;
 }
-.lunch-day-block.today .items { color: var(--text); font-weight: 600; }
 
 .lunch-loading {
   text-align: center;
@@ -2375,21 +2367,41 @@ async function fetchAndParseLunchPdf(fileId) {
     .filter(function(g) { return g && Object.keys(g.days).length > 0; });
 }
 
+// Map raw Crave section names to compact display labels. Sections not in this
+// map are dropped from the rendered view (BEVERAGES, ICE CREAM, VOSS, GRAB & GO,
+// SALAD BAR, etc. — the noisy stuff that isn't an actual main meal).
+var LUNCH_SECTION_LABELS = {
+  'INTERNATIONAL':       'Intl.',
+  'KOREAN':              'Korean',
+  'BURGER OF THE WEEK':  'Burger',
+  'SOUP OF THE WEEK':    'Soup',
+  'GRILL':               'Grill',
+  'BUILD YOUR OWN':      'Salad'
+};
+
 function renderLunchSections(sections) {
   var todayIdx = new Date().getDay();
   var todayShort = LUNCH_DAYS_SHORT[todayIdx];
-  var ORDER = ['Mon','Tue','Wed','Thu','Fri','Wk'];
-  return sections.map(function(s) {
-    var rows = ORDER.filter(function(d) { return s.days[d]; }).map(function(d) {
-      var isToday = (d === todayShort);
-      var dayLabel = d === 'Wk' ? 'This Week' : d;
-      return '<div class="lunch-day-block' + (isToday ? ' today' : '') + '">' +
-               '<div class="day">' + dayLabel + '</div>' +
-               '<div class="items">' + escapeLunchHtml(s.days[d]) + '</div>' +
-             '</div>';
-    }).join('');
-    return '<div class="lunch-section">' + escapeLunchHtml(s.section) + '</div>' + rows;
-  }).join('');
+
+  var rows = [];
+  sections.forEach(function(s) {
+    var label = LUNCH_SECTION_LABELS[s.section];
+    if (!label) return;                       // drop noisy / unknown sections
+    // Today's items first; fall back to weekly ('Wk') for sections that
+    // don't change daily (Burger of the week, Soup of the week, Grill, Salad).
+    var items = s.days[todayShort] || s.days.Wk;
+    if (!items) return;
+    rows.push(
+      '<div class="lunch-row">' +
+        '<div class="label">' + escapeLunchHtml(label) + '</div>' +
+        '<div class="items">' + escapeLunchHtml(items) + '</div>' +
+      '</div>'
+    );
+  });
+
+  return rows.length
+    ? '<div class="lunch-today-list">' + rows.join('') + '</div>'
+    : '';
 }
 
 function escapeLunchHtml(s) {
