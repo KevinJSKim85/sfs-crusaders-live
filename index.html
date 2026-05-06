@@ -1095,32 +1095,34 @@ a.widget:hover { background: var(--bg-card-hover); }
   .link-name { font-size: 11.5px; }
 }
 
-/* ===== INSTAGRAM CAROUSEL ===== */
+/* ===== INSTAGRAM FEED GRID ===== */
 .ig-wrap {
   position: relative;
   flex: 1;
   border-radius: 12px;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   background: var(--surface);
   margin: 0 -4px -2px;
+  padding: 10px;
 }
 
 .ig-track {
-  display: flex;
-  height: 100%;
-  transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  align-content: start;
 }
 
-.ig-slide {
-  flex: 0 0 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.ig-post {
+  height: 158px;
   background: var(--bg-elev);
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border);
 }
 
-.ig-slide iframe {
+.ig-post iframe {
   width: 100%;
   height: 100%;
   border: none;
@@ -1133,7 +1135,12 @@ a.widget:hover { background: var(--bg-card-hover); }
 }
 
 .ig-fallback {
+  display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+  grid-column: 1 / -1;
   gap: 12px;
   background: linear-gradient(135deg, rgba(193,40,46,0.10), rgba(74,82,144,0.10));
   text-decoration: none;
@@ -1163,53 +1170,36 @@ a.widget:hover { background: var(--bg-card-hover); }
   color: var(--sfs-red);
 }
 
-.ig-arrow {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 1px solid var(--border-strong);
-  background: rgba(0,0,0,0.6);
-  backdrop-filter: blur(8px);
-  color: white;
-  cursor: pointer;
-  z-index: 2;
+.ig-more {
+  grid-column: 1 / -1;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  min-height: 44px;
+  border: 1px solid var(--border-strong);
+  border-radius: 9px;
+  color: var(--text);
+  background: var(--bg-elev);
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
 }
 
-.ig-arrow:hover { background: rgba(0,0,0,0.85); }
-.ig-arrow svg { width: 14px; height: 14px; }
-.ig-arrow.left { left: 8px; }
-.ig-arrow.right { right: 8px; }
-
-.ig-dots {
-  display: flex;
-  justify-content: center;
-  gap: 4px;
-  padding: 10px 0 0;
-  flex-shrink: 0;
+.ig-more:hover {
+  background: var(--bg-card-hover);
+  color: var(--sfs-red);
+  border-color: var(--sfs-red);
 }
 
-.ig-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--border-strong);
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s;
-  padding: 0;
-}
+.ig-wrap::-webkit-scrollbar { width: 4px; }
+.ig-wrap::-webkit-scrollbar-track { background: transparent; }
+.ig-wrap::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
 
-.ig-dot.active {
-  background: var(--sfs-red);
-  width: 18px;
-  border-radius: 3px;
+@media (max-width: 640px) {
+  .ig-post { height: 150px; }
 }
 
 /* ===== FEATURE WIDGET (Spirit/Unlocked) ===== */
@@ -1742,12 +1732,9 @@ footer p {
     </div>
     <div class="ig-wrap">
       <div class="ig-track" id="ig-track-sfs">
-        <div class="ig-slide ig-loading">Loading posts...</div>
+        <div class="ig-fallback ig-loading">Loading posts...</div>
       </div>
-      <button class="ig-arrow left" onclick="igSlide('sfs',-1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
-      <button class="ig-arrow right" onclick="igSlide('sfs',1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
     </div>
-    <div class="ig-dots" id="ig-dots-sfs"></div>
   </div>
 
   <!-- Instagram Athletics -->
@@ -1766,12 +1753,9 @@ footer p {
     </div>
     <div class="ig-wrap">
       <div class="ig-track" id="ig-track-athletics">
-        <div class="ig-slide ig-loading">Loading posts...</div>
+        <div class="ig-fallback ig-loading">Loading posts...</div>
       </div>
-      <button class="ig-arrow left" onclick="igSlide('athletics',-1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
-      <button class="ig-arrow right" onclick="igSlide('athletics',1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
     </div>
-    <div class="ig-dots" id="ig-dots-athletics"></div>
   </div>
 
   <!-- Spirit Magazine (live from Issuu) -->
@@ -2400,51 +2384,30 @@ async function loadSFSNews() {
   }
 }
 
-// ===== INSTAGRAM CAROUSEL =====
-var igState = {};
+// ===== INSTAGRAM FEED GRID =====
 var IG_SEED_SHORTCODES = {
-  sfs: ['CikU03zjeVJ', 'Cigv1gpjPp0', 'Ch_qi7EDu4m', 'ChtkT84jyVB'],
-  athletics: ['CjsYUsBganw', 'CjFZeeDgsQa', 'CWQXZyRgMQj', 'CSgHRHABW7-']
+  sfs: ['DX6bUu7j2wa', 'DXtFwRnEykc', 'DXp9pcID8Ys', 'DXiC4O5E8vr', 'DXdoRkFDw5m', 'DXbhPw3D5V2', 'DXYpLkND8s0', 'DXWDNtkj_y_'],
+  athletics: ['DX_RTfiD0ip', 'DX_RNvNj6aq', 'DX6P6N1D1Lr', 'DX6P1wkD5pL', 'DXaZXAFD5Fo', 'DXYQ79_j5Dj', 'DXYQvLIj--O', 'DXYQjuhj3Se']
 };
 
-function igSlide(id, dir) {
-  var st = igState[id];
-  if (!st || st.total === 0) return;
-  var next = st.current + dir;
-  if (next < 0) next = st.total - 1;
-  if (next >= st.total) next = 0;
-  igGoTo(id, next);
-}
-
-function igGoTo(id, idx) {
-  var st = igState[id];
-  if (!st) return;
-  st.current = idx;
-  document.getElementById('ig-track-' + id).style.transform = 'translateX(-' + (idx * 100) + '%)';
-  var dots = document.querySelectorAll('#ig-dots-' + id + ' .ig-dot');
-  dots.forEach(function(d, i) { d.classList.toggle('active', i === idx); });
-}
-
-function buildCarousel(id, shortcodes) {
+function buildInstagramGrid(id, username, shortcodes) {
   var track = document.getElementById('ig-track-' + id);
-  var dotsWrap = document.getElementById('ig-dots-' + id);
   if (shortcodes.length === 0) {
-    track.innerHTML = '<div class="ig-slide ig-loading">No posts found</div>';
+    track.innerHTML = '<div class="ig-fallback ig-loading">No posts found</div>';
     return;
   }
-  track.innerHTML = shortcodes.map(function(code) {
-    return '<div class="ig-slide"><iframe src="https://www.instagram.com/p/' + code + '/embed/" title="Instagram post" loading="eager" allowtransparency="true" scrolling="no"></iframe></div>';
+  var posts = shortcodes.slice(0, 8).map(function(code, i) {
+    var loading = i < 4 ? 'eager' : 'lazy';
+    return '<div class="ig-post"><iframe src="https://www.instagram.com/p/' + code + '/embed/" title="Instagram post" loading="' + loading + '" allowtransparency="true" scrolling="no"></iframe></div>';
   }).join('');
-  dotsWrap.innerHTML = shortcodes.map(function(_, i) {
-    return '<button class="ig-dot' + (i === 0 ? ' active' : '') + '" onclick="igGoTo(\'' + id + '\',' + i + ')"></button>';
-  }).join('');
-  igState[id] = { current: 0, total: shortcodes.length };
+  track.innerHTML = posts +
+    '<a class="ig-more" href="https://www.instagram.com/' + username + '/" target="_blank" rel="noopener">More on Instagram &rarr;</a>';
 }
 
 async function loadInstagramCarousel(id, username) {
   var profileUrl = 'https://www.instagram.com/' + username + '/';
   var seedCodes = IG_SEED_SHORTCODES[id] || [];
-  if (seedCodes.length > 0) buildCarousel(id, seedCodes);
+  if (seedCodes.length > 0) buildInstagramGrid(id, username, seedCodes);
 
   try {
     var res = await fetchWithTimeout('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(profileUrl), 8000);
@@ -2459,9 +2422,9 @@ async function loadInstagramCarousel(id, username) {
     while ((match = reelRegex.exec(html)) !== null) {
       if (codes.indexOf(match[1]) === -1) codes.push(match[1]);
     }
-    codes = codes.slice(0, 4);
+    codes = codes.slice(0, 8);
     if (codes.length === 0) throw new Error('no codes');
-    buildCarousel(id, codes);
+    buildInstagramGrid(id, username, codes);
   } catch (e) {
     if (seedCodes.length > 0) return;
 
@@ -2469,15 +2432,13 @@ async function loadInstagramCarousel(id, username) {
     // Show a clean CTA card linking to the profile instead of a broken iframe.
     var track = document.getElementById('ig-track-' + id);
     track.innerHTML =
-      '<a class="ig-slide ig-fallback" href="https://www.instagram.com/' + username + '/" target="_blank" rel="noopener">' +
+      '<a class="ig-fallback" href="https://www.instagram.com/' + username + '/" target="_blank" rel="noopener">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="ig-fallback-icon">' +
           '<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/>' +
         '</svg>' +
         '<div class="ig-fallback-handle">@' + username + '</div>' +
         '<div class="ig-fallback-cta">Open in Instagram &rarr;</div>' +
       '</a>';
-    document.getElementById('ig-dots-' + id).innerHTML = '';
-    igState[id] = { current: 0, total: 1 };
   }
 }
 
