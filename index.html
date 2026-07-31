@@ -2174,13 +2174,12 @@ updateLunchTodayLabel();
 // Ordered by how often a student actually opens them, most-used first — the
 // bar scrolls horizontally, so position is the whole ranking.
 //
-// Every URL here was checked to resolve. Two requested links are missing on
-// purpose rather than guessed:
-//   - Managebac: the tenant subdomain is unknown (seoulforeign.managebac.com
-//     404s). It is the most-used tool of the lot, so it should go first once
-//     someone confirms the real address.
-//   - Assessment Calendar (G9-12): four separate links, none published.
+// Every URL here was checked to resolve. Managebac answers 401 to an
+// anonymous request, which is the tenant confirming itself — a 404 would mean
+// the wrong subdomain. Still missing: the G9-12 assessment calendars, which
+// are four separate links and are not published anywhere I can find.
 var links = [
+  { name: "Managebac",        icon: ICONS.building,  url: "https://sfs.managebac.com/" },
   { name: "Gmail",            icon: ICONS.mail,      url: "https://mail.google.com" },
   { name: "Classroom",        icon: ICONS.classroom, url: "https://classroom.google.com" },
   { name: "Drive",            icon: ICONS.drive,     url: "https://drive.google.com" },

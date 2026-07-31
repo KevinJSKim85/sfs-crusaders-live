@@ -88,6 +88,26 @@ function sortKey(item) {
   return item.publishedAt ? new Date(item.publishedAt).getTime() : -1;
 }
 
+// The listing carries no date, but each article page does:
+//   <time datetime="2026-04-06T00:00:00+09:00">
+// That is authoritative, where the image version stamp is only a good proxy
+// (it happens to agree here, but it dates the asset upload, not the post).
+// Worth N extra requests: they happen once per cache window on the server,
+// never in a student's browser.
+async function articleDate(url) {
+  try {
+    const res = await fetchWithTimeout(url, { timeout: 8000 });
+    if (!res.ok) return null;
+    const html = await res.text();
+    const m = html.match(/<time[^>]*\sdatetime="([^"]+)"/i);
+    if (!m) return null;
+    const d = new Date(m[1]);
+    return Number.isNaN(d.getTime()) ? null : d.toISOString();
+  } catch {
+    return null;   // fall back to whatever the listing gave us
+  }
+}
+
 export default handler(SOURCE, async (req, res) => {
   const response = await fetchWithTimeout(NEWS_URL, { timeout: 10000 });
   if (!response.ok) throw new Error(`upstream ${response.status}`);
@@ -131,6 +151,17 @@ export default handler(SOURCE, async (req, res) => {
 
   if (candidates.length === 0) return fail(res, { source: SOURCE, error: 'no_articles_parsed' });
 
-  const items = candidates.sort((a, b) => sortKey(b) - sortKey(a)).slice(0, MAX_ITEMS);
+  // Upgrade to the exact date from each article page before sorting, so the
+  // order reflects publication rather than an asset-upload proxy.
+  const shortlist = candidates.sort((a, b) => sortKey(b) - sortKey(a)).slice(0, MAX_ITEMS);
+  await Promise.all(shortlist.map(async (item) => {
+    const exact = await articleDate(item.link);
+    if (exact) {
+      item.publishedAt = exact;
+      item.dateSource = 'article';
+    }
+  }));
+
+  const items = shortlist.sort((a, b) => sortKey(b) - sortKey(a));
   return ok(res, { source: SOURCE, items, sMaxage: 900, swr: 3600 });
 });
