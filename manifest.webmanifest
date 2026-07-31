@@ -1,0 +1,25 @@
+{
+  "name": "SFS Crusader Hub",
+  "short_name": "Crusader Hub",
+  "description": "Seoul Foreign School student dashboard — lunch, news, athletics, weather and the links you open every day.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#101527",
+  "theme_color": "#2B3160",
+  "icons": [
+    {
+      "src": "/sfs-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

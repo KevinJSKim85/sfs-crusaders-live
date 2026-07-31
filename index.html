@@ -7,6 +7,10 @@
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="icon" type="image/png" sizes="32x32" href="sfs-logo.png">
 <link rel="apple-touch-icon" href="sfs-logo.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Crusader Hub">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <meta name="theme-color" content="#2B3160">
 <meta name="description" content="SFS Crusader Hub — Seoul Foreign School student dashboard with news, lunch, athletics, weather, and more.">
 <meta property="og:title" content="SFS Crusader Hub">
@@ -15,7 +19,7 @@
 <meta property="og:type" content="website">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack-extra.min.css" rel="stylesheet">
 <style>
@@ -24,6 +28,10 @@
 :root, [data-theme="dark"] {
   --sfs-red: #C1282E;
   --sfs-red-dim: #9A1F24;
+  /* Brand red as *text* on a dark card is 2.76:1 — below AA even at large
+     sizes, on content students scan fastest (lunch banner, menu labels,
+     "Latest Issue"). Lightened to 5.8:1 for text only; fills keep --sfs-red. */
+  --sfs-red-text: #FF6B70;
   --sfs-blue: #2B3160;
   --sfs-blue-deep: #232955;
   --sfs-blue-light: #48527F;
@@ -64,6 +72,7 @@
 }
 
 [data-theme="light"] {
+  --sfs-red-text: #C1282E;   /* 5.9:1 on white — brand red is already legible here */
   --bg: #F4F5F8;
   --bg-elev: #FFFFFF;
   --bg-card: #FFFFFF;
@@ -73,7 +82,7 @@
   --border-strong: rgba(43,49,96,0.20);
   --text: #151824;
   --text-secondary: #4C5368;
-  --text-muted: #878787;
+  --text-muted: #666B75;
   --bg-wash: radial-gradient(circle at top left, rgba(193,40,46,0.07), transparent 34rem),
              linear-gradient(180deg, #F7F8FB 0%, #ECEFF5 100%);
   --nav-shadow: 0 12px 28px rgba(43,49,96,0.18);
@@ -249,8 +258,8 @@ body {
 }
 
 .icon-btn {
-  width: 34px;
-  height: 34px;
+  width: 44px;
+  height: 44px;
   border: 1px solid rgba(255,255,255,0.18);
   background: transparent;
   border-radius: 6px;
@@ -281,6 +290,14 @@ body {
   position: relative;
   overflow: hidden;
   background: #000;
+}
+
+/* <picture> is an inline box by default, which broke the img's 100%-height
+   chain once the responsive sources were added. */
+.hero-media picture {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .hero-media img {
@@ -517,7 +534,7 @@ body {
 }
 
 .reset-btn:hover {
-  color: var(--sfs-red);
+  color: var(--sfs-red-text);
   border-color: var(--border-strong);
 }
 
@@ -647,6 +664,7 @@ a.widget:hover { background: var(--bg-card-hover); }
 .w-icon svg { width: 16px; height: 16px; stroke-width: 2; }
 
 .w-title {
+  margin: 0;
   font-family: 'Inter', sans-serif;
   font-size: 14px;
   font-weight: 700;
@@ -664,6 +682,42 @@ a.widget:hover { background: var(--bg-card-hover); }
   align-items: center;
   gap: 3px;
   transition: color 0.2s;
+}
+
+/* ===== FOCUS & MOTION =====
+   The page had exactly one `outline` rule — `outline: none` on the notes
+   editor — and nothing to replace it, so a keyboard user tabbing into the only
+   editable field on the page got no confirmation at all. Everything else fell
+   back to the UA's default ring, which clashes with the navy/crimson palette. */
+:focus-visible {
+  outline: 2px solid var(--sfs-red-text);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.notes-editor:focus,
+.notes-editor:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--sfs-red-text);
+}
+
+/* Respect the OS-level setting instead of animating unconditionally. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Widget bodies scroll inside a page that also scrolls. On mobile most of the
+   vertical surface at any moment is "inside a widget", so a thumb-swipe that
+   starts over content could be captured locally. Contain it. */
+.w-body,
+.notes-editor,
+.quicklinks-bar {
+  overscroll-behavior: contain;
 }
 
 /* Freshness badge. Every widget carries one so "is this current?" is always
@@ -693,7 +747,7 @@ a.widget:hover { background: var(--bg-card-hover); }
 
 .w-fresh-stale   { color: var(--tag-amber-fg); }
 .w-fresh-stale::before   { background: var(--tag-amber-fg); }
-.w-fresh-error   { color: var(--sfs-red); }
+.w-fresh-error   { color: var(--sfs-red-text); }
 .w-fresh-error::before   { background: var(--sfs-red); }
 .w-fresh-offline { color: var(--text-muted); }
 .w-fresh-offline::before { background: var(--text-muted); }
@@ -702,7 +756,7 @@ a.widget:hover { background: var(--bg-card-hover); }
   .w-fresh { font-size: 9.5px; margin-left: 5px; }
 }
 
-.w-link:hover { color: var(--sfs-red); }
+.w-link:hover { color: var(--sfs-red-text); }
 .w-link svg { width: 12px; height: 12px; }
 
 .w-badge {
@@ -791,7 +845,7 @@ a.widget:hover { background: var(--bg-card-hover); }
   font-variant-numeric: tabular-nums;
   font-size: 12.5px;
   font-weight: 700;
-  color: var(--sfs-red);
+  color: var(--sfs-red-text);
   min-width: 50px;
 }
 
@@ -810,7 +864,7 @@ a.widget:hover { background: var(--bg-card-hover); }
 }
 .news-item:last-child { border-bottom: none; }
 .news-item a { text-decoration: none; color: inherit; display: block; }
-.news-item a:hover h4 { color: var(--sfs-red); }
+.news-item a:hover h4 { color: var(--sfs-red-text); }
 
 .news-tag {
   font-size: 9px;
@@ -860,7 +914,7 @@ a.widget:hover { background: var(--bg-card-hover); }
   display: block;
   min-width: 0;
 }
-.news-item-rich > a:hover h4 { color: var(--sfs-red); }
+.news-item-rich > a:hover h4 { color: var(--sfs-red-text); }
 .news-kicker {
   display: flex;
   align-items: center;
@@ -929,7 +983,7 @@ a.widget:hover { background: var(--bg-card-hover); }
   color: inherit;
   display: block;
 }
-.athletic-row > a:hover h4 { color: var(--sfs-red); }
+.athletic-row > a:hover h4 { color: var(--sfs-red-text); }
 .athletic-row h4 {
   font-size: 13.5px;
   font-weight: 700;
@@ -1009,7 +1063,7 @@ a.widget:hover { background: var(--bg-card-hover); }
 }
 
 .stale-note a {
-  color: var(--sfs-red);
+  color: var(--sfs-red-text);
   font-weight: 600;
   text-decoration: none;
 }
@@ -1026,7 +1080,7 @@ a.widget:hover { background: var(--bg-card-hover); }
 
 .lunch-today-banner {
   background: var(--tag-red-bg);
-  color: var(--sfs-red);
+  color: var(--sfs-red-text);
   border-radius: 10px;
   padding: 12px 14px;
   font-size: 13.5px;
@@ -1148,7 +1202,7 @@ a.widget:hover { background: var(--bg-card-hover); }
   font-weight: 800;
   letter-spacing: 1.1px;
   text-transform: uppercase;
-  color: var(--sfs-red);
+  color: var(--sfs-red-text);
   flex-shrink: 0;
   min-width: 78px;
   line-height: 1.4;
@@ -1217,7 +1271,7 @@ a.widget:hover { background: var(--bg-card-hover); }
   width: 24px;
   height: 24px;
   stroke-width: 1.8;
-  color: var(--sfs-red);
+  color: var(--sfs-red-text);
   flex-shrink: 0;
 }
 
@@ -1320,7 +1374,7 @@ a.widget:hover { background: var(--bg-card-hover); }
 .ig-fallback-icon {
   width: 44px;
   height: 44px;
-  color: var(--sfs-red);
+  color: var(--sfs-red-text);
 }
 .ig-fallback-handle {
   font-size: 15px;
@@ -1332,7 +1386,7 @@ a.widget:hover { background: var(--bg-card-hover); }
   font-weight: 700;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: var(--sfs-red);
+  color: var(--sfs-red-text);
 }
 
 .ig-more {
@@ -1355,7 +1409,7 @@ a.widget:hover { background: var(--bg-card-hover); }
 
 .ig-more:hover {
   background: var(--bg-card-hover);
-  color: var(--sfs-red);
+  color: var(--sfs-red-text);
   border-color: var(--sfs-red);
 }
 
@@ -1403,8 +1457,8 @@ a.widget:hover { background: var(--bg-card-hover); }
   flex-wrap: wrap;
 }
 .notes-toolbar button {
-  width: 28px;
-  height: 28px;
+  width: 34px;
+  height: 34px;
   background: transparent;
   border: 1px solid transparent;
   border-radius: 6px;
@@ -1440,7 +1494,8 @@ a.widget:hover { background: var(--bg-card-hover); }
   width: 100%;
   background: transparent;
   border: none;
-  outline: none;
+  outline: none;   /* replaced by the :focus rule below, never simply removed */
+  border-radius: 8px;
   color: var(--text);
   font-family: 'Inter', sans-serif;
   font-size: 14px;
@@ -1479,7 +1534,7 @@ a.widget:hover { background: var(--bg-card-hover); }
   margin-top: auto;
   font-size: 11.5px;
   font-weight: 700;
-  color: var(--sfs-red);
+  color: var(--sfs-red-text);
   text-transform: uppercase;
   letter-spacing: 1px;
   display: flex;
@@ -1523,7 +1578,7 @@ a.widget:hover { background: var(--bg-card-hover); }
   font-weight: 800;
   letter-spacing: 1.3px;
   text-transform: uppercase;
-  color: var(--sfs-red);
+  color: var(--sfs-red-text);
   margin-bottom: 5px;
 }
 
@@ -1543,7 +1598,7 @@ a.widget:hover { background: var(--bg-card-hover); }
   letter-spacing: 0.2px;
 }
 
-.spirit-feature:hover .spirit-title { color: var(--sfs-red); }
+.spirit-feature:hover .spirit-title { color: var(--sfs-red-text); }
 
 .spirit-archive {
   display: flex;
@@ -1590,7 +1645,7 @@ a.widget:hover { background: var(--bg-card-hover); }
   margin-top: 2px;
 }
 
-.spirit-mini:hover .spirit-mini-title { color: var(--sfs-red); }
+.spirit-mini:hover .spirit-mini-title { color: var(--sfs-red-text); }
 
 /* ===== ICON COLORS (tag backgrounds) ===== */
 .bg-red    { background: var(--tag-red-bg); color: var(--tag-red-fg); }
@@ -1643,7 +1698,7 @@ footer p {
 .footer-brand {
   font-family: 'Cinzel', serif;
   font-weight: 600;
-  color: var(--sfs-red);
+  color: var(--sfs-red-text);
 }
 
 @media (max-width: 999.98px) {
@@ -1670,7 +1725,7 @@ footer p {
 <body>
 <div class="container">
 
-<nav class="topnav">
+<nav class="topnav" aria-label="Primary">
   <div class="topnav-inner">
     <a href="https://www.seoulforeign.org" target="_blank" class="brand-logo">
       <img src="sfs-logo.png" alt="SFS Crusaders Seal">
@@ -1685,17 +1740,17 @@ footer p {
       <a href="https://calendar.google.com" target="_blank" class="nav-link">Calendar</a>
       <a href="#links-grid" class="nav-link">Links</a>
       <a href="https://www.seoulforeign.org" target="_blank" class="nav-btn">SFS.org
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M8 7h9v9"/></svg>
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M8 7h9v9"/></svg>
       </a>
       <div class="nav-tools">
-        <button class="icon-btn" id="btnLight" title="Light mode" onclick="setTheme('light')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+        <button class="icon-btn" id="btnLight" title="Light mode" aria-label="Switch to light mode" onclick="setTheme('light')">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
         </button>
-        <button class="icon-btn active" id="btnDark" title="Dark mode" onclick="setTheme('dark')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <button class="icon-btn active" id="btnDark" title="Dark mode" aria-label="Switch to dark mode" onclick="setTheme('dark')">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         </button>
-        <button class="icon-btn reset-layout-btn" title="Reset widget layout" onclick="resetLayout()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+        <button class="icon-btn reset-layout-btn" title="Reset widget layout" aria-label="Reset widget layout to default" onclick="resetLayout()">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
         </button>
       </div>
     </div>
@@ -1704,7 +1759,16 @@ footer p {
 
 <section class="hero">
   <div class="hero-media">
-    <img src="hero-campus.jpg" alt="SFS Campus">
+    <!-- The LCP element. Every device used to download the same 222 KB file to
+         render it at ~220 px tall; a phone now pulls 50 KB. Explicit dimensions
+         reserve the box so nothing shifts when it lands. -->
+    <picture>
+      <source type="image/webp"
+              srcset="img/hero-campus-640.webp 640w, img/hero-campus-1024.webp 1024w"
+              sizes="(max-width: 999.98px) 100vw, 60vw">
+      <img src="img/hero-campus-1024.jpg" alt="The SFS campus pagoda at the main gate"
+           width="1024" height="683" fetchpriority="high" decoding="async">
+    </picture>
     <div class="hero-overlay"></div>
     <div class="hero-text">
       <p class="hero-greet">Good <span id="greet-time">Morning</span>, Crusaders</p>
@@ -1716,7 +1780,7 @@ footer p {
     <div class="hw-header">
       <p class="hw-loc">Seoul</p>
       <div class="hw-icon" id="hw-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
       </div>
     </div>
     <div class="hw-temp">
@@ -1753,13 +1817,13 @@ footer p {
     <div class="w-head">
       <div class="w-head-left">
         <div class="w-icon bg-red">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
         </div>
-        <div class="w-title">Clubs &amp; Announcements</div>
+        <h2 class="w-title">Clubs &amp; Announcements</h2>
       </div>
       <a href="https://sites.google.com/seoulforeign.org/sfhsclubsorganizations25-26/home" target="_blank" class="w-link">
         SFHS Hub
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
       </a>
     </div>
     <div class="w-body">
@@ -1768,7 +1832,7 @@ footer p {
       </div>
       <button class="expand-btn" id="announcements-expand" style="display:none;" onclick="toggleAnnouncements()">
         <span id="expand-label">Show more</span>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
       </button>
     </div>
   </div>
@@ -1778,13 +1842,13 @@ footer p {
     <div class="w-head">
       <div class="w-head-left">
         <div class="w-icon bg-amber">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11h18a9 9 0 0 1-18 0z"/><path d="M12 11V3"/><path d="M9 6c0-1.5 3-1.5 3-3M15 6c0-1.5-3-1.5-3-3"/></svg>
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11h18a9 9 0 0 1-18 0z"/><path d="M12 11V3"/><path d="M9 6c0-1.5 3-1.5 3-3M15 6c0-1.5-3-1.5-3-3"/></svg>
         </div>
-        <div class="w-title">High School Lunch</div>
+        <h2 class="w-title">High School Lunch</h2>
       </div>
       <a href="https://sfs.cravefood.kr" target="_blank" class="w-link">
         CraveFood
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
       </a>
     </div>
     <div class="w-body">
@@ -1797,7 +1861,7 @@ footer p {
         <div class="lunch-actions">
           <a href="https://sfs.cravefood.kr" target="_blank" rel="noopener" class="lunch-btn lunch-btn-primary">
             <span class="lb-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11h18a9 9 0 0 1-18 0z"/><path d="M12 11V3"/></svg>
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11h18a9 9 0 0 1-18 0z"/><path d="M12 11V3"/></svg>
               CraveFood Menu
             </span>
             <svg class="lb-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
@@ -1816,13 +1880,13 @@ footer p {
     <div class="w-head">
       <div class="w-head-left">
         <div class="w-icon bg-red">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21L8 19l-1.5 1L6 22M14 14.66V17c0 .55.47.98.97 1.21L16 19l1.5 1L18 22M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21L8 19l-1.5 1L6 22M14 14.66V17c0 .55.47.98.97 1.21L16 19l1.5 1L18 22M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>
         </div>
-        <div class="w-title">Athletics Results</div>
+        <h2 class="w-title">Athletics Results</h2>
       </div>
       <a href="https://sfscrusaderathletics.com/" target="_blank" class="w-link">
         Schedule
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
       </a>
     </div>
     <div class="w-body" id="athletics-body">
@@ -1835,13 +1899,13 @@ footer p {
     <div class="w-head">
       <div class="w-head-left">
         <div class="w-icon bg-blue">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
         </div>
-        <div class="w-title">SFS News</div>
+        <h2 class="w-title">SFS News</h2>
       </div>
       <a href="https://www.seoulforeign.org/community/news" target="_blank" class="w-link">
         All news
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
       </a>
     </div>
     <div class="w-body" id="sfs-news-body">
@@ -1854,9 +1918,9 @@ footer p {
     <div class="w-head">
       <div class="w-head-left">
         <div class="w-icon bg-purple">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
         </div>
-        <div class="w-title">World &amp; Reading</div>
+        <h2 class="w-title">World &amp; Reading</h2>
       </div>
       <span class="w-badge bg-purple">News + Econ</span>
     </div>
@@ -1870,9 +1934,9 @@ footer p {
     <div class="w-head">
       <div class="w-head-left">
         <div class="w-icon bg-green">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
         </div>
-        <div class="w-title">College News</div>
+        <h2 class="w-title">College News</h2>
       </div>
       <span class="w-badge bg-green">Top US</span>
     </div>
@@ -1886,13 +1950,13 @@ footer p {
     <div class="w-head">
       <div class="w-head-left">
         <div class="w-icon bg-red">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/></svg>
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/></svg>
         </div>
-        <div class="w-title">Seoul Foreign School</div>
+        <h2 class="w-title">Seoul Foreign School</h2>
       </div>
       <a href="https://www.instagram.com/seoul_foreign_school/" target="_blank" class="w-link">
         @seoul_foreign_school
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
       </a>
     </div>
     <div class="ig-wrap">
@@ -1907,13 +1971,13 @@ footer p {
     <div class="w-head">
       <div class="w-head-left">
         <div class="w-icon bg-blue">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/></svg>
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/></svg>
         </div>
-        <div class="w-title">Athletics Instagram</div>
+        <h2 class="w-title">Athletics Instagram</h2>
       </div>
       <a href="https://www.instagram.com/sfscrusaderathletics/" target="_blank" class="w-link">
         @sfscrusaderathletics
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
       </a>
     </div>
     <div class="ig-wrap">
@@ -1928,13 +1992,13 @@ footer p {
     <div class="w-head">
       <div class="w-head-left">
         <div class="w-icon bg-red">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></svg>
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></svg>
         </div>
-        <div class="w-title">Spirit Magazine</div>
+        <h2 class="w-title">Spirit Magazine</h2>
       </div>
       <a href="https://issuu.com/thesfhsspirit" target="_blank" class="w-link">
         All issues
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
       </a>
     </div>
     <div class="w-body" id="spirit-body">
@@ -1947,9 +2011,9 @@ footer p {
     <div class="w-head">
       <div class="w-head-left">
         <div class="w-icon bg-blue">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
         </div>
-        <div class="w-title">Notes</div>
+        <h2 class="w-title">Notes</h2>
       </div>
       <span class="notes-status" id="notes-status">Saved</span>
     </div>
@@ -1999,22 +2063,22 @@ if (typeof firebase !== 'undefined' && window.isFirebaseConfigured && window.isF
 
 // ===== ICONS (Lucide-style stroke set) =====
 var ICONS = {
-  mail:       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',
-  drive:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>',
-  classroom:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></svg>',
-  target:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',
-  calendar:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
-  palette:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="1.5"/><circle cx="17.5" cy="10.5" r="1.5"/><circle cx="8.5" cy="7.5" r="1.5"/><circle cx="6.5" cy="12.5" r="1.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.5-.7 1.5-1.5 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1 0-.8.7-1.5 1.5-1.5H16c3.3 0 6-2.7 6-6 0-4.4-4.5-8-10-8z"/></svg>',
-  building:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="1"/><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"/></svg>',
-  document:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>',
-  wind:       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/></svg>',
-  laptop:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="14" rx="2"/><line x1="2" y1="20" x2="22" y2="20"/></svg>',
-  book:       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15z"/></svg>',
-  printer:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6,9 6,2 18,2 18,9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>',
-  clipboard:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>',
-  utensils:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h.01M7 2v20M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3z"/></svg>',
-  trophy:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21L8 19l-1.5 1L6 22M14 14.66V17c0 .55.47.98.97 1.21L16 19l1.5 1L18 22M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>',
-  instagram:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/></svg>'
+  mail:       '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',
+  drive:      '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>',
+  classroom:  '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></svg>',
+  target:     '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',
+  calendar:   '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
+  palette:    '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="1.5"/><circle cx="17.5" cy="10.5" r="1.5"/><circle cx="8.5" cy="7.5" r="1.5"/><circle cx="6.5" cy="12.5" r="1.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.5-.7 1.5-1.5 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1 0-.8.7-1.5 1.5-1.5H16c3.3 0 6-2.7 6-6 0-4.4-4.5-8-10-8z"/></svg>',
+  building:   '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="1"/><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"/></svg>',
+  document:   '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>',
+  wind:       '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/></svg>',
+  laptop:     '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="14" rx="2"/><line x1="2" y1="20" x2="22" y2="20"/></svg>',
+  book:       '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15z"/></svg>',
+  printer:    '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6,9 6,2 18,2 18,9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>',
+  clipboard:  '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>',
+  utensils:   '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h.01M7 2v20M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3z"/></svg>',
+  trophy:     '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21L8 19l-1.5 1L6 22M14 14.66V17c0 .55.47.98.97 1.21L16 19l1.5 1L18 22M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>',
+  instagram:  '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/></svg>'
 };
 
 // ===== THEME =====
@@ -2102,19 +2166,34 @@ function updateLunchTodayLabel() {
 updateLunchTodayLabel();
 
 // ===== QUICK LINKS =====
+// Ordered by how often a student actually opens them, most-used first — the
+// bar scrolls horizontally, so position is the whole ranking.
+//
+// Every URL here was checked to resolve. Two requested links are missing on
+// purpose rather than guessed:
+//   - Managebac: the tenant subdomain is unknown (seoulforeign.managebac.com
+//     404s). It is the most-used tool of the lot, so it should go first once
+//     someone confirms the real address.
+//   - Assessment Calendar (G9-12): four separate links, none published.
 var links = [
   { name: "Gmail",            icon: ICONS.mail,      url: "https://mail.google.com" },
-  { name: "Drive",            icon: ICONS.drive,     url: "https://drive.google.com" },
   { name: "Classroom",        icon: ICONS.classroom, url: "https://classroom.google.com" },
+  { name: "Drive",            icon: ICONS.drive,     url: "https://drive.google.com" },
   { name: "Calendar",         icon: ICONS.calendar,  url: "https://calendar.google.com" },
+  { name: "CraveFood",        icon: ICONS.utensils,  url: "https://sfs.cravefood.kr" },
+  { name: "Clubs",            icon: ICONS.laptop,    url: "https://sites.google.com/seoulforeign.org/sfhsclubsorganizations25-26/home" },
+  { name: "Library",          icon: ICONS.book,      url: "https://library.seoulforeign.org/oliver/home/news" },
+  { name: "Sora",             icon: ICONS.book,      url: "https://soraapp.com" },
+  { name: "Noodletools",      icon: ICONS.document,  url: "https://www.noodletools.com" },
+  { name: "Padlet",           icon: ICONS.clipboard, url: "https://padlet.com" },
+  { name: "Kahoot",           icon: ICONS.target,    url: "https://kahoot.it" },
+  { name: "Quizlet",          icon: ICONS.book,      url: "https://quizlet.com" },
+  { name: "Canva",            icon: ICONS.palette,   url: "https://www.canva.com" },
   { name: "Maia Learning",    icon: ICONS.target,    url: "https://www.maialearning.com" },
   { name: "CollegeBoard",     icon: ICONS.building,  url: "https://www.collegeboard.org" },
-  { name: "Canva",            icon: ICONS.palette,   url: "https://www.canva.com" },
-  { name: "Library",          icon: ICONS.book,      url: "https://library.seoulforeign.org/oliver/home/news" },
-  { name: "Clubs",            icon: ICONS.laptop,    url: "https://sites.google.com/seoulforeign.org/sfhsclubsorganizations25-26/home" },
-  { name: "CraveFood",        icon: ICONS.utensils,  url: "https://sfs.cravefood.kr" },
   { name: "Web Print",        icon: ICONS.printer,   url: "https://fujifilm.sfs.or.kr/User" },
-  { name: "Doc Request",      icon: ICONS.clipboard, url: "https://docs.google.com/forms/d/e/1FAIpQLScH5DW3v_tMNrx_Kfn5Acs56Y-SoCZe9JMizLvd9wSZtFO5ww/viewform" }
+  { name: "Doc Request",      icon: ICONS.clipboard, url: "https://docs.google.com/forms/d/e/1FAIpQLScH5DW3v_tMNrx_Kfn5Acs56Y-SoCZe9JMizLvd9wSZtFO5ww/viewform" },
+  { name: "SFS.org",          icon: ICONS.building,  url: "https://www.seoulforeign.org" }
 ];
 
 var grid = document.getElementById('links-grid');
@@ -2149,13 +2228,13 @@ function toggleAnnouncements() {
 // ===== HERO WEATHER + AQI =====
 // WMO weather code -> { label, svg }. SVGs are lucide-style stroke icons.
 var WEATHER_ICONS = {
-  sun:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>',
-  pcloud: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 18a5 5 0 0 0 0-10c-.5-3-3-5-6-5a6 6 0 0 0-6 6 4 4 0 0 0 0 8h12z"/><circle cx="7" cy="7" r="2.2" opacity=".7"/></svg>',
-  cloud:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 18a5 5 0 0 0 0-10c-.5-3-3-5-6-5a6 6 0 0 0-6 6 4 4 0 0 0 0 8h12z"/></svg>',
-  rain:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 14a5 5 0 0 0 0-10c-.5-3-3-5-6-5a6 6 0 0 0-6 6 4 4 0 0 0 0 8h12z"/><path d="M8 18l-1 3M12 18l-1 3M16 18l-1 3"/></svg>',
-  snow:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 14a5 5 0 0 0 0-10c-.5-3-3-5-6-5a6 6 0 0 0-6 6 4 4 0 0 0 0 8h12z"/><path d="M8 19l.01 0M12 21l.01 0M16 19l.01 0"/></svg>',
-  storm:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 14a5 5 0 0 0 0-10c-.5-3-3-5-6-5a6 6 0 0 0-6 6 4 4 0 0 0 0 8h12z"/><path d="M13 14l-3 5h3l-2 4"/></svg>',
-  fog:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h18M5 12h14M3 16h16M7 20h12"/></svg>'
+  sun:    '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>',
+  pcloud: '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 18a5 5 0 0 0 0-10c-.5-3-3-5-6-5a6 6 0 0 0-6 6 4 4 0 0 0 0 8h12z"/><circle cx="7" cy="7" r="2.2" opacity=".7"/></svg>',
+  cloud:  '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 18a5 5 0 0 0 0-10c-.5-3-3-5-6-5a6 6 0 0 0-6 6 4 4 0 0 0 0 8h12z"/></svg>',
+  rain:   '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 14a5 5 0 0 0 0-10c-.5-3-3-5-6-5a6 6 0 0 0-6 6 4 4 0 0 0 0 8h12z"/><path d="M8 18l-1 3M12 18l-1 3M16 18l-1 3"/></svg>',
+  snow:   '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 14a5 5 0 0 0 0-10c-.5-3-3-5-6-5a6 6 0 0 0-6 6 4 4 0 0 0 0 8h12z"/><path d="M8 19l.01 0M12 21l.01 0M16 19l.01 0"/></svg>',
+  storm:  '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 14a5 5 0 0 0 0-10c-.5-3-3-5-6-5a6 6 0 0 0-6 6 4 4 0 0 0 0 8h12z"/><path d="M13 14l-3 5h3l-2 4"/></svg>',
+  fog:    '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h18M5 12h14M3 16h16M7 20h12"/></svg>'
 };
 
 function weatherMeta(code) {
@@ -2269,7 +2348,7 @@ function renderAnnouncements(allItems) {
   if (!container) return;
 
   if (!allItems || allItems.length === 0) {
-    container.innerHTML = '<div class="feed-empty">No announcements yet. <a href="https://sites.google.com/seoulforeign.org/sfhsclubsorganizations25-26/home" target="_blank" style="color:var(--sfs-red);">Visit SFHS Hub</a></div>';
+    container.innerHTML = '<div class="feed-empty">No announcements yet. <a href="https://sites.google.com/seoulforeign.org/sfhsclubsorganizations25-26/home" target="_blank" style="color:var(--sfs-red-text);">Visit SFHS Hub</a></div>';
     return;
   }
 
@@ -2411,7 +2490,7 @@ function renderFeedWidget(containerId, tagMap, payload) {
 
 function feedErrorHtml(links) {
   return '<div class="feed-empty">Feed unavailable. ' + links.map(function(l) {
-    return '<a href="' + l.url + '" target="_blank" rel="noopener" style="color:var(--sfs-red);">' + l.label + '</a>';
+    return '<a href="' + l.url + '" target="_blank" rel="noopener" style="color:var(--sfs-red-text);">' + l.label + '</a>';
   }).join(' &middot; ') + '</div>';
 }
 
@@ -2428,17 +2507,17 @@ function loadCollegeFeeds() {
 
 // ===== ATHLETICS =====
 var SPORT_ICONS = {
-  soccer:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7l4 3-1.5 5h-5L8 10z"/><path d="M12 7V3M16 10l4-1M14.5 15l2 4M9.5 15l-2 4M8 10L4 9"/></svg>',
-  basketball: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3v18"/><path d="M5.5 5.5c4 4 4 9 0 13M18.5 5.5c-4 4-4 9 0 13"/></svg>',
-  volleyball: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3c-3 4-3 14 0 18M3 12c4-3 14-3 18 0M5.5 5.5c2.5 2.5 11 2.5 13 0"/></svg>',
-  baseball:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M5 7c2 1 3 3 3 5s-1 4-3 5M19 7c-2 1-3 3-3 5s1 4 3 5"/></svg>',
-  tennis:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12c5 0 9-4 9-9M21 12c-5 0-9 4-9 9"/></svg>',
-  badminton:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4l6 6-9 9-3-3z"/><circle cx="6" cy="18" r="2"/><path d="M8 16l2-2"/></svg>',
-  swim:       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M2 18c2-1.5 4-1.5 6 0s4 1.5 6 0 4-1.5 6 0M2 13c2-1.5 4-1.5 6 0s4 1.5 6 0 4-1.5 6 0"/><circle cx="17" cy="6" r="2"/></svg>',
-  track:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4" r="2"/><path d="M9 14l3-4 3 2 3-2M11 21l1-7-3-3-3 5"/></svg>',
-  golf:       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3v18M9 5l8 3-8 3"/><circle cx="9" cy="20" r="2"/></svg>',
-  cricket:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M16 2l6 6-3 3-6-6z"/><path d="M5 19l9-9"/><circle cx="6" cy="18" r="2"/></svg>',
-  trophy:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21L8 19l-1.5 1L6 22M14 14.66V17c0 .55.47.98.97 1.21L16 19l1.5 1L18 22M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>'
+  soccer:     '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7l4 3-1.5 5h-5L8 10z"/><path d="M12 7V3M16 10l4-1M14.5 15l2 4M9.5 15l-2 4M8 10L4 9"/></svg>',
+  basketball: '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3v18"/><path d="M5.5 5.5c4 4 4 9 0 13M18.5 5.5c-4 4-4 9 0 13"/></svg>',
+  volleyball: '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3c-3 4-3 14 0 18M3 12c4-3 14-3 18 0M5.5 5.5c2.5 2.5 11 2.5 13 0"/></svg>',
+  baseball:   '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M5 7c2 1 3 3 3 5s-1 4-3 5M19 7c-2 1-3 3-3 5s1 4 3 5"/></svg>',
+  tennis:     '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12c5 0 9-4 9-9M21 12c-5 0-9 4-9 9"/></svg>',
+  badminton:  '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4l6 6-9 9-3-3z"/><circle cx="6" cy="18" r="2"/><path d="M8 16l2-2"/></svg>',
+  swim:       '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M2 18c2-1.5 4-1.5 6 0s4 1.5 6 0 4-1.5 6 0M2 13c2-1.5 4-1.5 6 0s4 1.5 6 0 4-1.5 6 0"/><circle cx="17" cy="6" r="2"/></svg>',
+  track:      '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4" r="2"/><path d="M9 14l3-4 3 2 3-2M11 21l1-7-3-3-3 5"/></svg>',
+  golf:       '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3v18M9 5l8 3-8 3"/><circle cx="9" cy="20" r="2"/></svg>',
+  cricket:    '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M16 2l6 6-3 3-6-6z"/><path d="M5 19l9-9"/><circle cx="6" cy="18" r="2"/></svg>',
+  trophy:     '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21L8 19l-1.5 1L6 22M14 14.66V17c0 .55.47.98.97 1.21L16 19l1.5 1L18 22M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>'
 };
 
 function sportFor(text) {
@@ -2529,7 +2608,7 @@ function loadAthletics() {
     var items = (payload.items || []).map(apiEventToAthleticItem);
     if (!items.length) {
       container.innerHTML = '<div class="feed-empty">No fixtures posted right now. '
-        + '<a href="https://sfscrusaderathletics.com/" target="_blank" rel="noopener" style="color:var(--sfs-red);">Open Athletics</a></div>';
+        + '<a href="https://sfscrusaderathletics.com/" target="_blank" rel="noopener" style="color:var(--sfs-red-text);">Open Athletics</a></div>';
       return;
     }
     // Out of season the newest "result" can be months old. Say so rather than
@@ -2553,7 +2632,7 @@ function loadAthletics() {
     var container = document.getElementById('athletics-body');
     if (!container) return;
     container.innerHTML = '<div class="feed-empty">Scores unavailable right now. '
-      + '<a href="https://sfscrusaderathletics.com/" target="_blank" rel="noopener" style="color:var(--sfs-red);">Open Athletics</a></div>';
+      + '<a href="https://sfscrusaderathletics.com/" target="_blank" rel="noopener" style="color:var(--sfs-red-text);">Open Athletics</a></div>';
   });
 }
 
@@ -2565,7 +2644,7 @@ function loadSFSNews() {
     var items = (payload.items || []).slice(0, 5);
     if (!items.length) {
       container.innerHTML = '<div class="feed-empty">No stories posted right now. '
-        + '<a href="https://www.seoulforeign.org/community/news" target="_blank" rel="noopener" style="color:var(--sfs-red);">Visit site</a></div>';
+        + '<a href="https://www.seoulforeign.org/community/news" target="_blank" rel="noopener" style="color:var(--sfs-red-text);">Visit site</a></div>';
       return;
     }
     container.innerHTML = items.map(function(it) {
@@ -2586,7 +2665,7 @@ function loadSFSNews() {
     var container = document.getElementById('sfs-news-body');
     if (container) container.innerHTML =
       '<div class="feed-empty">SFS News unavailable. ' +
-      '<a href="https://www.seoulforeign.org/community/news" target="_blank" rel="noopener" style="color:var(--sfs-red);">Visit site</a></div>';
+      '<a href="https://www.seoulforeign.org/community/news" target="_blank" rel="noopener" style="color:var(--sfs-red-text);">Visit site</a></div>';
   });
 }
 
@@ -2606,7 +2685,7 @@ function buildInstagramGrid(id, username, shortcodes) {
   // of tiles fail. Without onerror those render as the browser's broken-image
   // glyph; swap in a branded placeholder that still links to the post.
   var tileFallback = '<div class="ig-post-fallback">'
-    + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">'
+    + '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">'
     + '<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/>'
     + '</svg></div>';
   var tileFallbackAttr = JSON.stringify(tileFallback).replace(/'/g, '&#39;').replace(/"/g, '&quot;');
@@ -2652,7 +2731,7 @@ async function loadInstagramCarousel(id, username) {
     var track = document.getElementById('ig-track-' + id);
     track.innerHTML =
       '<a class="ig-fallback" href="https://www.instagram.com/' + username + '/" target="_blank" rel="noopener">' +
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="ig-fallback-icon">' +
+        '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="ig-fallback-icon">' +
           '<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/>' +
         '</svg>' +
         '<div class="ig-fallback-handle">@' + username + '</div>' +
@@ -2705,7 +2784,7 @@ function loadLunch() {
     var menuEl = document.getElementById('lunch-menu');
     if (menuEl) {
       menuEl.innerHTML = '<div class="feed-empty">Menu unavailable right now. '
-        + '<a href="https://sfs.cravefood.kr" target="_blank" rel="noopener" style="color:var(--sfs-red);">Open CraveFood</a></div>';
+        + '<a href="https://sfs.cravefood.kr" target="_blank" rel="noopener" style="color:var(--sfs-red-text);">Open CraveFood</a></div>';
       menuEl.classList.add('show');
     }
   });
@@ -3135,7 +3214,7 @@ function renderSpirit(issues) {
   if (!container) return;
   if (!issues || !issues.length) {
     container.innerHTML = '<div class="feed-empty">No issues yet. '
-      + '<a href="https://issuu.com/thesfhsspirit" target="_blank" rel="noopener" style="color:var(--sfs-red);">Browse on Issuu</a></div>';
+      + '<a href="https://issuu.com/thesfhsspirit" target="_blank" rel="noopener" style="color:var(--sfs-red-text);">Browse on Issuu</a></div>';
     return;
   }
   var MONTHS_SH = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -3171,7 +3250,7 @@ paintSpiritSeed();
 schedule('spirit', loadSpirit, 60 * 60 * 1000);
 
 // ===== GRIDSTACK DRAG GRID =====
-var LAYOUT_KEY = 'sfs-grid-layout-v11';
+var LAYOUT_KEY = 'sfs-grid-layout-v12';   // bumped: default order now leads with Lunch
 var CELL_W = 4;   // 12-col grid / 4 = 3 widgets per row
 var CELL_H = 7;   // 7 rows tall (row height 58 → ~420px with margin) — bumped for larger fonts
 var gridApi = null;
@@ -3188,15 +3267,19 @@ var gridApi = null;
     doomed.forEach(function(k) { localStorage.removeItem(k); });
   } catch (e) {}
 })();
+// On mobile this is literally the scroll order, one widget per row. Lunch used
+// to sit sixth — roughly 2,000 px down, below an empty Notes card and an
+// Instagram grid — which is the wrong answer for the person this dashboard is
+// for: a student checking their phone before school.
 var DEFAULT_WIDGET_ORDER = [
+  'lunch',
   'sfs-news',
   'athletics',
-  'notes',
   'news',
-  'ig-sfs',
-  'lunch',
+  'notes',
   'reads',
   'college',
+  'ig-sfs',
   'ig-athletics',
   'spirit'
 ];
