@@ -1,34 +1,82 @@
 rules_version = '2';
 
 // Firestore security rules for SFS Crusader Hub.
-// - Public read for everything under /config and /announcements (the dashboard
-//   reads these without auth).
-// - Writes require an authenticated Google account whose email is in the
-//   admin allowlist below.
 //
-// IMPORTANT: keep the admin email list in sync with window.ADMIN_EMAILS in
-// firebase-config.js. The client-side check is convenience; this server-side
-// rule is the real gate.
+// Public read on /config and /announcements is intentional: the dashboard is a
+// public page and reads them without signing anyone in. Nothing sensitive lives
+// in either collection. Writes are gated here, server-side — the allowlist in
+// firebase-config.js only decides what the admin UI shows, so this file is the
+// actual boundary.
+//
+// NOTE: these rules are NOT deployed by pushing to git. Run
+//   firebase deploy --only firestore:rules
+// after editing, or the change silently never takes effect.
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Single source of truth for who may write. Keep in sync with
+    // window.ADMIN_EMAILS in firebase-config.js (that copy is UI convenience;
+    // this one is enforcement).
+    function adminEmails() {
+      return [
+        'sfsdashboard@gmail.com'
+      ];
+    }
+
     function isAdmin() {
       return request.auth != null
           && request.auth.token.email_verified == true
-          && request.auth.token.email in [
-               "sfsdashboard@gmail.com"
-             ];
+          && request.auth.token.email in adminEmails();
     }
 
+    function str(field, maxLen) {
+      return !(field in request.resource.data)
+          || (request.resource.data[field] is string
+              && request.resource.data[field].size() <= maxLen);
+    }
+
+    // Shape checks apply on top of isAdmin(). Without them a hijacked admin
+    // session could write arbitrary fields or a multi-megabyte document that
+    // every visitor then downloads.
     match /config/{docId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if isAdmin()
+                   && request.resource.data.keys().hasOnly(
+                        ['driveFileId', 'driveUrl', 'week', 'updatedAt',
+                         'bellSchedule', 'noSchoolToday', 'bannerMessage'])
+                   && str('driveFileId', 200)
+                   && str('driveUrl', 500)
+                   && str('week', 200)
+                   && str('bannerMessage', 500);
     }
 
     match /announcements/{docId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if isAdmin()
+                   && request.resource.data.keys().hasOnly(
+                        ['club', 'news', 'link', 'active', 'createdAt',
+                         'title', 'body', 'tag'])
+                   && str('club', 120)
+                   && str('news', 1000)
+                   && str('link', 500)
+                   // Legacy fields, still accepted so pre-rename docs can be edited.
+                   && str('title', 200)
+                   && str('body', 1000)
+                   && str('tag', 60);
+    }
+
+    // Admin-curated Instagram posts. Scraping instagram.com returns a JS shell
+    // with zero post URLs in the markup, so there is no automated path to this
+    // data — a human picks the posts in /admin.
+    match /instagram/{docId} {
+      allow read: if true;
+      allow write: if isAdmin()
+                   && request.resource.data.keys().hasOnly(
+                        ['shortcode', 'caption', 'account', 'postedAt', 'active'])
+                   && str('shortcode', 40)
+                   && str('caption', 300)
+                   && str('account', 60);
     }
   }
 }

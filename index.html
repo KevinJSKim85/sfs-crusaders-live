@@ -2262,14 +2262,11 @@ function fetchWithTimeout(url, ms) {
 
 
 
-async function loadNewsAndAnnouncements() {
+// Admin-curated announcements only. Anything here is something an admin
+// explicitly posted via /admin.
+function renderAnnouncements(allItems) {
   var container = document.getElementById('announcements-body');
-  // Admin-curated announcements only. SFS scrape was removed — anything that
-  // appears here is something an admin explicitly posted via /admin.
-  var allItems = [];
-  try {
-    allItems = await loadAdminAnnouncements();
-  } catch (e) {}
+  if (!container) return;
 
   if (!allItems || allItems.length === 0) {
     container.innerHTML = '<div class="feed-empty">No announcements yet. <a href="https://sites.google.com/seoulforeign.org/sfhsclubsorganizations25-26/home" target="_blank" style="color:var(--sfs-red);">Visit SFHS Hub</a></div>';
@@ -2784,37 +2781,49 @@ function clubTagFor(name) {
   return { label: s, bg: p.bg, color: p.color };
 }
 
-async function loadAdminAnnouncements() {
-  if (!FIREBASE_READY) return [];
+function announcementDocToItem(d) {
+  // Prefer the current schema (club + news). The old one used title + body,
+  // where `title` was a headline — routing that into the tag slot rendered a
+  // full sentence inside a 9 px uppercase pill.
+  var club = d.club || 'SFHS';
+  var news = d.news || d.body || d.title || '';
+  return {
+    title: news || club,
+    link: d.link || 'https://sites.google.com/seoulforeign.org/sfhsclubsorganizations25-26/home',
+    pubDate: d.createdAt && d.createdAt.toDate ? d.createdAt.toDate().toISOString() : null,
+    source: '',                         // club name lives in the tag now
+    tag: clubTagFor(club)
+  };
+}
+
+// Realtime, not polled. This is the one surface where latency is measured in
+// human terms — "robotics moved to room 204", "early dismissal today" — and a
+// five-minute poll is the wrong tool for it. A listener also costs fewer reads
+// than polling: charges land on actual changes plus one snapshot per session.
+function subscribeAnnouncements() {
+  if (!FIREBASE_READY) { renderAnnouncements([]); return; }
   try {
-    var snap = await firebase.firestore()
+    firebase.firestore()
       .collection('announcements')
       .orderBy('createdAt', 'desc')
       .limit(20)
-      .get();
-    var items = [];
-    snap.forEach(function(doc) {
-      var d = doc.data() || {};
-      if (d.active === false) return;
-      // Prefer new schema (club + news); fall back to old (title + body) so any
-      // pre-rename docs still render without a one-off migration.
-      // The old schema's `title` was a headline, not a club name. Routing it
-      // into the tag slot rendered a full sentence inside a 9 px uppercase
-      // pill; it belongs in the body with a generic tag.
-      var club = d.club || 'SFHS';
-      var news = d.news || d.body || d.title || '';
-      items.push({
-        title: news || club,                // body of the news-item
-        link: d.link || 'https://sites.google.com/seoulforeign.org/sfhsclubsorganizations25-26/home',
-        pubDate: d.createdAt && d.createdAt.toDate ? d.createdAt.toDate().toISOString() : null,
-        source: '',                         // club name lives in the tag now
-        tag: clubTagFor(club)
+      .onSnapshot(function(snap) {
+        var items = [];
+        snap.forEach(function(doc) {
+          var d = doc.data() || {};
+          if (d.active === false) return;
+          items.push(announcementDocToItem(d));
+        });
+        renderAnnouncements(items.slice(0, 6));
+        setFreshness('news', Date.now(), 'fresh');
+      }, function(err) {
+        console.warn('announcements listener failed:', err);
+        renderAnnouncements([]);
+        setFreshness('news', null, 'error');
       });
-    });
-    return items.slice(0, 6);
   } catch (e) {
-    console.warn('loadAdminAnnouncements failed:', e);
-    return [];
+    console.warn('announcements subscribe failed:', e);
+    renderAnnouncements([]);
   }
 }
 
@@ -2957,7 +2966,7 @@ setInterval(function() {
 // Each loader is called once immediately, then re-runs on its own interval so
 // long-lived browser tabs keep getting fresh data without a page reload.
 // Intervals are tuned for source volatility and (for scraping) host friendliness.
-schedule('news', loadNewsAndAnnouncements, 5 * 60 * 1000);
+subscribeAnnouncements();   // realtime — no interval
 
 schedule('college', loadCollegeFeeds, 30 * 60 * 1000);
 

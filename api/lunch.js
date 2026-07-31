@@ -8,7 +8,29 @@
 // once and lets the CDN cache (see ok()'s sMaxage) absorb repeat requests.
 
 import { handler, ok, fail, safeUrl, clean, fetchWithTimeout } from './_lib/respond.js';
-import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
+
+// pdfjs-dist v4 calls Promise.withResolvers, which only exists from Node 22.
+// Vercel may run this on Node 20, where a static top-level import of pdfjs
+// throws before the handler ever runs and the whole endpoint fails.
+if (typeof Promise.withResolvers !== 'function') {
+  Promise.withResolvers = function () {
+    let resolve, reject;
+    const promise = new Promise((res, rej) => { resolve = res; reject = rej; });
+    return { promise, resolve, reject };
+  };
+}
+
+// Loaded lazily for the same reason: a resolution failure should degrade this
+// endpoint to its Drive-preview fallback, not take it down.
+let pdfjsPromise = null;
+function loadPdfjs() {
+  if (!pdfjsPromise) {
+    pdfjsPromise = import('pdfjs-dist/legacy/build/pdf.mjs')
+      .catch(() => import('pdfjs-dist/build/pdf.mjs'))
+      .catch(() => import('pdfjs-dist'));
+  }
+  return pdfjsPromise;
+}
 
 const FIRESTORE_URL =
   'https://firestore.googleapis.com/v1/projects/sfs-crusader-hub/databases/(default)/documents/config/lunch' +
@@ -73,11 +95,15 @@ function isStale(updatedAt) {
 // Parse the PDF text and group it into { section, days: { Mon: '...', Wk: '...' } }.
 // Ported from the client's fetchAndParseLunchPdf position-based grouping.
 async function parseLunchPdf(buf) {
+  // The legacy build already runs inline; disableWorker is the supported knob.
+  // Do not touch GlobalWorkerOptions.workerSrc — its setter rejects null.
+  const pdfjsLib = await loadPdfjs();
   const loadingTask = pdfjsLib.getDocument({
     data: new Uint8Array(buf),
     useWorkerFetch: false,
     isEvalSupported: false,
-    useSystemFonts: false
+    useSystemFonts: false,
+    disableWorker: true
   });
   const pdf = await loadingTask.promise;
 
@@ -177,7 +203,7 @@ function toResponseSections(rawSections) {
     if (!label) return; // drop noisy/unknown sections
     const days = {};
     WEEKDAYS.forEach((d) => {
-      days[d] = clean((raw.days[d] || raw.days.Wk || ''));
+      days[d] = clean(raw.days[d] || raw.days.Wk || '');
     });
     out.push({ key: raw.section, label, days });
   });
@@ -215,7 +241,9 @@ export default handler('drive+firestore', async (req, res) => {
 
   let pdfRes;
   try {
-    pdfRes = await fetchWithTimeout(`https://drive.google.com/uc?export=download&id=${driveFileId}`, { timeout: 15000 });
+    // Drive is occasionally slow for this file; 15s was tight enough to abort
+    // on a healthy download.
+    pdfRes = await fetchWithTimeout(`https://drive.google.com/uc?export=download&id=${driveFileId}`, { timeout: 25000 });
   } catch (error) {
     console.error('lunch: drive fetch failed:', error);
     return fail(res, { source: 'drive+firestore', error: 'drive_fetch_failed', fallbackEmbed });
@@ -234,17 +262,30 @@ export default handler('drive+firestore', async (req, res) => {
     rawSections = await parseLunchPdf(buf);
   } catch (error) {
     console.error('lunch: pdf parse threw:', error);
-    return fail(res, { source: 'drive+firestore', error: 'pdf_parse_unavailable', fallbackEmbed });
+    // Carry the underlying reason. Bare 'pdf_parse_unavailable' told us the
+    // endpoint had degraded but not whether the runtime, the download or the
+    // layout was at fault, which is the only thing worth knowing here.
+    return fail(res, {
+      source: 'drive+firestore',
+      error: 'pdf_parse_unavailable',
+      fallbackEmbed,
+      detail: String(error && error.message || error).slice(0, 200)
+    });
   }
   if (rawSections.length === 0) {
     console.error('lunch: pdf parsed but yielded no sections');
-    return fail(res, { source: 'drive+firestore', error: 'pdf_parse_unavailable', fallbackEmbed });
+    return fail(res, {
+      source: 'drive+firestore',
+      error: 'pdf_parse_unavailable',
+      fallbackEmbed,
+      detail: 'parsed_zero_sections'
+    });
   }
 
   return ok(res, {
     source: 'drive+firestore',
     items: [],
-    week: week ? clean((week)) : null,
+    week: week ? clean(week) : null,
     driveFileId: clean(driveFileId),
     updatedAt: updatedAt ? clean(updatedAt) : null,
     stale: isStale(updatedAt),
