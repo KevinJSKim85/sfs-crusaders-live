@@ -1,0 +1,15 @@
+{
+  "name": "sfs-crusader-hub",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Seoul Foreign School student dashboard. Static front end plus Vercel serverless proxies that fetch, normalize, and cache the sources the dashboard reads.",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "fast-xml-parser": "^4.5.0",
+    "node-html-parser": "^6.1.13",
+    "pdfjs-dist": "^4.0.379"
+  }
+}

@@ -3,3 +3,5 @@
 .firebase/
 .claude/
 .omc/
+node_modules/
+.vercel/
