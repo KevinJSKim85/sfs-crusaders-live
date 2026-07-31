@@ -126,7 +126,7 @@ body {
   .container { padding: 0 28px 28px; }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 639.98px) {
   .container { padding: 0 16px 24px; }
 }
 
@@ -143,7 +143,7 @@ body {
   .topnav { margin: 0 -28px 0; }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 639.98px) {
   .topnav { margin: 0 -16px 0; }
 }
 
@@ -436,7 +436,7 @@ body {
   margin-left: 2px;
 }
 
-@media (max-width: 1000px) {
+@media (max-width: 999.98px) {
   .hero { grid-template-columns: 1fr; height: auto; }
   .hero-media { height: 180px; }
   .topnav-inner { gap: 12px; }
@@ -446,7 +446,7 @@ body {
   .reset-layout-btn { display: none; }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 639.98px) {
   .topnav { padding: 12px 16px; margin: 0 -14px; }
   .brand-name { font-size: 13px; letter-spacing: 0.5px; }
   .brand-logo img { width: 36px; height: 36px; }
@@ -1195,7 +1195,7 @@ a.widget:hover { background: var(--bg-card-hover); }
   max-width: 100%;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 639.98px) {
   .quicklinks-bar { padding: 12px; gap: 10px; margin-bottom: 28px; }
   .link-tile { min-width: 80px; padding: 10px 8px; min-height: 64px; }
   .link-tile svg { width: 22px; height: 22px; }
@@ -1327,7 +1327,7 @@ a.widget:hover { background: var(--bg-card-hover); }
 .ig-wrap::-webkit-scrollbar-track { background: transparent; }
 .ig-wrap::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
 
-@media (max-width: 640px) {
+@media (max-width: 639.98px) {
   .ig-post { height: 150px; }
 }
 
@@ -1610,11 +1610,11 @@ footer p {
   color: var(--sfs-red);
 }
 
-@media (max-width: 1000px) {
+@media (max-width: 999.98px) {
   .container { padding: 18px 18px; }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 639.98px) {
   .container { padding: 14px; }
   header { padding: 0 0 14px; flex-direction: column; align-items: flex-start; }
   .header-tools { flex-wrap: wrap; }
@@ -1994,24 +1994,62 @@ function setTheme(theme) {
 var saved = localStorage.getItem('sfs-theme');
 if (saved) setTheme(saved);
 
-// ===== HERO BANNER CLOCK / GREETING =====
+// ===== SEOUL TIME =====
+// The dashboard describes a school in Seoul, so every date it shows must be
+// Seoul's \u2014 the banner literally prints "KST". Reading the device clock made a
+// student in California see the wrong weekday, the wrong greeting, and the
+// wrong day's lunch menu, all labelled KST.
 var DAYS = ['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
-var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var DAYS_LONG = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+var DAY_INDEX = { Sunday:0, Monday:1, Tuesday:2, Wednesday:3, Thursday:4, Friday:5, Saturday:6 };
+var MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
+var seoulFormatter = null;
+try {
+  seoulFormatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Seoul',
+    weekday: 'long', year: 'numeric', month: 'short', day: 'numeric',
+    hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
+  });
+} catch (e) {
+  seoulFormatter = null;   // ancient engine without tz support: fall back to local
+}
+
+// { dayIndex, weekday, month, day, year, hour (0-23), minute }
+function seoulNow(date) {
+  var now = date || new Date();
+  if (!seoulFormatter) {
+    return {
+      dayIndex: now.getDay(), weekday: DAYS_LONG[now.getDay()],
+      month: MONTHS_SHORT[now.getMonth()], day: now.getDate(),
+      year: now.getFullYear(), hour: now.getHours(), minute: now.getMinutes()
+    };
+  }
+  var p = {};
+  seoulFormatter.formatToParts(now).forEach(function(part) { p[part.type] = part.value; });
+  return {
+    dayIndex: DAY_INDEX[p.weekday],
+    weekday: p.weekday,
+    month: p.month,
+    day: Number(p.day),
+    year: Number(p.year),
+    hour: Number(p.hour) % 24,   // h23 renders midnight as "24" in some engines
+    minute: Number(p.minute)
+  };
+}
+
+// ===== HERO BANNER CLOCK / GREETING =====
 function updateHero() {
-  var now = new Date();
-  var day = DAYS[now.getDay()];
-  var greet = now.getHours() < 12 ? 'Morning' : now.getHours() < 18 ? 'Afternoon' : 'Evening';
-  var mm = String(now.getMinutes()).padStart(2, '0');
-  var hh = now.getHours();
-  var ampm = hh >= 12 ? 'PM' : 'AM';
-  hh = hh % 12 || 12;
-  var dateStr = MONTHS[now.getMonth()] + ' ' + now.getDate() + ', ' + now.getFullYear()
-              + ' \u00B7 ' + hh + ':' + mm + ' ' + ampm + ' KST';
+  var t = seoulNow();
+  var greet = t.hour < 12 ? 'Morning' : t.hour < 18 ? 'Afternoon' : 'Evening';
+  var hh = t.hour % 12 || 12;
+  var ampm = t.hour >= 12 ? 'PM' : 'AM';
+  var dateStr = t.month + ' ' + t.day + ', ' + t.year
+              + ' \u00B7 ' + hh + ':' + String(t.minute).padStart(2, '0') + ' ' + ampm + ' KST';
   var dayEl = document.getElementById('hero-day');
   var greetEl = document.getElementById('greet-time');
   var dateEl = document.getElementById('hero-date');
-  if (dayEl) dayEl.textContent = day;
+  if (dayEl) dayEl.textContent = DAYS[t.dayIndex];
   if (greetEl) greetEl.textContent = greet;
   if (dateEl) dateEl.textContent = dateStr;
   if (typeof updateLunchTodayLabel === 'function') updateLunchTodayLabel();
@@ -2023,8 +2061,7 @@ updateHero();
 function updateLunchTodayLabel() {
   var lbl = document.getElementById('lunch-today-label');
   if (!lbl) return;
-  var DAYS_LONG = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  var d = new Date().getDay();
+  var d = seoulNow().dayIndex;
   lbl.textContent = (d >= 1 && d <= 5)
     ? "Today is " + DAYS_LONG[d]
     : "Lunch resumes Monday";
@@ -2168,7 +2205,11 @@ setInterval(fetchWeatherAndAQI, 600000);
 var RSS_PROXY = 'https://api.rss2json.com/v1/api.json?rss_url=';
 
 function timeAgo(dateStr) {
-  var diff = Date.now() - new Date(dateStr).getTime();
+  var then = new Date(dateStr).getTime();
+  // RSS pubDate formats vary, and a device clock running a few minutes slow
+  // turns a fresh item into "-3m ago". Neither should reach the UI.
+  if (!Number.isFinite(then)) return '';
+  var diff = Math.max(0, Date.now() - then);
   var mins = Math.floor(diff / 60000);
   if (mins < 60) return mins + 'm ago';
   var hrs = Math.floor(mins / 60);
@@ -2258,9 +2299,26 @@ async function loadNewsAndAnnouncements() {
       '</a></div>';
   }).join('');
 
+  // This runs again every 5 minutes. Re-collapsing without also resetting the
+  // flag and the label left a reader watching the list fold itself back up,
+  // after which the button still read "Show less" but expanded.
+  var expandBtn = document.getElementById('announcements-expand');
+  var expandLabel = document.getElementById('expand-label');
   if (allItems.length > 4) {
-    container.classList.add('collapsed');
-    document.getElementById('announcements-expand').style.display = 'flex';
+    if (announcementsExpanded) {
+      container.classList.remove('collapsed');   // honour the reader's choice
+    } else {
+      container.classList.add('collapsed');
+    }
+    if (expandBtn) expandBtn.style.display = 'flex';
+  } else {
+    announcementsExpanded = false;
+    container.classList.remove('collapsed');
+    if (expandBtn) {
+      expandBtn.style.display = 'none';
+      expandBtn.classList.remove('open');
+    }
+    if (expandLabel) expandLabel.textContent = 'Show more';
   }
 }
 
@@ -2750,16 +2808,23 @@ async function renderLunchMenu(fileId) {
   var note   = document.getElementById('lunch-note');
   if (!menuEl) return;
 
-  var cacheKey = 'lunch-menu-v2-' + fileId;
+  // The cached value is rendered HTML with today's column already selected, so
+  // the Seoul day is part of its identity — without it, a tab open across
+  // midnight shows yesterday's menu under today's banner.
+  var LUNCH_TTL = 30 * 60 * 1000;
+  var cacheKey = 'lunch-menu-v3-' + fileId + '-' + seoulNow().dayIndex;
   try {
     var cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
-    if (cached && (Date.now() - cached.t) < 30 * 60 * 1000 && cached.html) {
+    var age = cached ? Date.now() - cached.t : Infinity;
+    if (cached && age < LUNCH_TTL && cached.html) {
       menuEl.innerHTML = cached.html;
       menuEl.classList.add('show');
       if (frame) frame.classList.remove('show');
       if (note) note.style.display = 'none';
-      // Refresh in background (don't await) so the next load is fresh
-      parseAndRenderLunch(fileId, menuEl, frame, note, true);
+      // Only re-parse when the cache is past halfway. Refreshing on every hit
+      // meant a 222 KB download and a full PDF parse up to 12x/hour per tab,
+      // which made the cache worth nothing on the network path.
+      if (age > LUNCH_TTL / 2) parseAndRenderLunch(fileId, menuEl, frame, note, true);
       return;
     }
   } catch (e) {}
@@ -2781,7 +2846,8 @@ async function parseAndRenderLunch(fileId, menuEl, frame, note, silent) {
     if (frame) frame.classList.remove('show');
     if (note) note.style.display = 'none';
     try {
-      localStorage.setItem('lunch-menu-v2-' + fileId, JSON.stringify({ t: Date.now(), html: html }));
+      localStorage.setItem('lunch-menu-v3-' + fileId + '-' + seoulNow().dayIndex,
+                           JSON.stringify({ t: Date.now(), html: html }));
     } catch (e) {}
   } catch (e) {
     console.warn('PDF parse failed, falling back to iframe:', e);
@@ -2901,7 +2967,11 @@ async function fetchAndParseLunchPdf(fileId) {
   var grouped = {};
   items.forEach(function(item) {
     if (DAY_RE.test(item.text)) return;
-    if (KNOWN.test(item.text) || (sectionMarkers.length < 3 && SECTION_RE.test(item.text) && item.text.length < 35)) return;
+    // Test knownHits, not sectionMarkers: sectionMarkers is the *result* of
+    // this choice, and on the generic path it usually holds more than 3 entries,
+    // so the guard read false and every generic section header (VOSS, GRILL,
+    // GRAB & GO...) leaked through and got concatenated into a day's menu text.
+    if (KNOWN.test(item.text) || (knownHits.length < 3 && SECTION_RE.test(item.text) && item.text.length < 35)) return;
     if (JUNK_RE.test(item.text)) return;
     if (item.text === '₩' || /^\d+[,.]?\d*$/.test(item.text)) return;
 
@@ -2936,7 +3006,17 @@ var LUNCH_SECTION_LABELS = {
 };
 
 function renderLunchSections(sections) {
-  var todayIdx = new Date().getDay();
+  var todayIdx = seoulNow().dayIndex;
+
+  // On a weekend the banner already says "Lunch resumes Monday". Falling
+  // through to the weekly ('Wk') rows below would contradict it by listing
+  // Burger/Soup/Grill as if they were being served today.
+  if (todayIdx === 0 || todayIdx === 6) {
+    return '<div class="lunch-today-list"><div class="lunch-row">'
+      + '<div class="items">No service today — the weekly menu returns Monday.</div>'
+      + '</div></div>';
+  }
+
   var todayShort = LUNCH_DAYS_SHORT[todayIdx];
 
   var rows = [];
@@ -2997,8 +3077,11 @@ async function loadAdminAnnouncements() {
       if (d.active === false) return;
       // Prefer new schema (club + news); fall back to old (title + body) so any
       // pre-rename docs still render without a one-off migration.
-      var club = d.club || d.title || 'SFHS';
-      var news = d.news || d.body || '';
+      // The old schema's `title` was a headline, not a club name. Routing it
+      // into the tag slot rendered a full sentence inside a 9 px uppercase
+      // pill; it belongs in the body with a generic tag.
+      var club = d.club || 'SFHS';
+      var news = d.news || d.body || d.title || '';
       items.push({
         title: news || club,                // body of the news-item
         link: d.link || 'https://sites.google.com/seoulforeign.org/sfhsclubsorganizations25-26/home',
@@ -3303,6 +3386,19 @@ var LAYOUT_KEY = 'sfs-grid-layout-v11';
 var CELL_W = 4;   // 12-col grid / 4 = 3 widgets per row
 var CELL_H = 7;   // 7 rows tall (row height 58 → ~420px with margin) — bumped for larger fonts
 var gridApi = null;
+
+// Every layout-shape change bumped the key and orphaned the previous payload,
+// so a long-time user is carrying ten dead copies of their old grid around.
+(function pruneOldLayoutKeys() {
+  try {
+    var doomed = [];
+    for (var i = 0; i < localStorage.length; i++) {
+      var k = localStorage.key(i);
+      if (k && k.indexOf('sfs-grid-layout-v') === 0 && k !== LAYOUT_KEY) doomed.push(k);
+    }
+    doomed.forEach(function(k) { localStorage.removeItem(k); });
+  } catch (e) {}
+})();
 var DEFAULT_WIDGET_ORDER = [
   'sfs-news',
   'athletics',
