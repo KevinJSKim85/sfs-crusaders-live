@@ -2823,11 +2823,15 @@ function renderLunchSections(sections) {
 
   var rows = [];
   sections.forEach(function(s) {
-    var label = LUNCH_SECTION_LABELS[s.section];
-    if (!label) return;                       // drop noisy / unknown sections
+    // /api/lunch emits { key, label, days } and has already dropped the noisy
+    // sections. This read `s.section` against the old client-parsed shape, so
+    // every label came back undefined and every row was skipped — the widget
+    // rendered empty while the data behind it was fine.
+    var label = s.label || LUNCH_SECTION_LABELS[s.key] || s.key;
+    if (!label) return;
     // Today's items first; fall back to weekly ('Wk') for sections that
     // don't change daily (Burger of the week, Soup of the week, Grill, Salad).
-    var items = s.days[todayShort] || s.days.Wk;
+    var items = (s.days || {})[todayShort] || (s.days || {}).Wk;
     if (!items) return;
     rows.push(
       '<div class="lunch-row">' +
