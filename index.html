@@ -700,7 +700,9 @@ a.widget:hover { background: var(--bg-card-hover); }
 .notes-editor:focus,
 .notes-editor:focus-visible {
   outline: none;
-  box-shadow: inset 0 0 0 2px var(--sfs-red-text);
+  border-color: var(--sfs-red-text);
+  box-shadow: 0 0 0 3px var(--tag-red-bg);
+  background: var(--bg-card);
 }
 
 /* Respect the OS-level setting instead of animating unconditionally. */
@@ -1048,6 +1050,65 @@ a.widget:hover { background: var(--bg-card-hover); }
   padding: 24px 0;
   font-size: 12px;
 }
+
+/* ===== CLUB DIRECTORY (fallback content for the announcements widget) ===== */
+.club-group { margin-bottom: 12px; }
+.club-group:last-of-type { margin-bottom: 6px; }
+
+.club-group-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--sfs-red-text);
+  margin-bottom: 6px;
+}
+
+.club-count {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0;
+  color: var(--text-muted);
+  background: var(--surface);
+  border-radius: 20px;
+  padding: 1px 6px;
+}
+
+.club-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+
+.club-chip {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 3px 7px;
+  text-decoration: none;
+  line-height: 1.3;
+}
+
+a.club-chip:hover { color: var(--sfs-red-text); border-color: var(--border-strong); }
+
+.club-links {
+  display: flex;
+  gap: 14px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
+}
+
+.club-links a {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--sfs-red-text);
+  text-decoration: none;
+}
+
+.club-links a:hover { text-decoration: underline; }
 
 /* Shown above frozen fallback content so it can never be mistaken for live data. */
 .stale-note {
@@ -1491,13 +1552,19 @@ a.widget:hover { background: var(--bg-card-hover); }
   margin: 0 4px;
 }
 
+/* Give the writing area a visible surface. As a bare transparent block it was
+   indistinguishable from the empty half of the card, so there was no way to
+   tell where — or whether — you could type. */
 .notes-editor {
   flex: 1;
   width: 100%;
-  background: transparent;
-  border: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
   outline: none;   /* replaced by the :focus rule below, never simply removed */
-  border-radius: 8px;
+  border-radius: 10px;
+  padding: 12px 14px;
+  cursor: text;
+  transition: border-color 0.15s, background 0.15s;
   color: var(--text);
   font-family: 'Inter', sans-serif;
   font-size: 14px;
@@ -1506,10 +1573,16 @@ a.widget:hover { background: var(--bg-card-hover); }
   overflow-y: auto;
   word-break: break-word;
 }
-.notes-editor:empty::before {
+.notes-editor:hover { border-color: var(--border-strong); }
+
+/* Driven by a JS-set class, not :empty. Typing and then deleting everything
+   leaves a stray <br> behind, so :empty stops matching and the hint never
+   comes back — leaving a blank card with nothing to say it is editable. */
+.notes-editor.is-empty::before {
   content: attr(data-placeholder);
   color: var(--text-muted);
   pointer-events: none;
+  display: block;
 }
 .notes-editor ul,
 .notes-editor ol {
@@ -2031,7 +2104,7 @@ footer p {
         <span class="notes-toolbar-divider"></span>
         <button type="button" data-cmd="removeFormat"        title="Clear formatting">✕</button>
       </div>
-      <div id="notes-editor" class="notes-editor" contenteditable="true" spellcheck="true" data-placeholder="Type anything here — reminders, to-do, ideas. Auto-saves to this browser."></div>
+      <div id="notes-editor" class="notes-editor" contenteditable="true" spellcheck="true" data-placeholder="Tap here to write. Reminders, to-do, ideas — saved on this device."></div>
     </div>
   </div>
 
@@ -2347,12 +2420,55 @@ function fetchWithTimeout(url, ms) {
 
 // Admin-curated announcements only. Anything here is something an admin
 // explicitly posted via /admin.
+// The announcements collection is often empty, and an empty card is wasted
+// space on the most valuable row of the dashboard. When there is nothing
+// posted, show the club directory instead — which day each club meets is the
+// thing students actually look up.
+var CLUBS_PAYLOAD = null;
+var HAS_ANNOUNCEMENTS = false;
+
+function renderClubsDirectory() {
+  var container = document.getElementById('announcements-body');
+  if (!container) return;
+  if (!CLUBS_PAYLOAD || !(CLUBS_PAYLOAD.sections || []).length) {
+    container.innerHTML = '<div class="feed-empty">Nothing posted yet. '
+      + '<a href="https://sites.google.com/seoulforeign.org/sfhsclubsorganizations25-26/home" target="_blank" rel="noopener" style="color:var(--sfs-red-text);">Visit SFHS Hub</a></div>';
+    return;
+  }
+  var signup = CLUBS_PAYLOAD.signup || {};
+  var out = (CLUBS_PAYLOAD.sections || []).map(function(s) {
+    return '<div class="club-group">'
+      + '<div class="club-group-head">' + htmlEscape(s.label)
+      + '<span class="club-count">' + s.clubs.length + '</span></div>'
+      + '<div class="club-chips">' + s.clubs.map(function(c) {
+          return c.url
+            ? '<a class="club-chip" href="' + safeUrl(c.url) + '" target="_blank" rel="noopener">' + htmlEscape(c.name) + '</a>'
+            : '<span class="club-chip">' + htmlEscape(c.name) + '</span>';
+        }).join('') + '</div></div>';
+  }).join('');
+  if (signup.calendarUrl || signup.formUrl) {
+    out += '<div class="club-links">'
+      + (signup.formUrl ? '<a href="' + safeUrl(signup.formUrl) + '" target="_blank" rel="noopener">Sign-up form</a>' : '')
+      + (signup.calendarUrl ? '<a href="' + safeUrl(signup.calendarUrl) + '" target="_blank" rel="noopener">Club calendar</a>' : '')
+      + '</div>';
+  }
+  container.innerHTML = out;
+}
+
+function loadClubs() {
+  return cachedFetch('clubs', '/api/clubs', 6 * 60 * 60 * 1000, function(payload) {
+    CLUBS_PAYLOAD = payload;
+    if (!HAS_ANNOUNCEMENTS) renderClubsDirectory();
+  });
+}
+
 function renderAnnouncements(allItems) {
   var container = document.getElementById('announcements-body');
   if (!container) return;
 
-  if (!allItems || allItems.length === 0) {
-    container.innerHTML = '<div class="feed-empty">No announcements yet. <a href="https://sites.google.com/seoulforeign.org/sfhsclubsorganizations25-26/home" target="_blank" style="color:var(--sfs-red-text);">Visit SFHS Hub</a></div>';
+  HAS_ANNOUNCEMENTS = !!(allItems && allItems.length);
+  if (!HAS_ANNOUNCEMENTS) {
+    renderClubsDirectory();
     return;
   }
 
@@ -2674,74 +2790,43 @@ function loadSFSNews() {
 }
 
 // ===== INSTAGRAM FEED GRID =====
-var IG_SEED_SHORTCODES = {
-  sfs: ['DX6bUu7j2wa', 'DXtFwRnEykc', 'DXp9pcID8Ys', 'DXiC4O5E8vr', 'DXdoRkFDw5m', 'DXbhPw3D5V2', 'DXYpLkND8s0', 'DXWDNtkj_y_'],
-  athletics: ['DX_RTfiD0ip', 'DX_RNvNj6aq', 'DX6P6N1D1Lr', 'DX6P1wkD5pL', 'DXaZXAFD5Fo', 'DXYQ79_j5Dj', 'DXYQvLIj--O', 'DXYQjuhj3Se']
-};
-
-function buildInstagramGrid(id, username, shortcodes) {
+// ===== INSTAGRAM =====
+// The old approach regex-scanned the profile HTML for /p/{code}/ links. That
+// data is not in the markup at all, so it never once succeeded and the widget
+// silently showed a hardcoded seed list. /api/instagram reads Instagram's own
+// feed endpoint server-side and returns real posts with thumbnails.
+function buildInstagramGrid(id, username, posts) {
   var track = document.getElementById('ig-track-' + id);
-  if (shortcodes.length === 0) {
-    track.innerHTML = '<div class="ig-fallback ig-loading">No posts found</div>';
+  if (!track) return;
+  if (!posts.length) {
+    track.innerHTML = '<a class="ig-fallback" href="https://www.instagram.com/' + username + '/" target="_blank" rel="noopener">'
+      + '<div class="ig-fallback-handle">@' + htmlEscape(username) + '</div>'
+      + '<div class="ig-fallback-cta">Open in Instagram &rarr;</div></a>';
     return;
   }
-  // The thumbnail proxy returns 404 for video/reel posts, so a meaningful share
-  // of tiles fail. Without onerror those render as the browser's broken-image
-  // glyph; swap in a branded placeholder that still links to the post.
+
+  // Thumbnails come from a resizing proxy that can still miss; swap in a
+  // branded tile rather than leaving the browser's broken-image glyph.
   var tileFallback = '<div class="ig-post-fallback">'
     + '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">'
     + '<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/>'
     + '</svg></div>';
   var tileFallbackAttr = JSON.stringify(tileFallback).replace(/'/g, '&#39;').replace(/"/g, '&quot;');
 
-  var posts = shortcodes.slice(0, 8).map(function(code, i) {
-    var postUrl = 'https://www.instagram.com/p/' + code + '/';
-    var mediaUrl = 'https://images.weserv.nl/?url=' + encodeURIComponent('https://www.instagram.com/p/' + code + '/media/?size=l');
-    return '<a class="ig-post" href="' + postUrl + '" target="_blank" rel="noopener">' +
-      '<img src="' + mediaUrl + '" alt="Instagram post" loading="lazy" ' +
-      'onerror="this.outerHTML=' + tileFallbackAttr + ';">' +
-    '</a>';
-  }).join('');
-  track.innerHTML = posts +
-    '<a class="ig-more" href="https://www.instagram.com/' + username + '/" target="_blank" rel="noopener">More on Instagram &rarr;</a>';
+  track.innerHTML = posts.slice(0, 8).map(function(p) {
+    var alt = p.caption ? htmlEscape(String(p.caption).slice(0, 90)) : 'Instagram post';
+    return '<a class="ig-post" href="' + safeUrl(p.url, 'https://www.instagram.com/' + username + '/') + '" target="_blank" rel="noopener">'
+      + '<img src="' + safeUrl(p.thumbnail) + '" alt="' + alt + '" loading="lazy" '
+      + 'onerror="this.outerHTML=' + tileFallbackAttr + ';">'
+      + '</a>';
+  }).join('')
+    + '<a class="ig-more" href="https://www.instagram.com/' + username + '/" target="_blank" rel="noopener">More on Instagram &rarr;</a>';
 }
 
-async function loadInstagramCarousel(id, username) {
-  var profileUrl = 'https://www.instagram.com/' + username + '/';
-  var seedCodes = IG_SEED_SHORTCODES[id] || [];
-  if (seedCodes.length > 0) buildInstagramGrid(id, username, seedCodes);
-
-  try {
-    var res = await fetchWithTimeout('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(profileUrl), 8000);
-    var html = await res.text();
-    var regex = /\/p\/([A-Za-z0-9_-]{6,})\//g;
-    var match;
-    var codes = [];
-    while ((match = regex.exec(html)) !== null) {
-      if (codes.indexOf(match[1]) === -1) codes.push(match[1]);
-    }
-    var reelRegex = /\/reel\/([A-Za-z0-9_-]{6,})\//g;
-    while ((match = reelRegex.exec(html)) !== null) {
-      if (codes.indexOf(match[1]) === -1) codes.push(match[1]);
-    }
-    codes = codes.slice(0, 8);
-    if (codes.length === 0) throw new Error('no codes');
-    buildInstagramGrid(id, username, codes);
-  } catch (e) {
-    if (seedCodes.length > 0) return;
-
-    // Profile-level /USERNAME/embed is blocked by Instagram (X-Frame-Options).
-    // Show a clean CTA card linking to the profile instead of a broken iframe.
-    var track = document.getElementById('ig-track-' + id);
-    track.innerHTML =
-      '<a class="ig-fallback" href="https://www.instagram.com/' + username + '/" target="_blank" rel="noopener">' +
-        '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="ig-fallback-icon">' +
-          '<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/>' +
-        '</svg>' +
-        '<div class="ig-fallback-handle">@' + username + '</div>' +
-        '<div class="ig-fallback-cta">Open in Instagram &rarr;</div>' +
-      '</a>';
-  }
+function loadInstagram(id, account, username) {
+  return cachedFetch('ig-' + id, '/api/instagram?account=' + account, 30 * 60 * 1000,
+    function(payload) { buildInstagramGrid(id, username, payload.items || []); },
+    function() { buildInstagramGrid(id, username, []); });
 }
 
 // ===== LUNCH FROM FIRESTORE — parses PDF text, falls back to iframe =====
@@ -3049,13 +3134,14 @@ setInterval(function() {
 // long-lived browser tabs keep getting fresh data without a page reload.
 // Intervals are tuned for source volatility and (for scraping) host friendliness.
 subscribeAnnouncements();   // realtime — no interval
+schedule('clubs', loadClubs, 6 * 60 * 60 * 1000);   // club directory changes rarely
 
 schedule('college', loadCollegeFeeds, 30 * 60 * 1000);
 
 schedule('athletics', loadAthletics, 15 * 60 * 1000);
 
-loadInstagramCarousel('sfs', 'seoul_foreign_school');
-loadInstagramCarousel('athletics', 'sfscrusaderathletics');
+schedule('ig-sfs', function() { return loadInstagram('sfs', 'sfs', 'seoul_foreign_school'); }, 30 * 60 * 1000);
+schedule('ig-athletics', function() { return loadInstagram('athletics', 'athletics', 'sfscrusaderathletics'); }, 30 * 60 * 1000);
 
 // ===== STUDENT READS (curated for HS students) =====
 var collegeNewsTags = {
@@ -3113,7 +3199,28 @@ schedule('sfs-news', loadSFSNews, 15 * 60 * 1000);
       }
     }
   } catch (e) {}
+
+  // contenteditable never really empties itself: deleting the last character
+  // leaves a <br>, and the list buttons leave an empty <ul>. Normalise that
+  // back to truly empty so the placeholder can return, and track the state in
+  // a class rather than relying on the :empty selector.
+  function syncEmptyState() {
+    var blank = !editor.textContent.trim() && !editor.querySelector('img');
+    if (blank && editor.innerHTML !== '') editor.innerHTML = '';
+    editor.classList.toggle('is-empty', blank);
+    return blank;
+  }
+  syncEmptyState();
   setStatus(editor.textContent.trim() ? 'Saved' : '', editor.textContent.trim() ? 'saved' : '');
+
+  // The editor fills the card, but an empty one still reads as dead space —
+  // send any click in the body to it so there's no wrong place to click.
+  var body = editor.parentElement;
+  if (body) {
+    body.addEventListener('mousedown', function(e) {
+      if (e.target === body) { e.preventDefault(); editor.focus(); }
+    });
+  }
 
   // Toolbar: B / I / U / S / lists / clear formatting
   if (toolbar) {
@@ -3135,18 +3242,20 @@ schedule('sfs-news', loadSFSNews, 15 * 60 * 1000);
   // Debounced save on every edit
   var saveTimer;
   function scheduleSave() {
+    var blank = syncEmptyState();
     setStatus('Saving…', 'saving');
     clearTimeout(saveTimer);
     saveTimer = setTimeout(function() {
       try {
         localStorage.setItem(KEY, editor.innerHTML);
-        setStatus('Saved', 'saved');
+        setStatus(blank ? '' : 'Saved', blank ? '' : 'saved');
       } catch (err) {
         setStatus('Save failed', '');
       }
     }, 350);
   }
   editor.addEventListener('input', scheduleSave);
+  editor.addEventListener('blur', syncEmptyState);
 })();
 
 schedule('lunch', loadLunch, 30 * 60 * 1000);
