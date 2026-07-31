@@ -666,6 +666,42 @@ a.widget:hover { background: var(--bg-card-hover); }
   transition: color 0.2s;
 }
 
+/* Freshness badge. Every widget carries one so "is this current?" is always
+   answerable — the whole class of stale-data bugs here was invisible without it. */
+.w-fresh {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+  margin-left: 8px;
+  opacity: 0.85;
+}
+
+.w-fresh:empty { display: none; }
+
+.w-fresh-stale::before,
+.w-fresh-error::before,
+.w-fresh-offline::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+
+.w-fresh-stale   { color: var(--tag-amber-fg); }
+.w-fresh-stale::before   { background: var(--tag-amber-fg); }
+.w-fresh-error   { color: var(--sfs-red); }
+.w-fresh-error::before   { background: var(--sfs-red); }
+.w-fresh-offline { color: var(--text-muted); }
+.w-fresh-offline::before { background: var(--text-muted); }
+
+@media (max-width: 639.98px) {
+  .w-fresh { font-size: 9.5px; margin-left: 5px; }
+}
+
 .w-link:hover { color: var(--sfs-red); }
 .w-link svg { width: 12px; height: 12px; }
 
@@ -1946,11 +1982,8 @@ footer p {
 <script src="firebase-config.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-<!-- defer: 320 KB that nothing needs at load time. Only the lunch parser touches
-     pdfjsLib, and it runs well after DOMContentLoaded. Without defer this blocks
-     the moment the grid layout stabilizes. Worker setup moved to initPdfWorker()
-     since a deferred script has not executed yet when inline script runs. -->
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<!-- pdf.js is gone: the lunch PDF is parsed in /api/lunch now, so 320 KB no
+     longer ships to every visitor for a widget most of them never scroll to. -->
 <script src="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack-all.js"></script>
 <script>
 // ===== FIREBASE INIT (no-op when firebase-config.js still has REPLACE_ME) =====
@@ -2198,11 +2231,12 @@ async function fetchWeatherAndAQI() {
     setTxt('hw-aqi-tier', 'Unavailable');
   }
 }
-fetchWeatherAndAQI();
-setInterval(fetchWeatherAndAQI, 600000);
+// Stays a direct call — open-meteo is CORS-enabled and keyless, so proxying it
+// would add latency and a serverless invocation for nothing. It still goes
+// through schedule() so it sleeps with the tab like everything else.
+schedule('weather', fetchWeatherAndAQI, 10 * 60 * 1000);
 
 // ===== RSS =====
-var RSS_PROXY = 'https://api.rss2json.com/v1/api.json?rss_url=';
 
 function timeAgo(dateStr) {
   var then = new Date(dateStr).getTime();
@@ -2219,17 +2253,6 @@ function timeAgo(dateStr) {
   return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-async function fetchRSS(feedUrl) {
-  // Must have a timeout: callers wrap these in Promise.allSettled, which waits
-  // for every promise. One socket that never settles would pin the widget on
-  // its "Loading feeds..." placeholder permanently, never reaching the catch
-  // that renders the fallback.
-  var res = await fetchWithTimeout(RSS_PROXY + encodeURIComponent(feedUrl), 8000);
-  if (!res.ok) throw new Error('HTTP ' + res.status);
-  var data = await res.json();
-  if (data.status !== 'ok') throw new Error('Feed error');
-  return data.items;
-}
 
 function fetchWithTimeout(url, ms) {
   var controller = new AbortController();
@@ -2237,37 +2260,7 @@ function fetchWithTimeout(url, ms) {
   return fetch(url, { signal: controller.signal }).finally(function() { clearTimeout(timer); });
 }
 
-var tagStyles = [
-  { label: 'News',   bg: 'var(--tag-red-bg)',    color: 'var(--tag-red-fg)' },
-  { label: 'Update', bg: 'var(--tag-blue-bg)',   color: 'var(--tag-blue-fg)' },
-  { label: 'Event',  bg: 'var(--tag-purple-bg)', color: 'var(--tag-purple-fg)' },
-  { label: 'Info',   bg: 'var(--tag-green-bg)',  color: 'var(--tag-green-fg)' }
-];
-var sfsTag = { label: 'SFS', bg: 'var(--tag-red-bg)', color: 'var(--tag-red-fg)' };
 
-async function scrapeSFSNews() {
-  var SFS_URL = 'https://www.seoulforeign.org/community/news';
-  var res = await fetchWithTimeout('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(SFS_URL), 6000);
-  var html = await res.text();
-  var doc = new DOMParser().parseFromString(html, 'text/html');
-  var items = [];
-  var selectors = ['a[href*="/community/news/"]', 'a[href*="~board/news"]', '.fsListItem a', 'article a', 'h3 a', 'h4 a'];
-  for (var s = 0; s < selectors.length; s++) {
-    var els = doc.querySelectorAll(selectors[s]);
-    for (var j = 0; j < els.length; j++) {
-      var t = els[j].textContent.trim();
-      var h = els[j].getAttribute('href') || '';
-      if (t && t.length > 8 && t.length < 180) {
-        if (h && !h.startsWith('http')) h = 'https://www.seoulforeign.org' + h;
-        if (!items.find(function(x) { return x.title === t; })) {
-          items.push({ title: t, link: h || SFS_URL, source: 'SFS', tag: sfsTag });
-        }
-      }
-    }
-    if (items.length >= 4) break;
-  }
-  return items.slice(0, 4);
-}
 
 async function loadNewsAndAnnouncements() {
   var container = document.getElementById('announcements-body');
@@ -2396,45 +2389,44 @@ var collegeTags = {
   guard: { label: 'Guardian',  bg: 'var(--tag-green-bg)',  color: 'var(--tag-green-fg)' }
 };
 
-async function loadCollegeFeeds() {
-  var container = document.getElementById('college-body');
-  try {
-    var feeds = await Promise.allSettled([
-      fetchRSS('https://www.economist.com/finance-and-economics/rss.xml'),
-      fetchRSS('https://feeds.bbci.co.uk/news/world/rss.xml'),
-      fetchRSS('https://rss.nytimes.com/services/xml/rss/nyt/Education.xml'),
-      fetchRSS('https://www.theguardian.com/education/rss')
-    ]);
-
-    var items = [];
-    var feedMeta = [
-      { tag: collegeTags.econ,  source: 'economist.com' },
-      { tag: collegeTags.bbc,   source: 'bbc.com' },
-      { tag: collegeTags.nyt,   source: 'nytimes.com' },
-      { tag: collegeTags.guard, source: 'theguardian.com' }
-    ];
-
-    feeds.forEach(function(f, idx) {
-      if (f.status === 'fulfilled') {
-        f.value.slice(0, 2).forEach(function(item) {
-          items.push({
-            title: item.title, link: item.link, pubDate: item.pubDate,
-            thumbnail: item.thumbnail, enclosure: item.enclosure, description: item.description,
-            tag: feedMeta[idx].tag, source: feedMeta[idx].source
-          });
-        });
-      }
-    });
-
-    items.sort(function(a, b) { return new Date(b.pubDate) - new Date(a.pubDate); });
-    items = items.slice(0, 5);
-
-    if (items.length === 0) throw new Error('empty');
-
-    container.innerHTML = items.map(richNewsItemHtml).join('');
-  } catch (e) {
-    container.innerHTML = '<div class="feed-empty">Feed unavailable. <a href="https://www.economist.com" target="_blank" style="color:var(--sfs-red);">Economist</a> &middot; <a href="https://www.bbc.com/news" target="_blank" style="color:var(--sfs-red);">BBC</a></div>';
+// Both feed widgets share one implementation now. /api/feeds fans out to the
+// four sources server-side, so this is a single request instead of four, and a
+// dead source arrives as a flag rather than sinking the whole widget.
+function renderFeedWidget(containerId, tagMap, payload) {
+  var container = document.getElementById(containerId);
+  if (!container) return;
+  var items = (payload.items || []).slice(0, 5).map(function(it) {
+    return {
+      title: it.title,
+      link: it.link,
+      pubDate: it.publishedAt,
+      thumbnail: it.thumbnail,
+      source: it.sourceDomain,
+      tag: tagMap[it.sourceKey] || { label: it.sourceLabel, bg: 'var(--surface)', color: 'var(--text-secondary)' }
+    };
+  });
+  if (!items.length) {
+    container.innerHTML = '<div class="feed-empty">No stories right now.</div>';
+    return;
   }
+  container.innerHTML = items.map(richNewsItemHtml).join('');
+}
+
+function feedErrorHtml(links) {
+  return '<div class="feed-empty">Feed unavailable. ' + links.map(function(l) {
+    return '<a href="' + l.url + '" target="_blank" rel="noopener" style="color:var(--sfs-red);">' + l.label + '</a>';
+  }).join(' &middot; ') + '</div>';
+}
+
+function loadCollegeFeeds() {
+  return cachedFetch('college', '/api/feeds?set=world', 30 * 60 * 1000,
+    function(payload) { renderFeedWidget('college-body', collegeTags, payload); },
+    function() {
+      document.getElementById('college-body').innerHTML = feedErrorHtml([
+        { url: 'https://www.economist.com', label: 'Economist' },
+        { url: 'https://www.bbc.com/news',  label: 'BBC' }
+      ]);
+    });
 }
 
 // ===== ATHLETICS =====
@@ -2513,200 +2505,92 @@ function safeUrl(value, fallback) {
   return htmlEscape(url);
 }
 
-function parseSidearmEvents(doc) {
-  var scripts = doc.querySelectorAll('script');
-  var events = [];
-  for (var i = 0; i < scripts.length; i++) {
-    var text = scripts[i].textContent || '';
-    if (text.indexOf('sidearmComponents.push(obj)') === -1 || text.indexOf('"type":"events"') === -1) continue;
-    var start = text.indexOf('var obj = ');
-    if (start === -1) continue;
-    start += 'var obj = '.length;
-    var end = text.indexOf(';\n    if (!("sidearmComponents"', start);
-    if (end === -1) end = text.indexOf(';\r\n    if (!("sidearmComponents"', start);
-    if (end === -1) end = text.indexOf(';\n    window.sidearmComponents', start);
-    if (end === -1) continue;
-    try {
-      var obj = JSON.parse(text.slice(start, end));
-      if (obj && Array.isArray(obj.data)) events = events.concat(obj.data);
-    } catch (e) {}
-  }
-  return events;
-}
 
-function eventToAthleticItem(event) {
-  var sportTitle = event.sport && (event.sport.abbreviation || event.sport.title || event.sport.short_title);
-  var opponent = event.opponent && (event.opponent.title || event.opponent.name);
-  if (!sportTitle || !opponent) return null;
-  var isAway = event.location_indicator === 'A';
-  var connector = isAway ? 'at' : 'vs';
-  var dateLabel = formatAthleticDate(event.date);
-  var locationLabel = event.location_indicator === 'H' ? 'Home'
-                    : event.location_indicator === 'A' ? 'Away'
-                    : event.location_indicator === 'N' ? 'Neutral'
-                    : '';
-  var result = '';
-  var resultClass = '';
-  var tag = 'Upcoming';
-  var tagColor = 'purple';
-  if (event.result && event.result.status) {
-    result = event.result.status;
-    if (event.result.team_score || event.result.opponent_score) {
-      result += ' ' + (event.result.team_score || '-') + '-' + (event.result.opponent_score || '-');
-    }
-    resultClass = event.result.status === 'W' ? 'green'
-                : event.result.status === 'L' ? 'red'
-                : 'purple';
-    tag = 'Result';
-    tagColor = resultClass;
-  }
-  var meta = [dateLabel, locationLabel, event.conference_abbrev || event.conference].filter(Boolean).join(' · ');
-  var link = event.schedule && event.schedule.url ? event.schedule.url : 'https://sfscrusaderathletics.com/';
+
+// Map an /api/athletics event onto the shape athleticItemHtml renders.
+function apiEventToAthleticItem(ev) {
+  var vs = ev.homeAway === 'H' ? 'vs' : ev.homeAway === 'A' ? 'at' : 'vs';
+  var outcomeClass = { W: 'green', L: 'red', T: 'purple' };
+  var where = ev.homeAway === 'H' ? 'Home' : ev.homeAway === 'A' ? 'Away' : '';
   return {
-    title: sportTitle + ' ' + connector + ' ' + opponent,
-    link: link,
-    meta: meta,
-    result: result,
-    resultClass: resultClass,
-    tag: tag,
-    color: tagColor,
-    sortDate: event.date ? new Date(event.date).getTime() : 0
+    title: clean([ev.sport, vs, ev.opponent].filter(Boolean).join(' ')),
+    link: ev.link,
+    result: ev.result ? ev.result.outcome + ' ' + ev.result.team + '-' + ev.result.opponent : '',
+    resultClass: ev.result ? (outcomeClass[ev.result.outcome] || 'neutral') : 'neutral',
+    meta: [formatAthleticDate(ev.date), where, ev.conference].filter(Boolean).join(' · '),
+    tag: ev.status === 'final' ? 'Result' : 'Upcoming',
+    color: ev.status === 'final' ? 'green' : 'purple'
   };
 }
 
-async function loadAthletics() {
-  var container = document.getElementById('athletics-body');
-  try {
-    var res = await fetchWithTimeout('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent('https://sfscrusaderathletics.com/'), 7000);
-    var html = await res.text();
-    var doc = new DOMParser().parseFromString(html, 'text/html');
-    var events = parseSidearmEvents(doc);
-    var items = events.map(eventToAthleticItem).filter(Boolean)
-      .sort(function(a, b) { return b.sortDate - a.sortDate; });
-    if (items.length === 0) throw new Error('empty');
-    container.innerHTML = items.slice(0, 4).map(function(item) {
+function clean(s) { return String(s || '').replace(/\s+/g, ' ').trim(); }
+
+function loadAthletics() {
+  return cachedFetch('athletics', '/api/athletics', 15 * 60 * 1000, function(payload) {
+    var container = document.getElementById('athletics-body');
+    if (!container) return;
+    var items = (payload.items || []).map(apiEventToAthleticItem);
+    if (!items.length) {
+      container.innerHTML = '<div class="feed-empty">No fixtures posted right now. '
+        + '<a href="https://sfscrusaderathletics.com/" target="_blank" rel="noopener" style="color:var(--sfs-red);">Open Athletics</a></div>';
+      return;
+    }
+    // Out of season the newest "result" can be months old. Say so rather than
+    // letting a spring scoreline read as this week's game.
+    var seasonNote = '';
+    if (payload.latestEventDate) {
+      var ageDays = (Date.now() - new Date(payload.latestEventDate).getTime()) / 86400000;
+      if (ageDays > 30) {
+        seasonNote = '<div class="stale-note">Season break &mdash; most recent results are from '
+          + htmlEscape(formatAthleticDate(payload.latestEventDate)) + '.</div>';
+      }
+    }
+    container.innerHTML = seasonNote + items.slice(0, 4).map(function(item) {
       return athleticItemHtml(item, item.tag, item.color);
     }).join('');
-  } catch (e) {
-    // These are a frozen snapshot, not live scores. They must never be styled
-    // like a fresh result — a student reading "W 7-1" in July should be able to
-    // tell at a glance that this is the last thing we successfully fetched.
-    var fallback = [
-      { title: 'Varsity Girls Soccer at Humphreys', link: 'https://sfscrusaderathletics.com/', result: 'W 7-1', meta: 'Apr 10 · Away · KAIAC' },
-      { title: 'Varsity Boys Soccer at Humphreys',  link: 'https://sfscrusaderathletics.com/', result: 'W 3-1', meta: 'Apr 10 · Away · KAIAC' },
-      { title: 'Varsity Boys Soccer vs Chadwick',   link: 'https://sfscrusaderathletics.com/', result: 'T 3-3', meta: 'Apr 8 · Home · KAIAC' },
-      { title: 'Varsity Girls Soccer vs Chadwick',  link: 'https://sfscrusaderathletics.com/', result: 'W 3-1', meta: 'Apr 8 · Home · KAIAC' }
-    ];
-    container.innerHTML =
-      '<div class="stale-note">Live scores unavailable &mdash; showing last known results. '
-      + '<a href="https://sfscrusaderathletics.com/" target="_blank" rel="noopener">Open Athletics</a></div>'
-      + fallback.map(function(it) {
-          return athleticItemHtml(it, 'Last known', 'neutral');
-        }).join('');
-  }
+  }, function() {
+    // Reached only when there is no cached render to fall back on, i.e. a
+    // first visit while the API is down. Better to say so than to invent
+    // scores: a frozen snapshot styled like a live result is what made this
+    // widget untrustworthy in the first place.
+    var container = document.getElementById('athletics-body');
+    if (!container) return;
+    container.innerHTML = '<div class="feed-empty">Scores unavailable right now. '
+      + '<a href="https://sfscrusaderathletics.com/" target="_blank" rel="noopener" style="color:var(--sfs-red);">Open Athletics</a></div>';
+  });
 }
 
 // ===== SFS NEWS (scraped from seoulforeign.org) =====
-async function loadSFSNews() {
-  var container = document.getElementById('sfs-news-body');
-  if (!container) return;
-  try {
-    var res = await fetchWithTimeout(
-      'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent('https://www.seoulforeign.org/community/news'),
-      10000
-    );
-    var html = await res.text();
-    var doc = new DOMParser().parseFromString(html, 'text/html');
-    var origin = 'https://www.seoulforeign.org';
-
-    function abs(u) {
-      if (!u) return '';
-      if (u.startsWith('//')) return 'https:' + u;
-      if (u.startsWith('http')) return u;
-      if (u.startsWith('/')) return origin + u;
-      return origin + '/' + u;
+function loadSFSNews() {
+  return cachedFetch('sfs-news', '/api/news', 15 * 60 * 1000, function(payload) {
+    var container = document.getElementById('sfs-news-body');
+    if (!container) return;
+    var items = (payload.items || []).slice(0, 5);
+    if (!items.length) {
+      container.innerHTML = '<div class="feed-empty">No stories posted right now. '
+        + '<a href="https://www.seoulforeign.org/community/news" target="_blank" rel="noopener" style="color:var(--sfs-red);">Visit site</a></div>';
+      return;
     }
-
-    function finalsiteImageUrl(el) {
-      if (!el) return '';
-      var direct = el.getAttribute && (el.getAttribute('data-src') || el.getAttribute('src'));
-      if (direct && !/pixel|blank|spacer/i.test(direct)) return direct;
-      var holder = el.matches && el.matches('[data-image-sizes]') ? el : el.querySelector('[data-image-sizes]');
-      var raw = holder && holder.getAttribute('data-image-sizes');
-      if (!raw) return '';
-      try {
-        var sizes = JSON.parse(raw.indexOf('%22') >= 0 ? decodeURIComponent(raw) : raw);
-        if (!Array.isArray(sizes) || sizes.length === 0) return '';
-        var sorted = sizes.slice().sort(function(a, b) { return (a.width || 0) - (b.width || 0); });
-        var pick = sorted.find(function(img) { return (img.width || 0) >= 512; }) || sorted[sorted.length - 1];
-        return pick && pick.url ? pick.url : '';
-      } catch (e) {
-        var m = raw.match(/https?:[^"'\]}]+/);
-        return m ? m[0] : '';
-      }
-    }
-
-    var items = [];
-    function add(title, link, image, date) {
-      title = (title || '').trim();
-      if (!title || title.length < 8 || title.length > 200) return;
-      if (items.find(function(x) { return x.title === title; })) return;
-      items.push({
-        title: title, link: abs(link), image: abs(image),
-        date: (date || '').trim(), source: 'seoulforeign.org',
-        pubDate: null, tag: sfsTag
+    container.innerHTML = items.map(function(it) {
+      return richNewsItemHtml({
+        title: it.title,
+        link: it.link,
+        thumbnail: it.image,
+        thumbSource: 'seoulforeign.org',
+        source: '',
+        tag: null,
+        hideSourceMeta: true,
+        // The server recovers dates the page itself never exposes; without
+        // them this list sat in raw DOM order with 2024 posts above 2026 ones.
+        pubDate: it.publishedAt
       });
-    }
-
-    // Strategy 1: Finalsite-style article list items
-    var articles = doc.querySelectorAll('.fsListItem, .fsPosts .fsPost, article, [class*="ArticleListItem"]');
-    for (var i = 0; i < articles.length && items.length < 8; i++) {
-      var a = articles[i];
-      var t = a.querySelector('.fsTitle, h2 a, h3 a, h4 a, h2, h3, h4, .title');
-      var lnk = a.querySelector('a[href]');
-      var img = a.querySelector('.fsThumbnail [data-image-sizes], [class*="Thumbnail"] [data-image-sizes], img[data-image-sizes], img');
-      var dt = a.querySelector('.fsDateTime, time, [class*="Date"], .date');
-      add(
-        t && t.textContent,
-        lnk && lnk.getAttribute('href'),
-        finalsiteImageUrl(img),
-        dt && dt.textContent
-      );
-    }
-
-    // Strategy 2: any link into /community/news/ with surrounding context
-    if (items.length < 4) {
-      var links = doc.querySelectorAll('a[href*="/community/news/"]');
-      for (var j = 0; j < links.length && items.length < 8; j++) {
-        var l = links[j];
-        var parent = l.closest('article, li, div') || l.parentElement;
-        var pImg = parent && parent.querySelector('.fsThumbnail [data-image-sizes], [class*="Thumbnail"] [data-image-sizes], img[data-image-sizes], img');
-        var pDate = parent && parent.querySelector('time, .date, [class*="Date"]');
-        add(
-          l.textContent,
-          l.getAttribute('href'),
-          finalsiteImageUrl(pImg),
-          pDate && pDate.textContent
-        );
-      }
-    }
-
-    if (items.length === 0) throw new Error('empty');
-
-    container.innerHTML = items.slice(0, 5).map(function(item) {
-      item.thumbnail = item.image;
-      item.thumbSource = item.source;
-      item.source = '';
-      item.tag = null;
-      item.hideSourceMeta = true;
-      if (item.date) item.meta = item.date;
-      return richNewsItemHtml(item);
     }).join('');
-  } catch (e) {
-    container.innerHTML =
+  }, function() {
+    var container = document.getElementById('sfs-news-body');
+    if (container) container.innerHTML =
       '<div class="feed-empty">SFS News unavailable. ' +
-      '<a href="https://www.seoulforeign.org/community/news" target="_blank" style="color:var(--sfs-red);">Visit site</a></div>';
-  }
+      '<a href="https://www.seoulforeign.org/community/news" target="_blank" rel="noopener" style="color:var(--sfs-red);">Visit site</a></div>';
+  });
 }
 
 // ===== INSTAGRAM FEED GRID =====
@@ -2781,216 +2665,53 @@ async function loadInstagramCarousel(id, username) {
 }
 
 // ===== LUNCH FROM FIRESTORE — parses PDF text, falls back to iframe =====
-var LUNCH_DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 var LUNCH_DAYS_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
-async function loadLunchFromFirestore() {
-  if (!FIREBASE_READY) return;
-  try {
-    var snap = await firebase.firestore().collection('config').doc('lunch').get();
-    if (!snap.exists) return;
-    var d = snap.data() || {};
-    if (!d.driveFileId) return;
-    var week = document.getElementById('lunch-week-label');
-    if (week && d.week) {
-      week.textContent = d.week;
-      week.classList.add('show');
+// The PDF fetch + parse now happens in /api/lunch: 320 KB of pdf.js leaves the
+// page entirely, and the expensive parse runs once per 30 min globally instead
+// of up to twelve times an hour in every open tab.
+function loadLunch() {
+  return cachedFetch('lunch', '/api/lunch', 30 * 60 * 1000, function(payload) {
+    var menuEl = document.getElementById('lunch-menu');
+    var frame  = document.getElementById('lunch-pdf');
+    var note   = document.getElementById('lunch-note');
+    if (!menuEl) return;
+
+    var weekEl = document.getElementById('lunch-week-label');
+    if (weekEl && payload.week) {
+      // Surface staleness rather than presenting a months-old menu with full
+      // confidence — the source doc can sit un-updated for a long time.
+      weekEl.textContent = payload.stale ? payload.week + ' · not updated recently' : payload.week;
+      weekEl.classList.add('show');
+      weekEl.classList.toggle('is-stale', !!payload.stale);
     }
-    await renderLunchMenu(d.driveFileId);
-  } catch (e) {
-    console.warn('loadLunchFromFirestore failed:', e);
-  }
-}
 
-async function renderLunchMenu(fileId) {
-  var menuEl = document.getElementById('lunch-menu');
-  var frame  = document.getElementById('lunch-pdf');
-  var note   = document.getElementById('lunch-note');
-  if (!menuEl) return;
-
-  // The cached value is rendered HTML with today's column already selected, so
-  // the Seoul day is part of its identity — without it, a tab open across
-  // midnight shows yesterday's menu under today's banner.
-  var LUNCH_TTL = 30 * 60 * 1000;
-  var cacheKey = 'lunch-menu-v3-' + fileId + '-' + seoulNow().dayIndex;
-  try {
-    var cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
-    var age = cached ? Date.now() - cached.t : Infinity;
-    if (cached && age < LUNCH_TTL && cached.html) {
-      menuEl.innerHTML = cached.html;
+    var html = renderLunchSections(payload.sections || []);
+    if (html) {
+      menuEl.innerHTML = html;
       menuEl.classList.add('show');
       if (frame) frame.classList.remove('show');
       if (note) note.style.display = 'none';
-      // Only re-parse when the cache is past halfway. Refreshing on every hit
-      // meant a 222 KB download and a full PDF parse up to 12x/hour per tab,
-      // which made the cache worth nothing on the network path.
-      if (age > LUNCH_TTL / 2) parseAndRenderLunch(fileId, menuEl, frame, note, true);
       return;
     }
-  } catch (e) {}
 
-  menuEl.innerHTML = '<div class="lunch-loading">Reading menu…</div>';
-  menuEl.classList.add('show');
-  if (frame) frame.classList.remove('show');
-  if (note) note.style.display = 'none';
-  await parseAndRenderLunch(fileId, menuEl, frame, note, false);
-}
-
-async function parseAndRenderLunch(fileId, menuEl, frame, note, silent) {
-  try {
-    var sections = await fetchAndParseLunchPdf(fileId);
-    if (!sections || sections.length === 0) throw new Error('empty');
-    var html = renderLunchSections(sections);
-    menuEl.innerHTML = html;
-    menuEl.classList.add('show');
-    if (frame) frame.classList.remove('show');
-    if (note) note.style.display = 'none';
-    try {
-      localStorage.setItem('lunch-menu-v3-' + fileId + '-' + seoulNow().dayIndex,
-                           JSON.stringify({ t: Date.now(), html: html }));
-    } catch (e) {}
-  } catch (e) {
-    console.warn('PDF parse failed, falling back to iframe:', e);
-    if (silent) return;  // background refresh — don't disturb the UI
-    menuEl.classList.remove('show');
-    menuEl.innerHTML = '';
-    if (frame) {
-      frame.src = 'https://drive.google.com/file/d/' + fileId + '/preview';
+    // Parsed nothing usable: fall back to the Drive preview rather than an
+    // empty card.
+    if (frame && payload.fallbackEmbed) {
+      frame.src = payload.fallbackEmbed;
       frame.classList.add('show');
+      menuEl.classList.remove('show');
+      menuEl.innerHTML = '';
+      if (note) note.style.display = '';
     }
-  }
-}
-
-// Fetch the PDF binary through a CORS proxy, parse with PDF.js, and group
-// text by section header + day. Returns an array of
-// { section: "INTERNATIONAL", days: { Mon: "...", Tue: "..." } }.
-// pdf.js is deferred, so its worker path is configured on first use rather than
-// in an inline script at parse time.
-function initPdfWorker() {
-  if (!window.pdfjsLib) return false;
-  var opts = window.pdfjsLib.GlobalWorkerOptions;
-  if (opts && !opts.workerSrc) {
-    opts.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-  }
-  return true;
-}
-
-async function fetchAndParseLunchPdf(fileId) {
-  if (!initPdfWorker()) throw new Error('pdfjs-not-loaded');
-  var driveUrl = 'https://drive.google.com/uc?export=download&id=' + fileId;
-  var enc = encodeURIComponent(driveUrl);
-  // Try multiple proxies — allorigins is currently 522, corsproxy.io is paid;
-  // codetabs has worked reliably for binary content.
-  var proxies = [
-    'https://api.codetabs.com/v1/proxy?quest=' + enc,
-    'https://api.allorigins.win/raw?url=' + enc
-  ];
-  var buf = null;
-  var lastError = null;
-  for (var p = 0; p < proxies.length; p++) {
-    try {
-      var res = await fetchWithTimeout(proxies[p], 15000);
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      buf = await res.arrayBuffer();
-      if (buf.byteLength < 100) throw new Error('empty');
-      var head = new Uint8Array(buf, 0, 5);
-      var sig = String.fromCharCode(head[0], head[1], head[2], head[3], head[4]);
-      if (sig !== '%PDF-') throw new Error('not-a-pdf:' + sig);
-      break; // success
-    } catch (e) {
-      lastError = e;
-      buf = null;
-    }
-  }
-  if (!buf) throw lastError || new Error('all-proxies-failed');
-  var pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
-
-  // Collect text items with positions (Y normalized top-down, pages stacked).
-  var items = [];
-  for (var i = 1; i <= pdf.numPages; i++) {
-    var page = await pdf.getPage(i);
-    var content = await page.getTextContent();
-    var pageHeight = (page.view && page.view[3]) || 0;
-    content.items.forEach(function(it) {
-      var s = (it.str || '').trim();
-      if (!s) return;
-      items.push({
-        text: s,
-        x: it.transform[4],
-        y: pageHeight - it.transform[5] + (i - 1) * 10000
-      });
-    });
-  }
-
-  var DAY_RE = /^(Mon|Tue|Wed|Thu|Fri)\.?$/i;
-  var SECTION_RE = /^[A-Z][A-Z\s&'\/]{3,}$/;
-  // Crave's HS menu sections — used to filter out brand-name false positives
-  // (VOSS, ICE CREAM) that look like sections. Falls back to generic detection
-  // if we don't find at least 3 known names (handles other PDF layouts).
-  var KNOWN = /^(INTERNATIONAL|KOREAN|BURGER OF THE WEEK|SOUP OF THE WEEK|BUILD YOUR OWN|SALAD BAR|GRAB & GO|GRILL|BEVERAGES)$/;
-  var JUNK_RE = /^(₩|\d+[,.]?\d*|.*[-]\s*(Brazil|USA|Korea|China|Australia|Foreign|Vietnam)\s*|High School|crave|\d+\s*\/\s*\d+)$/i;
-
-  var dayMarkers = items.filter(function(it) { return DAY_RE.test(it.text); });
-  var knownHits = items.filter(function(it) { return KNOWN.test(it.text); });
-  var sectionMarkers = (knownHits.length >= 3
-    ? knownHits
-    : items.filter(function(it) { return SECTION_RE.test(it.text) && it.text.length < 35; })
-  ).slice().sort(function(a, b) { return a.y - b.y; });
-
-  // Section labels in Crave PDFs sit in the MIDDLE of their cell, so use the
-  // midpoint between adjacent labels as the boundary instead of "label above".
-  function sectionFor(item) {
-    for (var i = 0; i < sectionMarkers.length; i++) {
-      var s = sectionMarkers[i];
-      var prev = sectionMarkers[i - 1];
-      var next = sectionMarkers[i + 1];
-      var lower = prev ? (prev.y + s.y) / 2 : -Infinity;
-      var upper = next ? (s.y + next.y) / 2 : Infinity;
-      if (item.y >= lower && item.y < upper) return s.text;
-    }
-    return sectionMarkers.length ? sectionMarkers[0].text : null;
-  }
-
-  // Day = the day-marker closest in Y AND positioned to the left of the item.
-  function dayFor(item) {
-    var nearest = null, minDist = 25;
-    for (var i = 0; i < dayMarkers.length; i++) {
-      var d = dayMarkers[i];
-      var dist = Math.abs(d.y - item.y);
-      if (dist < minDist && d.x < item.x - 10) { minDist = dist; nearest = d; }
-    }
-    if (!nearest) return null;
-    var s = nearest.text.slice(0, 3);
-    return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
-  }
-
-  var grouped = {};
-  items.forEach(function(item) {
-    if (DAY_RE.test(item.text)) return;
-    // Test knownHits, not sectionMarkers: sectionMarkers is the *result* of
-    // this choice, and on the generic path it usually holds more than 3 entries,
-    // so the guard read false and every generic section header (VOSS, GRILL,
-    // GRAB & GO...) leaked through and got concatenated into a day's menu text.
-    if (KNOWN.test(item.text) || (knownHits.length < 3 && SECTION_RE.test(item.text) && item.text.length < 35)) return;
-    if (JUNK_RE.test(item.text)) return;
-    if (item.text === '₩' || /^\d+[,.]?\d*$/.test(item.text)) return;
-
-    var section = sectionFor(item);
-    if (!section) return;
-    var day = dayFor(item) || 'Wk';
-    if (!grouped[section]) grouped[section] = { section: section, days: {}, _order: [] };
-    if (!grouped[section].days[day]) {
-      grouped[section].days[day] = item.text;
-      grouped[section]._order.push(day);
-    } else {
-      grouped[section].days[day] += ' / ' + item.text;
+  }, function() {
+    var menuEl = document.getElementById('lunch-menu');
+    if (menuEl) {
+      menuEl.innerHTML = '<div class="feed-empty">Menu unavailable right now. '
+        + '<a href="https://sfs.cravefood.kr" target="_blank" rel="noopener" style="color:var(--sfs-red);">Open CraveFood</a></div>';
+      menuEl.classList.add('show');
     }
   });
-
-  // Preserve section order from the markers list (top-down on the page).
-  return sectionMarkers
-    .map(function(s) { return grouped[s.text]; })
-    .filter(function(g) { return g && Object.keys(g.days).length > 0; });
 }
 
 // Map raw Crave section names to compact display labels. Sections not in this
@@ -3097,25 +2818,153 @@ async function loadAdminAnnouncements() {
   }
 }
 
+// ===== DATA LAYER =====
+// Three problems this replaces:
+//   1. Bare setInterval kept firing in hidden tabs. A dashboard left on a
+//      classroom projector fired well over a thousand requests overnight for
+//      nobody.
+//   2. Every tab that loaded at the same bell rang its next alarm at the same
+//      instant — a thundering herd, which matters much more now that we own
+//      the origin.
+//   3. A single transient failure destroyed good content: several widgets
+//      replaced a working render with an error card.
+
+var FRESHNESS = {};   // widgetId -> { fetchedAt, state }
+
+/**
+ * Poll `fn` on a self-adjusting timer. Sleeps while the tab is hidden or
+ * offline, spreads load with jitter, and backs off exponentially on failure so
+ * an outage costs logarithmically less instead of a fixed rate forever.
+ */
+function schedule(name, fn, baseMs) {
+  var failures = 0;
+  var timer = null;
+  var lastRun = 0;
+  var everRan = false;
+
+  function jitter() { return baseMs * (0.85 + Math.random() * 0.3); }
+  function backoff() { return Math.min(baseMs * Math.pow(2, failures), 30 * 60 * 1000); }
+  function arm(ms) { clearTimeout(timer); timer = setTimeout(tick, ms); }
+
+  async function tick() {
+    // The visibility gate is about repeat polling, not the first load. A page
+    // restored into a background tab, or opened with cmd-click, is hidden from
+    // the very first frame — gating the initial fetch on it left every widget
+    // empty until the student happened to focus the tab.
+    if (everRan && document.hidden) return arm(60 * 1000);
+    if (everRan && navigator.onLine === false) return arm(30 * 1000);
+    everRan = true;
+    lastRun = Date.now();
+    try {
+      await fn();
+      failures = 0;
+      arm(jitter());
+    } catch (e) {
+      failures++;
+      arm(backoff());
+    }
+  }
+
+  document.addEventListener('visibilitychange', function() {
+    // A tab restored after hours of sleep should not wait out the rest of an
+    // interval before showing current data.
+    if (!document.hidden && Date.now() - lastRun > baseMs) tick();
+  });
+  window.addEventListener('online', function() { failures = 0; tick(); });
+
+  tick();
+}
+
+/**
+ * Paint from cache immediately, then refresh in the background.
+ *
+ * The invariant that matters: a failed refresh NEVER clears a successful
+ * paint. Stale-but-visible beats an error card sitting where real content was.
+ */
+async function cachedFetch(widgetId, url, ttlMs, render, onEmpty) {
+  var key = 'sfs-cache-' + widgetId + '-v1';
+  var hit = null;
+  try { hit = JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) {}
+
+  if (hit && hit.payload) {
+    render(hit.payload);
+    setFreshness(widgetId, hit.t, Date.now() - hit.t > ttlMs ? 'stale' : 'fresh');
+  }
+
+  try {
+    var res = await fetchWithTimeout(url, 9000);
+    var data = await res.json();
+    if (!data || data.ok !== true) throw new Error(data && data.error || 'not_ok');
+    render(data);
+    setFreshness(widgetId, Date.now(), 'fresh');
+    try { localStorage.setItem(key, JSON.stringify({ t: Date.now(), payload: data })); } catch (e) {}
+    return data;
+  } catch (e) {
+    if (hit && hit.payload) {
+      setFreshness(widgetId, hit.t, navigator.onLine === false ? 'offline' : 'stale');
+    } else if (onEmpty) {
+      onEmpty(e);
+      setFreshness(widgetId, null, navigator.onLine === false ? 'offline' : 'error');
+    }
+    throw e;   // let schedule() count the failure and back off
+  }
+}
+
+function relativeAge(ts) {
+  var mins = Math.floor((Date.now() - ts) / 60000);
+  if (mins < 1)  return 'just now';
+  if (mins < 60) return mins + 'm ago';
+  var hrs = Math.floor(mins / 60);
+  if (hrs < 24)  return hrs + 'h ago';
+  return Math.floor(hrs / 24) + 'd ago';
+}
+
+function setFreshness(widgetId, fetchedAt, state) {
+  FRESHNESS[widgetId] = { fetchedAt: fetchedAt, state: state };
+  var el = document.querySelector('[data-fresh="' + widgetId + '"]');
+  if (!el) return;
+  el.className = 'w-fresh w-fresh-' + state;
+  if (state === 'offline')    el.textContent = fetchedAt ? 'Offline · ' + relativeAge(fetchedAt) : 'Offline';
+  else if (state === 'error') el.textContent = 'Unavailable';
+  else if (state === 'stale') el.textContent = fetchedAt ? relativeAge(fetchedAt) + ' · retrying' : 'Retrying';
+  else                        el.textContent = fetchedAt ? 'Updated ' + relativeAge(fetchedAt) : '';
+}
+
+// Give every widget a freshness slot without editing ten markup blocks. Without
+// a visible timestamp the outages this rewrite fixes were invisible: a dead
+// proxy, an 88-day-old lunch menu and 3-month-old scores all looked current.
+function installFreshnessSlots() {
+  document.querySelectorAll('.widget[data-wid]').forEach(function(w) {
+    var head = w.querySelector('.w-head');
+    if (!head || head.querySelector('.w-fresh')) return;
+    var span = document.createElement('span');
+    span.className = 'w-fresh';
+    span.setAttribute('data-fresh', w.getAttribute('data-wid'));
+    head.appendChild(span);
+  });
+}
+installFreshnessSlots();
+
+// Keep the relative labels honest without re-fetching anything.
+setInterval(function() {
+  Object.keys(FRESHNESS).forEach(function(id) {
+    var f = FRESHNESS[id];
+    if (f && f.fetchedAt) setFreshness(id, f.fetchedAt, f.state);
+  });
+}, 60 * 1000);
+
 // ===== KICKOFF + AUTO-REFRESH =====
 // Each loader is called once immediately, then re-runs on its own interval so
 // long-lived browser tabs keep getting fresh data without a page reload.
 // Intervals are tuned for source volatility and (for scraping) host friendliness.
-loadNewsAndAnnouncements();
-setInterval(loadNewsAndAnnouncements, 5 * 60 * 1000);    // Admin announcements only — 5 min
+schedule('news', loadNewsAndAnnouncements, 5 * 60 * 1000);
 
-loadCollegeFeeds();
-setInterval(loadCollegeFeeds, 30 * 60 * 1000);           // Economist/BBC/NYT/Guardian — 30 min
+schedule('college', loadCollegeFeeds, 30 * 60 * 1000);
 
-loadAthletics();
-setInterval(loadAthletics, 15 * 60 * 1000);              // Athletics scrape — 15 min
+schedule('athletics', loadAthletics, 15 * 60 * 1000);
 
 loadInstagramCarousel('sfs', 'seoul_foreign_school');
 loadInstagramCarousel('athletics', 'sfscrusaderathletics');
-setInterval(function() {
-  loadInstagramCarousel('sfs', 'seoul_foreign_school');
-  loadInstagramCarousel('athletics', 'sfscrusaderathletics');
-}, 30 * 60 * 1000);                                       // IG scrape — 30 min (rate-limit aware)
 
 // ===== STUDENT READS (curated for HS students) =====
 var collegeNewsTags = {
@@ -3125,47 +2974,20 @@ var collegeNewsTags = {
   mit:  { label: 'MIT',              bg: 'var(--tag-blue-bg)',   color: 'var(--tag-blue-fg)' }
 };
 
-async function loadCollegeNews() {
-  var container = document.getElementById('student-reads-body');
-  if (!container) return;
-  try {
-    var feeds = await Promise.allSettled([
-      fetchRSS('https://www.insidehighered.com/rss.xml'),
-      fetchRSS('https://hechingerreport.org/feed/'),
-      fetchRSS('https://news.harvard.edu/gazette/feed/'),
-      fetchRSS('https://news.mit.edu/rss/feed')
-    ]);
-    var items = [];
-    var meta = [
-      { tag: collegeNewsTags.ihe,  source: 'insidehighered.com' },
-      { tag: collegeNewsTags.hech, source: 'hechingerreport.org' },
-      { tag: collegeNewsTags.harv, source: 'harvard.edu' },
-      { tag: collegeNewsTags.mit,  source: 'mit.edu' }
-    ];
-    feeds.forEach(function(f, idx) {
-      if (f.status === 'fulfilled') {
-        f.value.slice(0, 2).forEach(function(item) {
-          items.push({
-            title: item.title, link: item.link, pubDate: item.pubDate,
-            thumbnail: item.thumbnail, enclosure: item.enclosure, description: item.description,
-            tag: meta[idx].tag, source: meta[idx].source
-          });
-        });
-      }
+function loadCollegeNews() {
+  return cachedFetch('reads', '/api/feeds?set=college', 30 * 60 * 1000,
+    function(payload) { renderFeedWidget('student-reads-body', collegeNewsTags, payload); },
+    function() {
+      var el = document.getElementById('student-reads-body');
+      if (el) el.innerHTML = feedErrorHtml([
+        { url: 'https://www.insidehighered.com',    label: 'Inside Higher Ed' },
+        { url: 'https://news.harvard.edu/gazette/', label: 'Harvard' }
+      ]);
     });
-    items.sort(function(a, b) { return new Date(b.pubDate) - new Date(a.pubDate); });
-    items = items.slice(0, 5);
-    if (items.length === 0) throw new Error('empty');
-    container.innerHTML = items.map(richNewsItemHtml).join('');
-  } catch (e) {
-    container.innerHTML = '<div class="feed-empty">Feed unavailable. <a href="https://www.insidehighered.com" target="_blank" style="color:var(--sfs-red);">Inside Higher Ed</a> &middot; <a href="https://news.harvard.edu/gazette/" target="_blank" style="color:var(--sfs-red);">Harvard</a></div>';
-  }
 }
-loadCollegeNews();
-setInterval(loadCollegeNews, 30 * 60 * 1000);             // College feeds — 30 min
+schedule('reads', loadCollegeNews, 30 * 60 * 1000);
 
-loadSFSNews();
-setInterval(loadSFSNews, 15 * 60 * 1000);                 // SFS News scrape — 15 min
+schedule('sfs-news', loadSFSNews, 15 * 60 * 1000);
 
 // ===== NOTES (localStorage-backed memo with basic rich-text toolbar) =====
 (function() {
@@ -3236,15 +3058,9 @@ setInterval(loadSFSNews, 15 * 60 * 1000);                 // SFS News scrape —
   editor.addEventListener('input', scheduleSave);
 })();
 
-loadLunchFromFirestore();
-setInterval(loadLunchFromFirestore, 5 * 60 * 1000);       // Lunch PDF — 5 min
+schedule('lunch', loadLunch, 30 * 60 * 1000);
 
-// ===== SPIRIT MAGAZINE (Issuu profile scrape, cached-first) =====
-var SPIRIT_CACHE_KEY = 'sfs-spirit-feed-v1';
-
-// Seed issues — used when there's nothing in localStorage yet so the widget
-// never shows a loading spinner on first paint. Kept small; real-time fetch
-// replaces this within a few hundred ms of page load when the network is fine.
+// ===== SPIRIT MAGAZINE =====
 // Verified against issuu.com/thesfhsspirit on 2026-07-31. Refresh when a new
 // issue ships — a first-time visitor with an empty cache sees this list, and a
 // stale seed reads as "Latest Issue" no matter how old it actually is.
@@ -3264,14 +3080,12 @@ function spiritIssueFromRaw(raw) {
   };
 }
 
-function renderSpiritCache() {
-  var cache;
-  try { cache = JSON.parse(localStorage.getItem(SPIRIT_CACHE_KEY) || 'null'); } catch (e) {}
-  // Array.isArray, not truthiness: a corrupt cache holding a non-array object
-  // would throw on .map() at top level here, aborting every statement that
-  // follows in this script block — including the grid initialization.
-  var list = (Array.isArray(cache) && cache.length) ? cache : SPIRIT_SEED;
-  renderSpirit(list.map(spiritIssueFromRaw));
+// Cold-start paint only. cachedFetch owns the real cache; this exists so a
+// first-time visitor sees covers instead of a spinner while /api/spirit runs.
+function paintSpiritSeed() {
+  var hasCache = false;
+  try { hasCache = !!localStorage.getItem('sfs-cache-spirit-v1'); } catch (e) {}
+  if (!hasCache) renderSpirit(SPIRIT_SEED.map(spiritIssueFromRaw));
 }
 function cleanSpiritTitle(slug) {
   var s = String(slug).replace(/_[a-f0-9]{10,}$/i, ''); // strip trailing dedupe hash
@@ -3294,48 +3108,17 @@ function parseCoverDate(coverId) {
   return new Date(2000 + +head.slice(0,2), +head.slice(2,4) - 1, +head.slice(4,6));
 }
 
-// Background refresh. Does NOT clear the cached UI on failure — keeps whatever
-// renderSpiritCache() painted so the user never sees a spinner or error state.
-async function loadSpirit(attempt) {
-  if (!document.getElementById('spirit-body')) return;
-  attempt = attempt || 1;
-  try {
-    var res = await fetchWithTimeout(
-      'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent('https://issuu.com/thesfhsspirit'),
-      15000
-    );
-    var html = await res.text();
-    var coverSet = [], seen = {}, m;
-    var re = /image\.isu\.pub\/(\d{12}-[a-f0-9]+)/g;
-    while ((m = re.exec(html)) !== null) {
-      if (!seen[m[1]]) { seen[m[1]] = 1; coverSet.push(m[1]); }
-    }
-    var slugSet = [], sseen = {};
-    var re2 = /\/docs\/([a-zA-Z0-9_-]+)/g;
-    while ((m = re2.exec(html)) !== null) {
-      if (!sseen[m[1]]) { sseen[m[1]] = 1; slugSet.push(m[1]); }
-    }
-    if (coverSet.length === 0 || slugSet.length === 0) throw new Error('empty');
-
-    var count = Math.min(5, coverSet.length, slugSet.length);
-    var raw = [];
-    for (var i = 0; i < count; i++) {
-      raw.push({ coverId: coverSet[i], slug: slugSet[i] });
-    }
-
-    // Skip DOM churn if the top issue matches what's already rendered.
-    var cached;
-    try { cached = JSON.parse(localStorage.getItem(SPIRIT_CACHE_KEY) || 'null'); } catch (e) {}
-    var unchanged = cached && cached[0]
-      && cached[0].coverId === raw[0].coverId
-      && cached[0].slug === raw[0].slug;
-    if (!unchanged) {
-      renderSpirit(raw.map(spiritIssueFromRaw));
-    }
-    try { localStorage.setItem(SPIRIT_CACHE_KEY, JSON.stringify(raw)); } catch (e) {}
-  } catch (e) {
-    if (attempt < 2) setTimeout(function() { loadSpirit(attempt + 1); }, 2000);
-  }
+function loadSpirit() {
+  return cachedFetch('spirit', '/api/spirit', 60 * 60 * 1000, function(payload) {
+    renderSpirit((payload.items || []).map(function(it) {
+      return {
+        cover: it.cover,
+        url: it.url,
+        title: it.title,
+        date: it.publishedAt ? new Date(it.publishedAt) : null
+      };
+    }));
+  });
 }
 
 function renderSpirit(issues) {
@@ -3375,11 +3158,8 @@ function renderSpirit(issues) {
   container.innerHTML = out;
 }
 
-// Initial paint from cached/seed data — instant, no network.
-// Then background fetch to update with latest from Issuu.
-renderSpiritCache();
-loadSpirit();
-setInterval(loadSpirit, 300000);   // re-check Issuu every 5 minutes
+paintSpiritSeed();
+schedule('spirit', loadSpirit, 60 * 60 * 1000);
 
 // ===== GRIDSTACK DRAG GRID =====
 var LAYOUT_KEY = 'sfs-grid-layout-v11';
