@@ -20,8 +20,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack.min.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack-extra.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack.min.css" rel="stylesheet"
+      integrity="sha384-3466xzONp5jWI9wRY4i5C4LQqPF7wQiNl2TPqqWNEKMxqleN1p3y+uCjs5rObTFv" crossorigin="anonymous">
+<link href="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack-extra.min.css" rel="stylesheet"
+      integrity="sha384-jMuLjAsBfwvyGiR9ynwk0CdSHsXdVoChAJ6lZnWeVxw8SKNVqI8lokdPzE81dYPo" crossorigin="anonymous">
 <style>
 /* ===== SFS Brand: Red #C1282E | Blue #2B3160 | Gray #878787 ===== */
 
@@ -2044,11 +2046,14 @@ footer p {
 </div>
 
 <script src="firebase-config.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"
+        integrity="sha384-yuGdyIzzYtOBlBG6JOWn+Ey9kpq7HocusNuxEGyyohr1eEyXpeEyehIIXC/hznw4" crossorigin="anonymous"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"
+        integrity="sha384-nwX2Qpkhc2sv6L0ZPkLefLGguao67toSowvePuQvGF6cG+8MUphGI2uI94Ls3JF7" crossorigin="anonymous"></script>
 <!-- pdf.js is gone: the lunch PDF is parsed in /api/lunch now, so 320 KB no
      longer ships to every visitor for a widget most of them never scroll to. -->
-<script src="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack-all.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack-all.js"
+        integrity="sha384-nK6N0YlXqSXYT4GJKLD6y4mPJ9w1v9DtgfsQHqltu+OHCjpKMRZ2koek3LRIcbCK" crossorigin="anonymous"></script>
 <script>
 // ===== FIREBASE INIT (no-op when firebase-config.js still has REPLACE_ME) =====
 var FIREBASE_READY = false;
@@ -2826,8 +2831,8 @@ function renderLunchSections(sections) {
     if (!items) return;
     rows.push(
       '<div class="lunch-row">' +
-        '<div class="label">' + escapeLunchHtml(label) + '</div>' +
-        '<div class="items">' + escapeLunchHtml(items) + '</div>' +
+        '<div class="label">' + htmlEscape(label) + '</div>' +
+        '<div class="items">' + htmlEscape(items) + '</div>' +
       '</div>'
     );
   });
@@ -2837,11 +2842,6 @@ function renderLunchSections(sections) {
     : '';
 }
 
-function escapeLunchHtml(s) {
-  return String(s || '').replace(/[&<>"']/g, function(c) {
-    return ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c];
-  });
-}
 
 // ===== ADMIN ANNOUNCEMENTS (per-club updates) FROM FIRESTORE =====
 // Each club gets a stable color from this palette (hash of club name → index).
