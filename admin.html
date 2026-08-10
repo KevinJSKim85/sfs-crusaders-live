@@ -662,6 +662,26 @@ select { appearance: none; background-image: url("data:image/svg+xml;utf8,<svg x
       <div class="status-msg" id="lunch-status"></div>
     </div>
 
+    <h2 class="section-title">HS Weekly Newsletter</h2>
+    <div class="card">
+      <div class="form-row">
+        <label for="news-title">Issue label (shown on dashboard)</label>
+        <input type="text" id="news-title" placeholder="e.g. Week of August 10">
+      </div>
+      <div class="form-row">
+        <label for="news-url">Newsletter link</label>
+        <input type="url" id="news-url" placeholder="https://app.smore.com/n/...">
+        <div class="field-help">
+          Open the weekly email, copy the &ldquo;View this in your browser&rdquo; / Smore link, paste it here.
+          Each issue gets its own address, so there is no way to fetch this automatically &mdash;
+          it is one paste a week. Leave blank and the dashboard shows school news instead.
+        </div>
+      </div>
+      <button class="btn" id="btn-save-news" type="button">Save &amp; Publish</button>
+      <div class="status-msg" id="news-status"></div>
+      <div class="current-info" id="news-current-info"></div>
+    </div>
+
   </div>
 
   <!-- ANNOUNCEMENTS TAB -->
@@ -855,6 +875,56 @@ function setTheme(theme) {
   }
 
   function wireLunchSave() {
+    document.getElementById('btn-save-news').onclick = function() {
+      var titleInput = document.getElementById('news-title');
+      var urlInput   = document.getElementById('news-url');
+      var statusEl   = document.getElementById('news-status');
+      var btn = document.getElementById('btn-save-news');
+      var title = titleInput.value.trim();
+      var raw   = urlInput.value.trim();
+
+      // Blank clears it, which is how you go back to showing school news.
+      if (!raw) {
+        btn.disabled = true; btn.textContent = 'Clearing…';
+        db.collection('config').doc('newsletter').set({
+          url: '', title: '', updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(function() {
+          status(statusEl, 'Cleared — dashboard is back to school news.', 'success');
+          titleInput.value = ''; loadCurrentNewsletter();
+        }).catch(function(err) {
+          status(statusEl, 'Could not save: ' + err.message, 'error');
+        }).then(function() { btn.disabled = false; btn.textContent = 'Save & Publish'; });
+        return;
+      }
+      if (!/^https:\/\//i.test(raw)) return status(statusEl, 'Link must start with https://', 'error');
+      if (!title) return status(statusEl, 'Please enter an issue label.', 'error');
+
+      btn.disabled = true; btn.textContent = 'Saving…';
+      db.collection('config').doc('newsletter').set({
+        url: raw,
+        title: title,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(function() {
+        status(statusEl, 'Saved — live on the dashboard.', 'success');
+        titleInput.value = ''; urlInput.value = '';
+        loadCurrentNewsletter();
+      }).catch(function(err) {
+        status(statusEl, 'Could not save: ' + err.message, 'error');
+      }).then(function() { btn.disabled = false; btn.textContent = 'Save & Publish'; });
+    };
+
+    function loadCurrentNewsletter() {
+      var box = document.getElementById('news-current-info');
+      if (!box) return;
+      db.collection('config').doc('newsletter').get().then(function(snap) {
+        var d = snap.exists ? (snap.data() || {}) : {};
+        if (!d.url) { box.textContent = 'No newsletter posted — dashboard is showing school news.'; return; }
+        var when = d.updatedAt && d.updatedAt.toDate ? d.updatedAt.toDate().toLocaleDateString() : 'unknown date';
+        box.textContent = 'Current: ' + (d.title || 'Untitled') + ' (posted ' + when + ')';
+      }).catch(function() { box.textContent = ''; });
+    }
+    loadCurrentNewsletter();
+
     document.getElementById('btn-save-lunch').onclick = function() {
       var weekInput = document.getElementById('lunch-week');
       var urlInput  = document.getElementById('lunch-url');

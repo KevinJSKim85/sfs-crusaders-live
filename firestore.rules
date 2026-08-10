@@ -44,11 +44,15 @@ service cloud.firestore {
       allow write: if isAdmin()
                    && request.resource.data.keys().hasOnly(
                         ['driveFileId', 'driveUrl', 'week', 'updatedAt',
-                         'bellSchedule', 'noSchoolToday', 'bannerMessage'])
+                         'bellSchedule', 'noSchoolToday', 'bannerMessage',
+                         'url', 'title'])
                    && str('driveFileId', 200)
                    && str('driveUrl', 500)
                    && str('week', 200)
-                   && str('bannerMessage', 500);
+                   && str('bannerMessage', 500)
+                   // config/newsletter: the weekly HS email link an admin pastes in.
+                   && str('url', 500)
+                   && str('title', 200);
     }
 
     match /announcements/{docId} {

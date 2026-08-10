@@ -1059,6 +1059,43 @@ a.widget:hover { background: var(--bg-card-hover); }
   font-size: 12px;
 }
 
+/* ===== HS WEEKLY NEWSLETTER CARD ===== */
+.newsletter-card {
+  display: block;
+  background: var(--tag-red-bg);
+  border: 1px solid var(--sfs-red);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  text-decoration: none;
+}
+.newsletter-card:hover { background: var(--bg-card-hover); }
+
+.newsletter-kicker {
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 1.3px;
+  text-transform: uppercase;
+  color: var(--sfs-red-text);
+  margin-bottom: 4px;
+}
+
+.newsletter-title {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--text);
+}
+
+.newsletter-meta { font-size: 10.5px; color: var(--text-muted); margin-top: 3px; }
+
+.newsletter-cta {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--sfs-red-text);
+  margin-top: 8px;
+}
+
 /* ===== UPCOMING EVENTS ===== */
 .event-list { display: flex; flex-direction: column; }
 
@@ -3007,31 +3044,77 @@ function loadAthletics() {
 }
 
 // ===== SFS NEWS (scraped from seoulforeign.org) =====
+// ===== HS WEEKLY NEWSLETTER =====
+// The newsletter goes out by email and every issue gets its own Smore address,
+// so there is nothing stable to poll. An admin pastes the week's link and it
+// takes over this widget; with no link set, the school news scrape shows
+// instead. Realtime, so it appears the moment it is posted.
+var NEWSLETTER = null;
+
+function subscribeNewsletter() {
+  if (!FIREBASE_READY) return;
+  try {
+    firebase.firestore().collection('config').doc('newsletter')
+      .onSnapshot(function(snap) {
+        var d = snap.exists ? (snap.data() || {}) : {};
+        NEWSLETTER = d.url ? d : null;
+        renderSFSNews();
+      }, function(err) { console.warn('newsletter listener failed:', err); });
+  } catch (e) {}
+}
+
+function newsletterCardHtml() {
+  var n = NEWSLETTER;
+  var posted = n.updatedAt && n.updatedAt.toDate
+    ? timeAgo(n.updatedAt.toDate().toISOString()) : '';
+  return '<a class="newsletter-card" href="' + safeUrl(n.url) + '" target="_blank" rel="noopener">'
+    + '<div class="newsletter-kicker">This week</div>'
+    + '<div class="newsletter-title">' + htmlEscape(n.title || 'HS Weekly Newsletter') + '</div>'
+    + (posted ? '<div class="newsletter-meta">Posted ' + htmlEscape(posted) + '</div>' : '')
+    + '<div class="newsletter-cta">Read the newsletter &rarr;</div>'
+    + '</a>';
+}
+
+var SFS_NEWS_ITEMS = [];
+
+// The newsletter, when there is one, sits above the school-news list rather
+// than replacing it — the weekly email is what students actually want, but
+// there is no reason to throw away the articles underneath it.
+function renderSFSNews() {
+  var container = document.getElementById('sfs-news-body');
+  if (!container) return;
+  var head = NEWSLETTER ? newsletterCardHtml() : '';
+  var body = SFS_NEWS_ITEMS.map(function(it) {
+    return richNewsItemHtml({
+      title: it.title,
+      link: it.link,
+      thumbnail: it.image,
+      thumbSource: 'seoulforeign.org',
+      source: '',
+      tag: null,
+      hideSourceMeta: true,
+      // The server recovers dates the page itself never exposes; without
+      // them this list sat in raw DOM order with 2024 posts above 2026 ones.
+      pubDate: it.publishedAt
+    });
+  }).join('');
+
+  if (!head && !body) {
+    container.innerHTML = '<div class="feed-empty">No stories posted right now. '
+      + '<a href="https://www.seoulforeign.org/community/news" target="_blank" rel="noopener" style="color:var(--sfs-red-text);">Visit site</a></div>';
+    return;
+  }
+  container.innerHTML = head + body;
+}
+
 function loadSFSNews() {
   return cachedFetch('sfs-news', '/api/news', 15 * 60 * 1000, function(payload) {
-    var container = document.getElementById('sfs-news-body');
-    if (!container) return;
-    var items = (payload.items || []).slice(0, 5);
-    if (!items.length) {
-      container.innerHTML = '<div class="feed-empty">No stories posted right now. '
-        + '<a href="https://www.seoulforeign.org/community/news" target="_blank" rel="noopener" style="color:var(--sfs-red-text);">Visit site</a></div>';
-      return;
-    }
-    container.innerHTML = items.map(function(it) {
-      return richNewsItemHtml({
-        title: it.title,
-        link: it.link,
-        thumbnail: it.image,
-        thumbSource: 'seoulforeign.org',
-        source: '',
-        tag: null,
-        hideSourceMeta: true,
-        // The server recovers dates the page itself never exposes; without
-        // them this list sat in raw DOM order with 2024 posts above 2026 ones.
-        pubDate: it.publishedAt
-      });
-    }).join('');
+    SFS_NEWS_ITEMS = (payload.items || []).slice(0, 5);
+    renderSFSNews();
   }, function() {
+    SFS_NEWS_ITEMS = [];
+    // A newsletter that is already posted should survive the scrape failing.
+    if (NEWSLETTER) { renderSFSNews(); return; }
     var container = document.getElementById('sfs-news-body');
     if (container) container.innerHTML =
       '<div class="feed-empty">SFS News unavailable. ' +
@@ -3472,6 +3555,7 @@ function loadEvents() {
 // long-lived browser tabs keep getting fresh data without a page reload.
 // Intervals are tuned for source volatility and (for scraping) host friendliness.
 subscribeAnnouncements();   // realtime — no interval
+subscribeNewsletter();      // realtime — no interval
 schedule('clubs', loadClubs, 6 * 60 * 60 * 1000);
 schedule('events', loadEvents, 6 * 60 * 60 * 1000);   // club directory changes rarely
 
