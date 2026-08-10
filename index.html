@@ -651,6 +651,9 @@ a.widget:hover { background: var(--bg-card-hover); }
   display: flex;
   align-items: center;
   justify-content: space-between;
+  /* space-between alone leaves nothing between a long title and its link, so
+     "High School Lunch" and "CraveFood" render as one word. */
+  gap: 10px;
   margin-bottom: 14px;
   flex-shrink: 0;
 }
