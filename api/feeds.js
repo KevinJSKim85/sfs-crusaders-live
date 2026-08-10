@@ -4,20 +4,64 @@
 import { XMLParser } from 'fast-xml-parser';
 import { handler, ok, fail, safeUrl, clean, fetchWithTimeout } from './_lib/respond.js';
 
-const FEED_SETS = new Map([
-  ['world', [
-    { key: 'econ',  label: 'Economist', domain: 'economist.com',   url: 'https://www.economist.com/finance-and-economics/rss.xml' },
-    { key: 'bbc',   label: 'BBC',       domain: 'bbc.com',         url: 'https://feeds.bbci.co.uk/news/world/rss.xml' },
-    { key: 'nyt',   label: 'NY Times',  domain: 'nytimes.com',     url: 'https://rss.nytimes.com/services/xml/rss/nyt/Education.xml' },
-    { key: 'guard', label: 'Guardian',  domain: 'theguardian.com', url: 'https://www.theguardian.com/education/rss' }
-  ]],
-  ['college', [
-    { key: 'ihe',  label: 'Inside Higher Ed', domain: 'insidehighered.com',  url: 'https://www.insidehighered.com/rss.xml' },
-    { key: 'hech', label: 'Hechinger',        domain: 'hechingerreport.org', url: 'https://hechingerreport.org/feed/' },
-    { key: 'harv', label: 'Harvard',          domain: 'harvard.edu',         url: 'https://news.harvard.edu/gazette/feed/' },
-    { key: 'mit',  label: 'MIT',              domain: 'mit.edu',             url: 'https://news.mit.edu/rss/feed' }
-  ]]
+// One catalog rather than two fixed lists, so students can pick their own mix.
+// `topic` drives the grouping in the picker; `sets` is which preset a source
+// belongs to when nobody has chosen anything.
+//
+// Note on NY Times: the widget already carried an nyt key, but pointed at the
+// Education feed, so "NY Times" in a world-news panel meant campus policy
+// stories. World and Tech are separate entries now, and the Education one is
+// labelled as such.
+const CATALOG = new Map([
+  ['nyt-world',  { label: 'NY Times · World',   domain: 'nytimes.com',         topic: 'World',      sets: ['world'], url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml' }],
+  ['bbc',        { label: 'BBC · World',        domain: 'bbc.com',             topic: 'World',      sets: ['world'], url: 'https://feeds.bbci.co.uk/news/world/rss.xml' }],
+  ['guard-world',{ label: 'Guardian · World',   domain: 'theguardian.com',     topic: 'World',      sets: [],        url: 'https://www.theguardian.com/world/rss' }],
+  // AP was here via rsshub.app, which now 403s all traffic. Left out rather
+  // than offered as a choice that fails the moment a student picks it.
+
+  ['econ',       { label: 'Economist',          domain: 'economist.com',       topic: 'Business',   sets: ['world'], url: 'https://www.economist.com/finance-and-economics/rss.xml' }],
+  ['nyt-biz',    { label: 'NY Times · Business',domain: 'nytimes.com',         topic: 'Business',   sets: [],        url: 'https://rss.nytimes.com/services/xml/rss/nyt/Business.xml' }],
+
+  ['nyt-tech',   { label: 'NY Times · Tech',    domain: 'nytimes.com',         topic: 'Science',    sets: [],        url: 'https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml' }],
+  ['nyt-sci',    { label: 'NY Times · Science', domain: 'nytimes.com',         topic: 'Science',    sets: ['world'], url: 'https://rss.nytimes.com/services/xml/rss/nyt/Science.xml' }],
+  ['quanta',     { label: 'Quanta',             domain: 'quantamagazine.org',  topic: 'Science',    sets: [],        url: 'https://api.quantamagazine.org/feed/' }],
+  ['nasa',       { label: 'NASA',               domain: 'nasa.gov',            topic: 'Science',    sets: [],        url: 'https://www.nasa.gov/news-release/feed/' }],
+
+  ['guard-arts', { label: 'Guardian · Culture', domain: 'theguardian.com',     topic: 'Arts',       sets: [],        url: 'https://www.theguardian.com/culture/rss' }],
+  ['nyt-arts',   { label: 'NY Times · Arts',    domain: 'nytimes.com',         topic: 'Arts',       sets: [],        url: 'https://rss.nytimes.com/services/xml/rss/nyt/Arts.xml' }],
+
+  ['korea',      { label: 'Korea Herald',       domain: 'koreaherald.com',     topic: 'Korea',      sets: [],        url: 'https://www.koreaherald.com/rss/newsAll' }],
+
+  ['ihe',        { label: 'Inside Higher Ed',   domain: 'insidehighered.com',  topic: 'College',    sets: ['college'], url: 'https://www.insidehighered.com/rss.xml' }],
+  ['hech',       { label: 'Hechinger',          domain: 'hechingerreport.org', topic: 'College',    sets: ['college'], url: 'https://hechingerreport.org/feed/' }],
+  ['harv',       { label: 'Harvard Gazette',    domain: 'harvard.edu',         topic: 'College',    sets: ['college'], url: 'https://news.harvard.edu/gazette/feed/' }],
+  ['mit',        { label: 'MIT News',           domain: 'mit.edu',             topic: 'College',    sets: ['college'], url: 'https://news.mit.edu/rss/feed' }],
+  ['nyt-edu',    { label: 'NY Times · Education', domain: 'nytimes.com',       topic: 'College',    sets: [],        url: 'https://rss.nytimes.com/services/xml/rss/nyt/Education.xml' }],
+  ['guard-edu',  { label: 'Guardian · Education', domain: 'theguardian.com',   topic: 'College',    sets: [],        url: 'https://www.theguardian.com/education/rss' }]
 ]);
+
+function feedsForSet(setName) {
+  const out = [];
+  for (const [key, meta] of CATALOG) {
+    if (meta.sets.includes(setName)) out.push({ key, ...meta });
+  }
+  return out;
+}
+
+// Explicit picks win over the preset. Unknown keys are dropped rather than
+// erroring: a saved preference from an older build should degrade to the
+// sources that still exist, not blank the widget.
+function feedsForKeys(raw) {
+  const seen = new Set();
+  const out = [];
+  for (const k of String(raw).split(',').map((s) => s.trim()).filter(Boolean).slice(0, 12)) {
+    if (CATALOG.has(k) && !seen.has(k)) {
+      seen.add(k);
+      out.push({ key: k, ...CATALOG.get(k) });
+    }
+  }
+  return out;
+}
 
 // Namespaced tags (media:thumbnail, dc:date, ...) only survive parsing intact
 // because we don't ask fast-xml-parser to strip prefixes. processEntities as
@@ -109,13 +153,23 @@ async function fetchFeed(feed) {
   return items;
 }
 
+const one = (v) => (Array.isArray(v) ? v[0] : v);
+
 export default handler('rss', async (req, res) => {
-  const requested = req.query?.set;
-  const setParam = Array.isArray(requested) ? requested[0] : requested;
-  // Map, not a plain object — a hostile `set` value must not resolve to
-  // Object.prototype the way FEED_SETS['__proto__'] would on a literal.
-  const setName = FEED_SETS.has(setParam) ? setParam : 'world';
-  const feeds = FEED_SETS.get(setName);
+  const setParam = one(req.query?.set);
+  const sourcesParam = one(req.query?.sources);
+
+  // Map, not a plain object — a hostile key must not resolve to
+  // Object.prototype the way CATALOG['__proto__'] would on a literal.
+  const setName = ['world', 'college'].includes(setParam) ? setParam : 'world';
+  let feeds = sourcesParam ? feedsForKeys(sourcesParam) : [];
+  if (!feeds.length) feeds = feedsForSet(setName);
+
+  // Always ship the catalog so the client can build its picker without a
+  // second request or a hardcoded copy that drifts from this list.
+  const catalog = [...CATALOG].map(([key, m]) => ({
+    key, label: m.label, domain: m.domain, topic: m.topic, inSet: m.sets
+  }));
 
   const settled = await Promise.allSettled(feeds.map(fetchFeed));
 
@@ -132,9 +186,15 @@ export default handler('rss', async (req, res) => {
   });
 
   if (sources.every((s) => !s.ok)) {
-    return fail(res, { source: 'rss', error: 'all_feeds_failed', sources });
+    return fail(res, { source: 'rss', error: 'all_feeds_failed', sources, catalog });
   }
 
   merged.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
-  return ok(res, { source: 'rss', items: merged.slice(0, 10), sMaxage: 1800, swr: 7200, sources });
+  return ok(res, {
+    source: 'rss',
+    items: merged.slice(0, 10),
+    sMaxage: 1800, swr: 7200,
+    sources, catalog,
+    selected: feeds.map((f) => f.key)
+  });
 });

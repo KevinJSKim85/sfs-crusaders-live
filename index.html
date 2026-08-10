@@ -39,34 +39,38 @@
   --sfs-blue-light: #48527F;
   --sfs-gray: #878787;
 
-  --bg: #101527;
-  --bg-elev: #151B31;
-  --bg-card: #18203A;
-  --bg-card-hover: #20294A;
-  --surface: #242D4A;
+  --bg: #0A0A0C;
+  --bg-elev: #131317;
+  --bg-card: #191920;
+  --bg-card-hover: #1F1F26;
+  --surface: #26262E;
+  /* The nav band and the hero weather panel. Split out so the chrome can go
+     back to navy on its own without touching the page surfaces. */
+  --chrome: #16161B;
+  --chrome-deep: #0E0E12;
   --border: rgba(135,135,135,0.16);
   --border-strong: rgba(255,255,255,0.18);
   --text: #F3F4F8;
   --text-secondary: #C7CAD6;
   --text-muted: #8F94A7;
-  --bg-wash: radial-gradient(circle at top left, rgba(193,40,46,0.10), transparent 34rem),
-             linear-gradient(180deg, #101527 0%, #0B1020 100%);
-  --nav-shadow: 0 12px 30px rgba(6,10,24,0.30);
-  --hero-shadow: 0 14px 36px rgba(6,10,24,0.38);
-  --card-shadow: 0 18px 46px rgba(6,10,24,0.24);
-  --card-shadow-hover: 0 20px 52px rgba(6,10,24,0.32);
-  --media-shadow: 0 2px 8px rgba(6,10,24,0.34);
+  --bg-wash: radial-gradient(circle at top left, rgba(193,40,46,0.13), transparent 34rem),
+             linear-gradient(180deg, #0A0A0C 0%, #050506 100%);
+  --nav-shadow: 0 12px 30px rgba(0,0,0,0.45);
+  --hero-shadow: 0 14px 36px rgba(0,0,0,0.50);
+  --card-shadow: 0 18px 46px rgba(0,0,0,0.38);
+  --card-shadow-hover: 0 20px 52px rgba(0,0,0,0.48);
+  --media-shadow: 0 2px 8px rgba(0,0,0,0.45);
 
   --tag-red-bg: rgba(193,40,46,0.18);
   --tag-red-fg: #FF7377;
-  --tag-blue-bg: rgba(72,82,127,0.28);
-  --tag-blue-fg: #C4CAE8;
+  --tag-blue-bg: rgba(255,255,255,0.10);
+  --tag-blue-fg: #CFD2DA;
   --tag-green-bg: rgba(135,135,135,0.16);
   --tag-green-fg: #D8D8D8;
   --tag-amber-bg: rgba(193,40,46,0.12);
   --tag-amber-fg: #F0A4A6;
-  --tag-purple-bg: rgba(43,49,96,0.34);
-  --tag-purple-fg: #D8DDF5;
+  --tag-purple-bg: rgba(255,255,255,0.07);
+  --tag-purple-fg: #BFC3CC;
 
   --accent-green: #34C759;
   --accent-amber: #FF9F0A;
@@ -75,6 +79,10 @@
 
 [data-theme="light"] {
   --sfs-red-text: #C1282E;   /* 5.9:1 on white — brand red is already legible here */
+  /* Same black-and-red chrome as the dark theme, so the identity does not
+     change when a student flips the toggle. */
+  --chrome: #1C1C22;
+  --chrome-deep: #101014;
   --bg: #F4F5F8;
   --bg-elev: #FFFFFF;
   --bg-card: #FFFFFF;
@@ -143,7 +151,7 @@ body {
 
 /* ===== TOP NAV ===== */
 .topnav {
-  background: linear-gradient(180deg, var(--sfs-blue) 0%, var(--sfs-blue-deep) 100%);
+  background: linear-gradient(180deg, var(--chrome) 0%, var(--chrome-deep) 100%);
   border-bottom: 3px solid var(--sfs-red);
   box-shadow: var(--nav-shadow);
   padding: 16px 32px;
@@ -357,7 +365,7 @@ body {
 }
 
 .hero-weather {
-  background: linear-gradient(160deg, var(--sfs-blue) 0%, var(--sfs-blue-deep) 100%);
+  background: linear-gradient(160deg, var(--chrome) 0%, var(--chrome-deep) 100%);
   color: white;
   padding: 18px 22px 16px;
   display: flex;
@@ -1050,6 +1058,94 @@ a.widget:hover { background: var(--bg-card-hover); }
   padding: 24px 0;
   font-size: 12px;
 }
+
+/* ===== NEWS SOURCE PICKER ===== */
+.w-gear {
+  background: none;
+  border: none;
+  padding: 4px;
+  margin-left: 6px;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: 6px;
+  display: inline-flex;
+  line-height: 0;
+}
+.w-gear:hover { color: var(--sfs-red-text); background: var(--surface); }
+.w-gear svg { width: 15px; height: 15px; }
+
+.feed-picker {
+  display: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  max-height: 220px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.feed-picker.open { display: block; }
+
+.picker-head {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.picker-topic {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--sfs-red-text);
+  margin: 8px 0 4px;
+}
+
+.picker-opts { display: flex; flex-wrap: wrap; gap: 4px; }
+
+.picker-opt {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+  user-select: none;
+}
+.picker-opt.on { color: var(--text); border-color: var(--sfs-red-text); }
+.picker-opt input { accent-color: var(--sfs-red); margin: 0; }
+
+.picker-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.picker-actions button {
+  font-family: 'Inter', sans-serif;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.picker-actions button.primary { background: var(--sfs-red); border-color: var(--sfs-red); color: #fff; }
+.picker-actions button:hover { border-color: var(--border-strong); }
 
 /* ===== CLUB DIRECTORY (fallback content for the announcements widget) ===== */
 .club-group { margin-bottom: 12px; }
@@ -1997,8 +2093,11 @@ footer p {
         </div>
         <h2 class="w-title">World &amp; Reading</h2>
       </div>
-      <span class="w-badge bg-purple">News + Econ</span>
+      <button type="button" class="w-gear" aria-label="Choose news sources" title="Choose sources" onclick="toggleFeedPicker('college')">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h11M17 6h4M3 12h4M10 12h11M3 18h11M17 18h4"/><circle cx="15.5" cy="6" r="2"/><circle cx="8.5" cy="12" r="2"/><circle cx="15.5" cy="18" r="2"/></svg>
+      </button>
     </div>
+    <div class="feed-picker" id="feed-picker-college"></div>
     <div class="w-body" id="college-body">
       <div class="feed-loading">Loading feeds...</div>
     </div>
@@ -2013,8 +2112,11 @@ footer p {
         </div>
         <h2 class="w-title">College News</h2>
       </div>
-      <span class="w-badge bg-green">Top US</span>
+      <button type="button" class="w-gear" aria-label="Choose news sources" title="Choose sources" onclick="toggleFeedPicker('reads')">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h11M17 6h4M3 12h4M10 12h11M3 18h11M17 18h4"/><circle cx="15.5" cy="6" r="2"/><circle cx="8.5" cy="12" r="2"/><circle cx="15.5" cy="18" r="2"/></svg>
+      </button>
     </div>
+    <div class="feed-picker" id="feed-picker-reads"></div>
     <div class="w-body" id="student-reads-body">
       <div class="feed-loading">Loading feeds...</div>
     </div>
@@ -2251,22 +2353,25 @@ updateLunchTodayLabel();
 // anonymous request, which is the tenant confirming itself — a 404 would mean
 // the wrong subdomain. Still missing: the G9-12 assessment calendars, which
 // are four separate links and are not published anywhere I can find.
+// Ordered by how often a high schooler actually opens them: daily tools first,
+// then coursework, then the occasional-use links. The bar scrolls sideways, so
+// position is the entire ranking — anything past the first eight needs a swipe.
 var links = [
-  { name: "Managebac",        icon: ICONS.building,  url: "https://sfs.managebac.com/" },
   { name: "Gmail",            icon: ICONS.mail,      url: "https://mail.google.com" },
+  { name: "Managebac",        icon: ICONS.building,  url: "https://sfs.managebac.com/" },
   { name: "Classroom",        icon: ICONS.classroom, url: "https://classroom.google.com" },
   { name: "Drive",            icon: ICONS.drive,     url: "https://drive.google.com" },
   { name: "Calendar",         icon: ICONS.calendar,  url: "https://calendar.google.com" },
-  { name: "CraveFood",        icon: ICONS.utensils,  url: "https://sfs.cravefood.kr" },
   { name: "Clubs",            icon: ICONS.laptop,    url: "https://sites.google.com/seoulforeign.org/sfhsclubsorganizations25-26/home" },
+  { name: "Maia Learning",    icon: ICONS.target,    url: "https://www.maialearning.com" },
+  { name: "Noodletools",      icon: ICONS.document,  url: "https://www.noodletools.com" },
   { name: "Library",          icon: ICONS.book,      url: "https://library.seoulforeign.org/oliver/home/news" },
   { name: "Sora",             icon: ICONS.book,      url: "https://soraapp.com" },
-  { name: "Noodletools",      icon: ICONS.document,  url: "https://www.noodletools.com" },
   { name: "Padlet",           icon: ICONS.clipboard, url: "https://padlet.com" },
   { name: "Kahoot",           icon: ICONS.target,    url: "https://kahoot.it" },
   { name: "Quizlet",          icon: ICONS.book,      url: "https://quizlet.com" },
   { name: "Canva",            icon: ICONS.palette,   url: "https://www.canva.com" },
-  { name: "Maia Learning",    icon: ICONS.target,    url: "https://www.maialearning.com" },
+  { name: "CraveFood",        icon: ICONS.utensils,  url: "https://sfs.cravefood.kr" },
   { name: "CollegeBoard",     icon: ICONS.building,  url: "https://www.collegeboard.org" },
   { name: "Web Print",        icon: ICONS.printer,   url: "https://fujifilm.sfs.or.kr/User" },
   { name: "Doc Request",      icon: ICONS.clipboard, url: "https://docs.google.com/forms/d/e/1FAIpQLScH5DW3v_tMNrx_Kfn5Acs56Y-SoCZe9JMizLvd9wSZtFO5ww/viewform" },
@@ -2588,9 +2693,98 @@ var collegeTags = {
 // Both feed widgets share one implementation now. /api/feeds fans out to the
 // four sources server-side, so this is a single request instead of four, and a
 // dead source arrives as a flag rather than sinking the whole widget.
-function renderFeedWidget(containerId, tagMap, payload) {
+// ===== NEWS SOURCE PICKER =====
+// Which sources a student wants is a preference, so it lives with their theme
+// and layout: on their device, no account needed. The server ships the whole
+// catalog with every response, so this never holds a stale copy of the list.
+var FEED_PREF_KEY = 'sfs-feed-sources-v1';
+var FEED_CATALOG = {};        // widgetId -> catalog array from the last response
+
+function feedPrefs(widgetId) {
+  try {
+    var all = JSON.parse(localStorage.getItem(FEED_PREF_KEY) || '{}');
+    return Array.isArray(all[widgetId]) ? all[widgetId] : null;
+  } catch (e) { return null; }
+}
+
+function setFeedPrefs(widgetId, keys) {
+  try {
+    var all = JSON.parse(localStorage.getItem(FEED_PREF_KEY) || '{}');
+    if (keys && keys.length) all[widgetId] = keys; else delete all[widgetId];
+    localStorage.setItem(FEED_PREF_KEY, JSON.stringify(all));
+  } catch (e) {}
+}
+
+function feedUrl(widgetId, presetSet) {
+  var picked = feedPrefs(widgetId);
+  return picked && picked.length
+    ? '/api/feeds?sources=' + encodeURIComponent(picked.join(','))
+    : '/api/feeds?set=' + presetSet;
+}
+
+function toggleFeedPicker(widgetId) {
+  var panel = document.getElementById('feed-picker-' + widgetId);
+  if (panel) panel.classList.toggle('open');
+}
+
+function renderFeedPicker(widgetId, presetSet, catalog, selected) {
+  var panel = document.getElementById('feed-picker-' + widgetId);
+  if (!panel || !catalog || !catalog.length) return;
+  var chosen = {};
+  selected.forEach(function(k) { chosen[k] = true; });
+
+  var byTopic = {};
+  catalog.forEach(function(c) { (byTopic[c.topic] = byTopic[c.topic] || []).push(c); });
+
+  var html = '<div class="picker-head">Show stories from</div>';
+  Object.keys(byTopic).forEach(function(topic) {
+    html += '<div class="picker-topic">' + htmlEscape(topic) + '</div><div class="picker-opts">';
+    byTopic[topic].forEach(function(c) {
+      html += '<label class="picker-opt' + (chosen[c.key] ? ' on' : '') + '">'
+        + '<input type="checkbox" value="' + htmlEscape(c.key) + '"' + (chosen[c.key] ? ' checked' : '') + '>'
+        + htmlEscape(c.label) + '</label>';
+    });
+    html += '</div>';
+  });
+  html += '<div class="picker-actions">'
+    + '<button type="button" data-act="reset">Reset to default</button>'
+    + '<button type="button" data-act="done" class="primary">Done</button></div>';
+  panel.innerHTML = html;
+
+  panel.onclick = function(e) {
+    var act = e.target.closest('button') && e.target.closest('button').dataset.act;
+    if (act === 'reset') {
+      setFeedPrefs(widgetId, null);
+      panel.classList.remove('open');
+      reloadFeedWidget(widgetId);
+      return;
+    }
+    if (act === 'done') {
+      var keys = [].slice.call(panel.querySelectorAll('input:checked')).map(function(i) { return i.value; });
+      // Saving zero sources would render an empty widget with no way back
+      // except the reset button; treat "none" as "back to the default set".
+      setFeedPrefs(widgetId, keys.length ? keys : null);
+      panel.classList.remove('open');
+      reloadFeedWidget(widgetId);
+    }
+  };
+  panel.onchange = function(e) {
+    if (e.target.matches('input[type=checkbox]')) e.target.closest('.picker-opt').classList.toggle('on', e.target.checked);
+  };
+}
+
+function reloadFeedWidget(widgetId) {
+  if (widgetId === 'college') { try { localStorage.removeItem('sfs-cache-college-v1'); } catch (e) {} loadCollegeFeeds(); }
+  if (widgetId === 'reads')   { try { localStorage.removeItem('sfs-cache-reads-v1');   } catch (e) {} loadCollegeNews(); }
+}
+
+function renderFeedWidget(containerId, tagMap, payload, widgetId, presetSet) {
   var container = document.getElementById(containerId);
   if (!container) return;
+  if (widgetId && payload.catalog) {
+    FEED_CATALOG[widgetId] = payload.catalog;
+    renderFeedPicker(widgetId, presetSet, payload.catalog, payload.selected || []);
+  }
   var items = (payload.items || []).slice(0, 5).map(function(it) {
     return {
       title: it.title,
@@ -2615,8 +2809,8 @@ function feedErrorHtml(links) {
 }
 
 function loadCollegeFeeds() {
-  return cachedFetch('college', '/api/feeds?set=world', 30 * 60 * 1000,
-    function(payload) { renderFeedWidget('college-body', collegeTags, payload); },
+  return cachedFetch('college', feedUrl('college', 'world'), 30 * 60 * 1000,
+    function(payload) { renderFeedWidget('college-body', collegeTags, payload, 'college', 'world'); },
     function() {
       document.getElementById('college-body').innerHTML = feedErrorHtml([
         { url: 'https://www.economist.com', label: 'Economist' },
@@ -3152,8 +3346,8 @@ var collegeNewsTags = {
 };
 
 function loadCollegeNews() {
-  return cachedFetch('reads', '/api/feeds?set=college', 30 * 60 * 1000,
-    function(payload) { renderFeedWidget('student-reads-body', collegeNewsTags, payload); },
+  return cachedFetch('reads', feedUrl('reads', 'college'), 30 * 60 * 1000,
+    function(payload) { renderFeedWidget('student-reads-body', collegeNewsTags, payload, 'reads', 'college'); },
     function() {
       var el = document.getElementById('student-reads-body');
       if (el) el.innerHTML = feedErrorHtml([
