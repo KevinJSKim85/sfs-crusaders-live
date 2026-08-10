@@ -1059,6 +1059,39 @@ a.widget:hover { background: var(--bg-card-hover); }
   font-size: 12px;
 }
 
+/* ===== UPCOMING EVENTS ===== */
+.event-list { display: flex; flex-direction: column; }
+
+.event-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+}
+.event-row:last-child { border-bottom: none; }
+
+.event-when {
+  flex: 0 0 62px;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: var(--sfs-red-text);
+  letter-spacing: 0.2px;
+  padding-top: 1px;
+  font-variant-numeric: tabular-nums;
+}
+
+.event-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+
+.event-title {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--text);
+}
+
+.w-gear.on { color: var(--sfs-red-text); background: var(--tag-red-bg); }
+
 /* ===== NEWS SOURCE PICKER ===== */
 .w-gear {
   background: none;
@@ -2165,6 +2198,29 @@ footer p {
   </div>
 
   <!-- Spirit Magazine (live from Issuu) -->
+  <!-- Upcoming Events (school calendar, non-athletics by default) -->
+  <div class="widget" data-wid="events">
+    <div class="w-head">
+      <div class="w-head-left">
+        <div class="w-icon bg-amber">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>
+        </div>
+        <h2 class="w-title">Upcoming</h2>
+      </div>
+      <button type="button" class="w-gear" id="events-toggle" aria-label="Show or hide athletics"
+              title="Include athletics" onclick="toggleEventSports()">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a15 15 0 0 0 0 18M12 3a15 15 0 0 1 0 18M3 12h18"/></svg>
+      </button>
+      <a href="https://www.seoulforeign.org/community/calendar" target="_blank" class="w-link">
+        Calendar
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+    </div>
+    <div class="w-body" id="events-body">
+      <div class="feed-loading">Loading events...</div>
+    </div>
+  </div>
+
   <div class="widget" data-wid="spirit">
     <div class="w-head">
       <div class="w-head-left">
@@ -3323,12 +3379,101 @@ setInterval(function() {
   });
 }, 60 * 1000);
 
+// ===== UPCOMING EVENTS =====
+// Athletics has its own widget, so this one hides sports by default; the globe
+// button brings them back for anyone who wants one combined list.
+var EVENTS_SPORTS_KEY = 'sfs-events-show-sports-v1';
+var EVENTS_PAYLOAD = null;
+
+function eventsShowSports() {
+  try { return localStorage.getItem(EVENTS_SPORTS_KEY) === '1'; } catch (e) { return false; }
+}
+
+function toggleEventSports() {
+  try { localStorage.setItem(EVENTS_SPORTS_KEY, eventsShowSports() ? '0' : '1'); } catch (e) {}
+  renderEvents();
+}
+
+var EVENT_CAT_LABEL = { arts: 'Arts', athletics: 'Sports', academic: 'Academic', holiday: 'No school', school: 'School' };
+var EVENT_CAT_CLASS = { arts: 'bg-purple', athletics: 'bg-blue', academic: 'bg-green', holiday: 'bg-red', school: 'bg-amber' };
+
+// "Today" / "Tomorrow" / "Mon 25" — a date a student has to decode is a date
+// they skip. Seoul time, since the event is in Seoul.
+function seoulTodayIso() {
+  var t = seoulNow();
+  var mm = ('0' + (MONTHS_SHORT.indexOf(t.month) + 1)).slice(-2);
+  var dd = ('0' + t.day).slice(-2);
+  return t.year + '-' + mm + '-' + dd;
+}
+
+function eventDayLabel(iso, endIso) {
+  // Build the weekday from a UTC-midnight Date, not a KST-midnight one. KST
+  // midnight is 15:00 UTC the previous day, so getUTCDay()/getUTCDate() on it
+  // report the wrong day \u2014 an off-by-one that looks fine until someone checks.
+  var parts = iso.split('-');
+  var utcNoon = new Date(Date.UTC(+parts[0], +parts[1] - 1, +parts[2]));
+  var diff = Math.round(
+    (Date.parse(iso + 'T00:00:00+09:00') - Date.parse(seoulTodayIso() + 'T00:00:00+09:00')) / 86400000
+  );
+  var base;
+  if (diff <= 0)       base = 'Today';
+  else if (diff === 1) base = 'Tomorrow';
+  else                 base = DAYS_LONG[utcNoon.getUTCDay()].slice(0, 3) + ' ' + (+parts[2]);
+  if (endIso) base += '\u2013' + (+endIso.split('-')[2]);
+  return base;
+}
+
+function renderEvents() {
+  var container = document.getElementById('events-body');
+  if (!container || !EVENTS_PAYLOAD) return;
+  var showSports = eventsShowSports();
+
+  var btn = document.getElementById('events-toggle');
+  if (btn) {
+    btn.classList.toggle('on', showSports);
+    btn.title = showSports ? 'Hide athletics' : 'Include athletics';
+  }
+
+  var items = (EVENTS_PAYLOAD.items || []).filter(function(e) {
+    return showSports || e.category !== 'athletics';
+  }).slice(0, 7);
+
+  if (!items.length) {
+    container.innerHTML = '<div class="feed-empty">Nothing scheduled right now. '
+      + '<a href="https://www.seoulforeign.org/community/calendar" target="_blank" rel="noopener" style="color:var(--sfs-red-text);">Open calendar</a></div>';
+    return;
+  }
+
+  container.innerHTML = '<div class="event-list">' + items.map(function(e) {
+    return '<div class="event-row">'
+      + '<div class="event-when">' + htmlEscape(eventDayLabel(e.date, e.endDate)) + '</div>'
+      + '<div class="event-main">'
+      +   '<div class="event-title">' + htmlEscape(e.title) + '</div>'
+      +   '<span class="news-tag ' + (EVENT_CAT_CLASS[e.category] || 'bg-amber') + '">'
+      +     htmlEscape(EVENT_CAT_LABEL[e.category] || 'School') + '</span>'
+      + '</div>'
+      + '</div>';
+  }).join('') + '</div>';
+}
+
+function loadEvents() {
+  return cachedFetch('events', '/api/events', 6 * 60 * 60 * 1000, function(payload) {
+    EVENTS_PAYLOAD = payload;
+    renderEvents();
+  }, function() {
+    var c = document.getElementById('events-body');
+    if (c) c.innerHTML = '<div class="feed-empty">Calendar unavailable. '
+      + '<a href="https://www.seoulforeign.org/community/calendar" target="_blank" rel="noopener" style="color:var(--sfs-red-text);">Open calendar</a></div>';
+  });
+}
+
 // ===== KICKOFF + AUTO-REFRESH =====
 // Each loader is called once immediately, then re-runs on its own interval so
 // long-lived browser tabs keep getting fresh data without a page reload.
 // Intervals are tuned for source volatility and (for scraping) host friendliness.
 subscribeAnnouncements();   // realtime — no interval
-schedule('clubs', loadClubs, 6 * 60 * 60 * 1000);   // club directory changes rarely
+schedule('clubs', loadClubs, 6 * 60 * 60 * 1000);
+schedule('events', loadEvents, 6 * 60 * 60 * 1000);   // club directory changes rarely
 
 schedule('college', loadCollegeFeeds, 30 * 60 * 1000);
 
@@ -3556,7 +3701,7 @@ paintSpiritSeed();
 schedule('spirit', loadSpirit, 60 * 60 * 1000);
 
 // ===== GRIDSTACK DRAG GRID =====
-var LAYOUT_KEY = 'sfs-grid-layout-v12';   // bumped: default order now leads with Lunch
+var LAYOUT_KEY = 'sfs-grid-layout-v13';   // bumped: Upcoming Events added
 var CELL_W = 4;   // 12-col grid / 4 = 3 widgets per row
 var CELL_H = 7;   // 7 rows tall (row height 58 → ~420px with margin) — bumped for larger fonts
 var gridApi = null;
@@ -3579,6 +3724,7 @@ var gridApi = null;
 // for: a student checking their phone before school.
 var DEFAULT_WIDGET_ORDER = [
   'lunch',
+  'events',
   'sfs-news',
   'athletics',
   'news',

@@ -126,11 +126,44 @@ export default handler(SOURCE, async (req, res) => {
     deduped.push({ date, title: stripped });
   }
 
-  const items = deduped
+  const upcoming = deduped
     .filter((ev) => ev.date >= today)
+    .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+
+  // Multi-day things (auditions, tryouts, exam weeks) are one calendar entry
+  // per day upstream. Left alone, two of them fill the whole widget with five
+  // repeats each and nothing further out is ever visible. Collapse a run of
+  // consecutive dates for the same title into one entry with an end date.
+  const nextDay = (d) => {
+    const t = new Date(d + 'T00:00:00Z');
+    t.setUTCDate(t.getUTCDate() + 1);
+    return t.toISOString().slice(0, 10);
+  };
+  const runs = [];
+  const openRun = new Map();          // title -> index into runs
+  for (const ev of upcoming) {
+    const idx = openRun.get(ev.title);
+    if (idx !== undefined && nextDay(runs[idx].endDate) === ev.date) {
+      runs[idx].endDate = ev.date;
+      continue;
+    }
+    openRun.set(ev.title, runs.length);
+    runs.push({ date: ev.date, endDate: ev.date, title: ev.title });
+  }
+
+  const items = runs
     .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0))
     .slice(0, 12)
-    .map((ev) => ({ date: ev.date, title: ev.title, category: categorize(ev.title), url: null }));
+    .map((ev) => ({
+      date: ev.date,
+      endDate: ev.endDate === ev.date ? null : ev.endDate,
+      days: ev.endDate === ev.date
+        ? 1
+        : Math.round((Date.parse(ev.endDate) - Date.parse(ev.date)) / 86400000) + 1,
+      title: ev.title,
+      category: categorize(ev.title),
+      url: null
+    }));
 
   if (items.length === 0) warnings.push('no_events_after_filtering');
 
