@@ -132,25 +132,60 @@ async function parseLunchPdf(buf) {
       : items.filter((it) => SECTION_RE.test(it.text) && it.text.length < 35)
     ).slice().sort((a, b) => a.y - b.y);
 
-    // Section labels in Crave PDFs sit in the MIDDLE of their cell, so use the
-    // midpoint between adjacent labels as the boundary instead of "label above".
+    // A section label sits in the MIDDLE of its block, and blocks differ in
+    // height, so splitting halfway between two labels lands inside the taller
+    // one. The day rows are the real structure, so use them as the anchor.
+    //
+    // Group day markers into weekly runs — a new run starts wherever the
+    // weekday stops advancing (…Thu, Fri, Mon…). Each run is one section's
+    // body, which gives an exact gap to split on instead of a guess.
+    const DAY_ORDER = { mon: 0, tue: 1, wed: 2, thu: 3, fri: 4 };
+    const dayRuns = [];
+    let currentRun = null;
+    let prevIdx = -1;
+    for (const d of dayMarkers.slice().sort((a, b) => a.y - b.y)) {
+      const idx = DAY_ORDER[d.text.slice(0, 3).toLowerCase()];
+      if (idx === undefined) continue;
+      if (!currentRun || idx <= prevIdx) {
+        currentRun = { start: d.y, end: d.y };
+        dayRuns.push(currentRun);
+      }
+      currentRun.end = d.y;
+      prevIdx = idx;
+    }
+    const runFor = (s) => dayRuns.find((r) => s.y >= r.start && s.y <= r.end) || null;
+
+    function boundaryBetween(a, b) {
+      const ra = runFor(a);
+      const rb = runFor(b);
+      if (ra && rb) return (ra.end + rb.start) / 2;   // split the gap between blocks
+      if (ra) return (ra.end + b.y) / 2;              // weekly section below a daily one
+      if (rb) return (a.y + rb.start) / 2;
+      return (a.y + b.y) / 2;                         // two weekly sections
+    }
+
+    const bounds = sectionMarkers.map((s, i) => ({
+      text: s.text,
+      lower: i === 0 ? -Infinity : boundaryBetween(sectionMarkers[i - 1], s),
+      upper: i === sectionMarkers.length - 1 ? Infinity : boundaryBetween(s, sectionMarkers[i + 1])
+    }));
+
     function sectionFor(item) {
-      for (let i = 0; i < sectionMarkers.length; i++) {
-        const s = sectionMarkers[i];
-        const prev = sectionMarkers[i - 1];
-        const next = sectionMarkers[i + 1];
-        const lower = prev ? (prev.y + s.y) / 2 : -Infinity;
-        const upper = next ? (s.y + next.y) / 2 : Infinity;
-        if (item.y >= lower && item.y < upper) return s.text;
+      for (const b of bounds) {
+        if (item.y >= b.lower && item.y < b.upper) return b.text;
       }
       return sectionMarkers.length ? sectionMarkers[0].text : null;
     }
 
     // Day = the day-marker closest in Y AND positioned to the left of the item.
-    function dayFor(item) {
+    // Only match a day row inside the item's own section. Without that bound,
+    // "Burger of the week" (a weekly item sitting 24px under Korean's Friday
+    // row) latched onto Friday and vanished Mon-Thu, when it is served all week.
+    function dayFor(item, sectionBounds) {
       let nearest = null, minDist = 25;
       for (let i = 0; i < dayMarkers.length; i++) {
         const d = dayMarkers[i];
+        if (sectionBounds && (d.y < sectionBounds.lower || d.y >= sectionBounds.upper)) continue;
         const dist = Math.abs(d.y - item.y);
         if (dist < minDist && d.x < item.x - 10) { minDist = dist; nearest = d; }
       }
@@ -174,7 +209,7 @@ async function parseLunchPdf(buf) {
 
       const section = sectionFor(item);
       if (!section) return;
-      const day = dayFor(item) || 'Wk';
+      const day = dayFor(item, bounds.find((b) => b.text === section)) || 'Wk';
       if (!grouped[section]) grouped[section] = { section, days: {} };
       if (!grouped[section].days[day]) {
         grouped[section].days[day] = item.text;
@@ -210,51 +245,113 @@ function toResponseSections(rawSections) {
   return out;
 }
 
-export default handler('drive+firestore', async (req, res) => {
-  const overrideFileId = getQueryParam(req, 'fileId');
+const LUNCH_PAGE = 'https://www.seoulforeign.org/lunch';
 
-  let driveFileId = null;
+// The school's lunch page links each division's menu through a Finalsite
+// resource-manager UUID that stays the same while the PDF behind it is
+// swapped. That makes it a stable address for "the current High School menu",
+// which is what removes the weekly copy-paste this endpoint used to need.
+//
+// Do NOT trust the resolved filename for the week: the file that served this
+// week's menu was still called ...HS223-227.pdf (Feb 23-27) because the school
+// reuses the name. The Cloudinary-style /v{unix}/ segment in the resolved URL
+// is the real signal — it moved to Aug 9 when they uploaded the new menu.
+async function discoverSchoolMenu() {
+  const page = await fetchWithTimeout(LUNCH_PAGE, { timeout: 12000 });
+  if (!page.ok) throw new Error(`lunch_page_http_${page.status}`);
+  const html = await page.text();
+
+  // Match the anchor whose visible text is the division name, not a filename
+  // pattern — the names are what the school maintains deliberately.
+  const re = /<a\b[^>]*href="(\/fs\/resource-manager\/view\/[a-f0-9-]{36})"[^>]*>([\s\S]*?)<\/a>/gi;
+  let m, target = null;
+  while ((m = re.exec(html)) !== null) {
+    const label = m[2].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
+    if (label === 'high school') { target = m[1]; break; }
+  }
+  if (!target) throw new Error('high_school_link_not_found');
+
+  const res = await fetchWithTimeout(`https://www.seoulforeign.org${target}`, { timeout: 25000 });
+  if (!res.ok) throw new Error(`menu_pdf_http_${res.status}`);
+  const buf = Buffer.from(await res.arrayBuffer());
+  if (buf.length < 100 || buf.toString('ascii', 0, 5) !== '%PDF-') throw new Error('menu_not_a_pdf');
+
+  const stamp = (res.url || '').match(/\/v(\d{9,10})\//);
+  return {
+    buf,
+    sourceUrl: `https://www.seoulforeign.org${target}`,
+    uploadedAt: stamp ? new Date(Number(stamp[1]) * 1000).toISOString() : null
+  };
+}
+
+export default handler('seoulforeign.org/lunch', async (req, res) => {
+  const overrideFileId = getQueryParam(req, 'fileId');
+  const warnings = [];
+
+  let buf = null;
   let week = null;
   let updatedAt = null;
+  let origin = 'school';
+  let sourceUrl = LUNCH_PAGE;
+  let fallbackEmbed = safeUrl(LUNCH_PAGE);
 
-  const configRes = await fetchWithTimeout(FIRESTORE_URL).catch((error) => {
-    console.warn('lunch: firestore config fetch failed:', error);
-    return null;
-  });
-  if (configRes && configRes.ok) {
-    const doc = await configRes.json();
-    const fields = doc.fields || {};
-    driveFileId = firestoreValue(fields.driveFileId);
-    week = firestoreValue(fields.week);
-    updatedAt = firestoreValue(fields.updatedAt);
-  }
-  if (overrideFileId) driveFileId = overrideFileId; // explicit test override wins
-
-  if (!driveFileId) {
-    return fail(res, { source: 'drive+firestore', error: 'no_drive_file_id' });
-  }
-  if (!DRIVE_ID_RE.test(driveFileId)) {
-    return fail(res, { source: 'drive+firestore', error: 'invalid_file_id' });
+  // Preferred path: read the school's own lunch page. Nobody has to remember
+  // anything for this to stay current.
+  if (!overrideFileId) {
+    try {
+      const found = await discoverSchoolMenu();
+      buf = found.buf;
+      updatedAt = found.uploadedAt;
+      sourceUrl = found.sourceUrl;
+      fallbackEmbed = safeUrl(found.sourceUrl);
+    } catch (error) {
+      console.warn('lunch: school page path failed:', error);
+      warnings.push(`school_page_failed:${String(error.message || error).slice(0, 60)}`);
+    }
   }
 
-  const fallbackEmbed = safeUrl(`https://drive.google.com/file/d/${driveFileId}/preview`);
+  // Fallback / manual override: a Drive file set in /admin. Kept so the menu
+  // can still be published by hand if the school page moves or breaks.
+  if (!buf) {
+    let driveFileId = overrideFileId;
+    if (!driveFileId) {
+      const configRes = await fetchWithTimeout(FIRESTORE_URL).catch((error) => {
+        console.warn('lunch: firestore config fetch failed:', error);
+        return null;
+      });
+      if (configRes && configRes.ok) {
+        const doc = await configRes.json();
+        const fields = doc.fields || {};
+        driveFileId = firestoreValue(fields.driveFileId);
+        week = firestoreValue(fields.week);
+        updatedAt = firestoreValue(fields.updatedAt);
+      }
+    }
+    if (!driveFileId) {
+      return fail(res, { source: 'seoulforeign.org/lunch', error: 'no_menu_source', warnings, fallbackEmbed });
+    }
+    if (!DRIVE_ID_RE.test(driveFileId)) {
+      return fail(res, { source: 'seoulforeign.org/lunch', error: 'invalid_file_id', warnings, fallbackEmbed });
+    }
 
-  let pdfRes;
-  try {
-    // Drive is occasionally slow for this file; 15s was tight enough to abort
-    // on a healthy download.
-    pdfRes = await fetchWithTimeout(`https://drive.google.com/uc?export=download&id=${driveFileId}`, { timeout: 25000 });
-  } catch (error) {
-    console.error('lunch: drive fetch failed:', error);
-    return fail(res, { source: 'drive+firestore', error: 'drive_fetch_failed', fallbackEmbed });
-  }
-  if (!pdfRes.ok) {
-    return fail(res, { source: 'drive+firestore', error: `drive_http_${pdfRes.status}`, fallbackEmbed });
-  }
+    origin = 'admin';
+    sourceUrl = `https://drive.google.com/file/d/${driveFileId}/view`;
+    fallbackEmbed = safeUrl(`https://drive.google.com/file/d/${driveFileId}/preview`);
 
-  const buf = Buffer.from(await pdfRes.arrayBuffer());
-  if (buf.length < 100 || buf.toString('ascii', 0, 5) !== '%PDF-') {
-    return fail(res, { source: 'drive+firestore', error: 'not_a_pdf', fallbackEmbed });
+    let pdfRes;
+    try {
+      pdfRes = await fetchWithTimeout(`https://drive.google.com/uc?export=download&id=${driveFileId}`, { timeout: 25000 });
+    } catch (error) {
+      console.error('lunch: drive fetch failed:', error);
+      return fail(res, { source: 'seoulforeign.org/lunch', error: 'drive_fetch_failed', warnings, fallbackEmbed });
+    }
+    if (!pdfRes.ok) {
+      return fail(res, { source: 'seoulforeign.org/lunch', error: `drive_http_${pdfRes.status}`, warnings, fallbackEmbed });
+    }
+    buf = Buffer.from(await pdfRes.arrayBuffer());
+    if (buf.length < 100 || buf.toString('ascii', 0, 5) !== '%PDF-') {
+      return fail(res, { source: 'seoulforeign.org/lunch', error: 'not_a_pdf', warnings, fallbackEmbed });
+    }
   }
 
   let rawSections;
@@ -266,7 +363,7 @@ export default handler('drive+firestore', async (req, res) => {
     // endpoint had degraded but not whether the runtime, the download or the
     // layout was at fault, which is the only thing worth knowing here.
     return fail(res, {
-      source: 'drive+firestore',
+      source: 'seoulforeign.org/lunch',
       error: 'pdf_parse_unavailable',
       fallbackEmbed,
       detail: String(error && error.message || error).slice(0, 200)
@@ -275,7 +372,7 @@ export default handler('drive+firestore', async (req, res) => {
   if (rawSections.length === 0) {
     console.error('lunch: pdf parsed but yielded no sections');
     return fail(res, {
-      source: 'drive+firestore',
+      source: 'seoulforeign.org/lunch',
       error: 'pdf_parse_unavailable',
       fallbackEmbed,
       detail: 'parsed_zero_sections'
@@ -283,14 +380,18 @@ export default handler('drive+firestore', async (req, res) => {
   }
 
   return ok(res, {
-    source: 'drive+firestore',
+    source: 'seoulforeign.org/lunch',
     items: [],
+    // `origin` tells the client whether this came from the school page or from
+    // a hand-published Drive file, which changes what a stale menu means.
+    origin,
+    sourceUrl: safeUrl(sourceUrl),
     week: week ? clean(week) : null,
-    driveFileId: clean(driveFileId),
     updatedAt: updatedAt ? clean(updatedAt) : null,
     stale: isStale(updatedAt),
     sections: toResponseSections(rawSections),
     fallbackEmbed,
+    warnings,
     sMaxage: 1800,
     swr: 86400
   });
